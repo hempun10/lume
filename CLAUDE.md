@@ -39,12 +39,16 @@ src/
 │   └── landing/         # Landing page feature
 │       ├── components/  # Hero, Stats, Features, Comparison, HowItWorks, FAQ, CTA sections
 │       └── index.tsx    # LandingPage composite component
+│   └── theme/           # Theme (dark mode) feature
+│       ├── context/     # ThemeProvider + useTheme hook (system/light/dark, localStorage)
+│       ├── components/  # ThemeToggle button (cycles light → dark → system)
+│       └── index.ts     # Barrel exports
 ├── layout/              # App-wide layout components (Header, Footer, nav-config)
 ├── lib/                 # Library configurations
 │   ├── supabase/        # Supabase client singleton + getSessionReady()
 │   └── utils.ts         # cn() helper (shadcn)
 ├── routes/              # File-based routing (TanStack Router) — thin shells importing from features
-│   ├── __root.tsx       # Root layout (AuthProvider, Header, Footer)
+│   ├── __root.tsx       # Root layout (ThemeProvider, AuthProvider, Header, Footer)
 │   ├── _authenticated.tsx # Route guard layout (redirects to /login if unauthenticated)
 │   ├── _authenticated/dashboard.tsx # Protected dashboard page
 │   ├── login.tsx        # Combined login/signup (delegates to LoginForm/SignupForm/SignupSuccess)
@@ -95,6 +99,7 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 - **Profiles table** is auto-created on signup via a PostgreSQL trigger (`handle_new_user`)
 - **RLS policies** ensure users can only read/update their own profile
 - **Path alias**: `@/*` maps to `src/*`
+- **Dark mode** uses the `class` strategy (`@custom-variant dark` in styles.css). `ThemeProvider` in `src/features/theme/` manages light/dark/system preference with localStorage persistence (`lume-theme` key). An inline `<script>` in `__root.tsx` prevents flash of wrong theme. All UI uses shadcn semantic tokens (`text-foreground`, `bg-background`, `border-border`, etc.) — avoid hardcoded gray/neutral colors.
 - **Homepage** is the Lume landing page (hero, features, comparison, FAQ, CTA), always accessible (no auth redirect)
 
 ## Environment Variables

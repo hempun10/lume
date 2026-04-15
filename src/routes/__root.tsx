@@ -2,10 +2,17 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AuthProvider } from "../features/auth/context/auth-context";
+import { ThemeProvider } from "../features/theme";
 import Footer from "../layout/Footer";
 import Header from "../layout/Header";
 
 import appCss from "../styles.css?url";
+
+/**
+ * Inline script injected into <head> to prevent flash of wrong theme (FOUC).
+ * Runs before React hydrates — reads localStorage and applies .dark class immediately.
+ */
+const themeScript = `(function(){try{var t=localStorage.getItem("lume-theme");var d=document.documentElement;if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)){d.classList.add("dark")}}catch(e){}})();`;
 
 const SITE_URL = "https://lume.chat";
 
@@ -82,28 +89,32 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
 				<HeadContent />
+				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: static script to prevent theme FOUC */}
+				<script dangerouslySetInnerHTML={{ __html: themeScript }} />
 			</head>
 			<body>
-				<AuthProvider>
-					<Header />
-					{children}
-					<Footer />
-					<TanStackDevtools
-						config={{
-							position: "bottom-right",
-						}}
-						plugins={[
-							{
-								name: "Tanstack Router",
-								render: <TanStackRouterDevtoolsPanel />,
-							},
-						]}
-					/>
-					<Scripts />
-				</AuthProvider>
+				<ThemeProvider>
+					<AuthProvider>
+						<Header />
+						{children}
+						<Footer />
+						<TanStackDevtools
+							config={{
+								position: "bottom-right",
+							}}
+							plugins={[
+								{
+									name: "Tanstack Router",
+									render: <TanStackRouterDevtoolsPanel />,
+								},
+							]}
+						/>
+						<Scripts />
+					</AuthProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);

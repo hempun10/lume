@@ -9,12 +9,12 @@ export function CtaSection() {
 			</div>
 
 			<div className="mb-10">
-				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-neutral-900 sm:text-2xl md:text-3xl">
+				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					Stop scrolling.
 					<br />
 					Start connecting.
 				</h2>
-				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-gray-600">
+				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-muted-foreground">
 					Every minute you spend swiping is a minute you could spend having a
 					real conversation with a real person. Lume makes it instant, safe, and
 					actually fun.
@@ -31,7 +31,7 @@ export function CtaSection() {
 						<ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
 					</Link>
 				</div>
-				<p className="text-sm text-gray-500">
+				<p className="text-sm text-muted-foreground">
 					Free forever &middot; No signup required &middot; Works on any device
 				</p>
 			</div>
