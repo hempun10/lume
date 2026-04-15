@@ -12,7 +12,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
 		user?.user_metadata?.display_name ?? user?.email ?? "User";
 
 	return (
-		<div className="min-h-[calc(100vh-64px)] bg-slate-900 p-6">
+		<div className="min-h-[calc(100vh-64px)] bg-muted p-6">
 			<div className="max-w-2xl mx-auto">
 				<Card>
 					<CardHeader>

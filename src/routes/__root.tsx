@@ -7,30 +7,30 @@ import Header from "../layout/Header";
 
 import appCss from "../styles.css?url";
 
-const SITE_URL = "https://tanstack-start-supabase.vercel.app";
+const SITE_URL = "https://lume.chat";
 
 export const Route = createRootRoute({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
 			{ name: "viewport", content: "width=device-width, initial-scale=1" },
-			{ title: "TanStack Start + Supabase Auth" },
+			{ title: "Lume — Meet New People Through Chat & Games" },
 			{
 				name: "description",
 				content:
-					"A production-ready starter template combining TanStack Start with Supabase Auth. Includes protected routes, email/password authentication, shadcn/ui, Tailwind CSS, and Vercel deployment.",
+					"Lume connects you with real people worldwide for spontaneous text chats and multiplayer games. Free, safe, and instant. The modern alternative to Omegle.",
 			},
-			{ name: "theme-color", content: "#0f172a" },
+			{ name: "theme-color", content: "#ffffff" },
 			{ property: "og:type", content: "website" },
 			{ property: "og:url", content: SITE_URL },
 			{
 				property: "og:title",
-				content: "TanStack Start + Supabase Auth",
+				content: "Lume — Meet New People Through Chat & Games",
 			},
 			{
 				property: "og:description",
 				content:
-					"A production-ready starter template combining TanStack Start with Supabase Auth. Includes protected routes, email/password authentication, shadcn/ui, Tailwind CSS, and Vercel deployment.",
+					"Lume connects you with real people worldwide for spontaneous text chats and multiplayer games. Free, safe, and instant.",
 			},
 			{ property: "og:image", content: `${SITE_URL}/og-image.png` },
 			{ property: "og:image:type", content: "image/png" },
@@ -38,21 +38,39 @@ export const Route = createRootRoute({
 			{ property: "og:image:height", content: "630" },
 			{
 				property: "og:site_name",
-				content: "TanStack Start + Supabase Auth",
+				content: "Lume",
 			},
 			{ name: "twitter:card", content: "summary_large_image" },
 			{
 				name: "twitter:title",
-				content: "TanStack Start + Supabase Auth",
+				content: "Lume — Meet New People Through Chat & Games",
 			},
 			{
 				name: "twitter:description",
 				content:
-					"A production-ready starter template combining TanStack Start with Supabase Auth. Includes protected routes, email/password authentication, shadcn/ui, Tailwind CSS, and Vercel deployment.",
+					"Lume connects you with real people worldwide for spontaneous text chats and multiplayer games. Free, safe, and instant.",
 			},
 			{ name: "twitter:image", content: `${SITE_URL}/og-image.png` },
 		],
 		links: [
+			{ rel: "preconnect", href: "https://rsms.me" },
+			{
+				rel: "preconnect",
+				href: "https://fonts.googleapis.com",
+			},
+			{
+				rel: "preconnect",
+				href: "https://fonts.gstatic.com",
+				crossOrigin: "anonymous",
+			},
+			{
+				rel: "stylesheet",
+				href: "https://rsms.me/inter/inter.css",
+			},
+			{
+				rel: "stylesheet",
+				href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap",
+			},
 			{ rel: "stylesheet", href: appCss },
 			{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
 			{ rel: "apple-touch-icon", href: "/logo192.svg" },
