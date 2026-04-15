@@ -123,15 +123,15 @@ function FeatureBlock({
 			<div className="pb-5">
 				<div className="flex items-center gap-2.5">
 					<div className={`h-2 w-4 rounded-full ${labelColor}`} />
-					<p className="text-sm font-medium text-gray-900">{label}</p>
+					<p className="text-sm font-medium text-foreground">{label}</p>
 				</div>
 			</div>
 
 			<div className="mb-14">
-				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-neutral-900 sm:text-2xl md:text-3xl">
+				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					{heading}
 				</h2>
-				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-gray-600">
+				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-muted-foreground">
 					{description}
 				</p>
 			</div>
@@ -141,10 +141,10 @@ function FeatureBlock({
 					{features.map((feature) => (
 						<div key={feature.title}>
 							<feature.icon className={`mb-3 h-10 w-10 ${feature.iconColor}`} />
-							<h4 className="text-sm font-semibold text-gray-900">
+							<h4 className="text-sm font-semibold text-foreground">
 								{feature.title}
 							</h4>
-							<p className="mt-1 text-pretty text-xs text-gray-600">
+							<p className="mt-1 text-pretty text-xs text-muted-foreground">
 								{feature.description}
 							</p>
 						</div>
@@ -155,7 +155,7 @@ function FeatureBlock({
 			{callout && (
 				<div className="mt-10 flex max-w-2xl gap-4">
 					<div className="w-1 shrink-0 rounded-full bg-brand-500" />
-					<p className="text-pretty text-sm font-medium text-gray-600">
+					<p className="text-pretty text-sm font-medium text-muted-foreground">
 						{callout}
 					</p>
 				</div>
@@ -176,7 +176,7 @@ export function FeaturesSection() {
 				callout="Every conversation is a blank slate. Who you are matters more than how you look."
 			/>
 
-			<hr className="my-20 border-t border-gray-100" />
+			<hr className="my-20 border-t border-border" />
 
 			<FeatureBlock
 				label="Games"
@@ -187,7 +187,7 @@ export function FeaturesSection() {
 				callout="Games make every match fun, even if you're not sure what to say first."
 			/>
 
-			<hr className="my-20 border-t border-gray-100" />
+			<hr className="my-20 border-t border-border" />
 
 			<FeatureBlock
 				label="Safety"

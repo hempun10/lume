@@ -32,13 +32,13 @@ export function StatsSection() {
 	return (
 		<section>
 			<div className="mb-14">
-				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-neutral-900 sm:text-2xl md:text-3xl">
+				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					A better way to meet
 					<br />
 					people online
 				</h2>
-				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-gray-600">
-					<span className="font-medium text-gray-900">
+				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-muted-foreground">
+					<span className="font-medium text-foreground">
 						Random doesn't mean reckless.
 					</span>{" "}
 					Lume is built from the ground up with safety, fun, and real connection
@@ -51,10 +51,10 @@ export function StatsSection() {
 					{stats.map((stat) => (
 						<div key={stat.title}>
 							<stat.icon className={`mb-3 h-10 w-10 ${stat.iconColor}`} />
-							<h4 className="text-sm font-semibold text-gray-900">
+							<h4 className="text-sm font-semibold text-foreground">
 								{stat.title}
 							</h4>
-							<p className="mt-1 text-pretty text-xs text-gray-600">
+							<p className="mt-1 text-pretty text-xs text-muted-foreground">
 								{stat.description}
 							</p>
 						</div>

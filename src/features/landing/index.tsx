@@ -11,27 +11,27 @@ export function LandingPage() {
 		<div className="mx-auto max-w-4xl px-6 pb-20 sm:px-8 lg:px-10">
 			<HeroSection />
 
-			<hr className="my-20 border-t border-gray-100" />
+			<hr className="my-20 border-t border-border" />
 
 			<StatsSection />
 
-			<hr className="my-20 border-t border-gray-100" />
+			<hr className="my-20 border-t border-border" />
 
 			<FeaturesSection />
 
-			<hr className="my-20 border-t border-gray-100" />
+			<hr className="my-20 border-t border-border" />
 
 			<ComparisonSection />
 
-			<hr className="my-20 border-t border-gray-100" />
+			<hr className="my-20 border-t border-border" />
 
 			<HowItWorksSection />
 
-			<hr className="my-20 border-t border-gray-100" />
+			<hr className="my-20 border-t border-border" />
 
 			<FaqSection />
 
-			<hr className="my-20 border-t border-gray-100" />
+			<hr className="my-20 border-t border-border" />
 
 			<CtaSection />
 		</div>

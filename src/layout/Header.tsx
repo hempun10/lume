@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/features/auth";
+import { ThemeToggle } from "@/features/theme";
 
 export default function Header() {
 	const [isOpen, setIsOpen] = useState(false);
@@ -22,19 +23,20 @@ export default function Header() {
 				<nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4 sm:px-8 lg:px-10">
 					{/* Logo */}
 					<Link to="/" className="flex items-center gap-2.5">
-						<div className="relative flex h-7 w-7 items-center justify-center rounded-xl bg-gray-900">
-							<Sparkles className="h-4 w-4 text-white" />
+						<div className="relative flex h-7 w-7 items-center justify-center rounded-xl bg-foreground">
+							<Sparkles className="h-4 w-4 text-background" />
 						</div>
-						<span className="font-semibold text-gray-900">Lume</span>
+						<span className="font-semibold text-foreground">Lume</span>
 					</Link>
 
 					{/* Desktop nav */}
 					<div className="hidden items-center gap-1 md:flex">
+						<ThemeToggle />
 						{!isLoading && !user && (
 							<>
 								<Link
 									to="/"
-									className="rounded-xl px-3 py-2 text-sm font-semibold text-gray-900 transition-all duration-300 hover:bg-black/5"
+									className="rounded-xl px-3 py-2 text-sm font-semibold text-foreground transition-all duration-300 hover:bg-accent"
 								>
 									Home
 								</Link>
@@ -51,13 +53,13 @@ export default function Header() {
 							<>
 								<Link
 									to="/dashboard"
-									className="rounded-xl px-3 py-2 text-sm font-semibold text-gray-900 transition-all duration-300 hover:bg-black/5"
+									className="rounded-xl px-3 py-2 text-sm font-semibold text-foreground transition-all duration-300 hover:bg-accent"
 								>
 									Dashboard
 								</Link>
 								<Link
 									to="/logout"
-									className="rounded-xl px-3 py-2 text-sm font-semibold text-gray-900 transition-all duration-300 hover:bg-black/5"
+									className="rounded-xl px-3 py-2 text-sm font-semibold text-foreground transition-all duration-300 hover:bg-accent"
 								>
 									Log out
 								</Link>
@@ -69,7 +71,7 @@ export default function Header() {
 					<button
 						type="button"
 						onClick={() => setIsOpen(!isOpen)}
-						className="flex items-center justify-center rounded-xl px-2 py-2 transition-all duration-300 hover:bg-black/5 md:hidden"
+						className="flex items-center justify-center rounded-xl px-2 py-2 text-foreground transition-all duration-300 hover:bg-accent md:hidden"
 						aria-label="Toggle menu"
 					>
 						<Menu className="h-5 w-5" />
@@ -95,19 +97,22 @@ export default function Header() {
 			>
 				<div className="flex items-center justify-between border-b border-border p-4">
 					<div className="flex items-center gap-2.5">
-						<div className="relative flex h-7 w-7 items-center justify-center rounded-xl bg-gray-900">
-							<Sparkles className="h-4 w-4 text-white" />
+						<div className="relative flex h-7 w-7 items-center justify-center rounded-xl bg-foreground">
+							<Sparkles className="h-4 w-4 text-background" />
 						</div>
-						<span className="font-semibold text-gray-900">Lume</span>
+						<span className="font-semibold text-foreground">Lume</span>
 					</div>
-					<button
-						type="button"
-						onClick={() => setIsOpen(false)}
-						className="rounded-xl p-2 text-foreground transition-colors hover:bg-accent"
-						aria-label="Close menu"
-					>
-						<X size={24} />
-					</button>
+					<div className="flex items-center gap-1">
+						<ThemeToggle />
+						<button
+							type="button"
+							onClick={() => setIsOpen(false)}
+							className="rounded-xl p-2 text-foreground transition-colors hover:bg-accent"
+							aria-label="Close menu"
+						>
+							<X size={24} />
+						</button>
+					</div>
 				</div>
 
 				<nav className="flex-1 overflow-y-auto p-4">

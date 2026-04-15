@@ -55,12 +55,12 @@ export function ComparisonSection() {
 	return (
 		<section>
 			<div className="mb-14">
-				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-neutral-900 sm:text-2xl md:text-3xl">
+				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					Not your average
 					<br />
 					random chat app
 				</h2>
-				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-gray-600">
+				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-muted-foreground">
 					We built Lume because every alternative is either unsafe, outdated, or
 					just plain boring. Here's how we compare.
 				</p>
@@ -68,25 +68,25 @@ export function ComparisonSection() {
 			<div className="overflow-x-auto">
 				<table className="w-full max-w-4xl">
 					<thead>
-						<tr className="border-b border-gray-200">
-							<th className="py-3 pr-4 text-left text-sm font-medium text-gray-900">
+						<tr className="border-b border-border">
+							<th className="py-3 pr-4 text-left text-sm font-medium text-foreground">
 								Feature
 							</th>
-							<th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
+							<th className="px-4 py-3 text-left text-sm font-medium text-foreground">
 								Lume
 							</th>
-							<th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+							<th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
 								Omegle, Rumi & Others
 							</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-gray-100">
+					<tbody className="divide-y divide-border">
 						{rows.map((row) => (
 							<tr key={row.feature}>
-								<td className="py-3 pr-4 text-sm text-gray-600">
+								<td className="py-3 pr-4 text-sm text-muted-foreground">
 									{row.feature}
 								</td>
-								<td className="px-4 py-3 text-sm text-gray-900">
+								<td className="px-4 py-3 text-sm text-foreground">
 									{row.lumePositive ? (
 										<Check className="mr-2 inline h-4 w-4 text-green-600" />
 									) : (
@@ -94,7 +94,7 @@ export function ComparisonSection() {
 									)}
 									{row.lume}
 								</td>
-								<td className="px-4 py-3 text-sm text-gray-600">
+								<td className="px-4 py-3 text-sm text-muted-foreground">
 									{row.others}
 								</td>
 							</tr>
