@@ -1,10 +1,9 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { Analytics } from "@vercel/analytics/react";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
-import { AuthProvider } from "../context/AuthContext";
+import { AuthProvider } from "../features/auth/context/auth-context";
+import Footer from "../layout/Footer";
+import Header from "../layout/Header";
 
 import appCss from "../styles.css?url";
 
@@ -85,9 +84,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							},
 						]}
 					/>
-					{/* cleanup:analytics-start */}
-					<Analytics />
-					{/* cleanup:analytics-end */}
 					<Scripts />
 				</AuthProvider>
 			</body>
