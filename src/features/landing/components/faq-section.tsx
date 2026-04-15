@@ -48,7 +48,8 @@ export function FaqSection() {
 	const [openIndex, setOpenIndex] = useState<number | null>(null);
 
 	return (
-		<section>
+		// biome-ignore lint/correctness/useUniqueElementIds: anchor ID for in-page navigation
+		<section id="faq">
 			<div className="mb-14">
 				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					Frequently asked questions

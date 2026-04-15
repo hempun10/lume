@@ -27,7 +27,8 @@ const steps = [
 
 export function HowItWorksSection() {
 	return (
-		<section>
+		// biome-ignore lint/correctness/useUniqueElementIds: anchor ID for in-page navigation
+		<section id="how-it-works">
 			<div className="mb-14">
 				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					Start talking in

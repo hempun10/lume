@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { requireAuth, useAuth } from "@/features/auth";
 import { profileOnboardingOptions } from "@/features/onboarding/queries";
+import { DashboardShell } from "@/layout/dashboard-shell";
 
 export const Route = createFileRoute("/_authenticated")({
 	async beforeLoad({ location, context: { queryClient } }) {
@@ -110,5 +111,14 @@ function OnboardingGate({ userId }: { userId: string }) {
 		return <Navigate to="/onboarding" />;
 	}
 
-	return <Outlet />;
+	// Onboarding uses its own full-screen layout — skip the dashboard shell
+	if (pathname === "/onboarding") {
+		return <Outlet />;
+	}
+
+	return (
+		<DashboardShell>
+			<Outlet />
+		</DashboardShell>
+	);
 }
