@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { type SignupFormValues, signupSchema } from "../schema";
 import type { SignupFormProps } from "../types";
+import { AuthInput } from "./auth-input";
 import { AuthLayout } from "./auth-layout";
 
 export function SignupForm({ onSubmit, error, onToggleMode }: SignupFormProps) {
@@ -51,16 +52,13 @@ export function SignupForm({ onSubmit, error, onToggleMode }: SignupFormProps) {
 								<FormItem>
 									<FormLabel className="text-sm font-[600]">Email</FormLabel>
 									<FormControl>
-										<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
-											<Mail className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
-											<input
-												type="email"
-												placeholder="you@example.com"
-												autoComplete="email"
-												className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-												{...field}
-											/>
-										</div>
+										<AuthInput
+											icon={Mail}
+											type="email"
+											placeholder="you@example.com"
+											autoComplete="email"
+											{...field}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -75,16 +73,13 @@ export function SignupForm({ onSubmit, error, onToggleMode }: SignupFormProps) {
 								<FormItem>
 									<FormLabel className="text-sm font-[600]">Password</FormLabel>
 									<FormControl>
-										<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
-											<Lock className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
-											<input
-												type="password"
-												placeholder="At least 6 characters"
-												autoComplete="new-password"
-												className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-												{...field}
-											/>
-										</div>
+										<AuthInput
+											icon={Lock}
+											type="password"
+											placeholder="At least 6 characters"
+											autoComplete="new-password"
+											{...field}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

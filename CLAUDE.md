@@ -26,23 +26,23 @@ src/
 │   └── errors/          # Error handling components (ErrorBoundary, ErrorPage, NotFound)
 ├── features/            # Domain-based feature modules (each with components/, context/, guards/, types/, schema.ts)
 │   ├── auth/            # Auth feature
-│   │   ├── components/  # AuthLayout (split-screen), form-login, form-signup, form-forgot-password, form-reset-password
+│   │   ├── components/  # AuthInput, AuthLayout (split-screen), form-login, form-signup, form-forgot-password, form-reset-password
 │   │   ├── context/     # AuthContext provider + useAuth hook
 │   │   ├── guards/      # Route guard (guard-authenticated)
 │   │   ├── types/       # TypeScript interfaces (component props)
 │   │   ├── schema.ts    # Zod validation schemas + inferred form value types
 │   │   └── index.ts     # Barrel exports (public API)
-│   └── onboarding/      # Onboarding feature (post-signup profile setup)
-│       ├── components/  # OnboardingForm (display name input)
-│       ├── schema.ts    # Zod schema for onboarding form
-│       └── index.ts     # Barrel exports
-│   └── dashboard/       # Dashboard feature
-│       ├── components/  # DashboardContent
-│       ├── types/       # TypeScript interfaces
-│       └── index.ts     # Barrel exports
-│   └── landing/         # Landing page feature
-│       ├── components/  # Hero, Stats, Features, Comparison, HowItWorks, FAQ, CTA sections
-│       └── index.tsx    # LandingPage composite component
+│   ├── onboarding/      # Onboarding feature (post-signup profile setup)
+│   │   ├── components/  # OnboardingForm (display name input)
+│   │   ├── schema.ts    # Zod schema for onboarding form
+│   │   └── index.ts     # Barrel exports
+│   ├── dashboard/       # Dashboard feature
+│   │   ├── components/  # DashboardContent
+│   │   ├── types/       # TypeScript interfaces
+│   │   └── index.ts     # Barrel exports
+│   ├── landing/         # Landing page feature
+│   │   ├── components/  # Hero, Stats, Features, Comparison, HowItWorks, FAQ, CTA sections
+│   │   └── index.tsx    # LandingPage composite component
 │   └── theme/           # Theme (dark mode) feature
 │       ├── context/     # ThemeProvider + useTheme hook (system/light/dark, localStorage)
 │       ├── components/  # ThemeToggle button (cycles light → dark → system)
@@ -70,7 +70,8 @@ src/
 - `src/features/auth/context/auth-context.tsx` — React context providing `session`, `user`, `isLoading` via `useAuth()` hook
 - `src/features/auth/guards/guard-authenticated.ts` — `requireAuth()` guard used by protected route layouts
 - `src/features/auth/schema.ts` — Zod validation schemas for auth forms (login: email+password, signup: email+password, forgot-password, reset-password)
-- `src/features/auth/components/auth-layout.tsx` — Split-screen auth layout (UserJot-inspired: form left, branding panel right)
+- `src/features/auth/components/auth-layout.tsx` — Split-screen auth layout (UserJot-inspired: form left, branding panel right, customizable quote/caption)
+- `src/features/auth/components/auth-input.tsx` — Reusable styled input with left-side icon, used across all auth & onboarding forms
 - `src/features/auth/components/form-login.tsx` / `form-signup.tsx` / `form-forgot-password.tsx` / `form-reset-password.tsx` — Auth form components using React Hook Form + Zod
 - `src/features/onboarding/components/onboarding-form.tsx` — Post-signup onboarding form (display name)
 - `src/features/onboarding/schema.ts` — Zod schema for onboarding form

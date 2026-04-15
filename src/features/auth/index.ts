@@ -1,3 +1,4 @@
+export { AuthInput } from "./components/auth-input";
 export { AuthLayout } from "./components/auth-layout";
 export { ForgotPasswordForm } from "./components/form-forgot-password";
 export { LoginForm } from "./components/form-login";

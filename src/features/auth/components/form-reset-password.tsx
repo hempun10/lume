@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { type ResetPasswordFormValues, resetPasswordSchema } from "../schema";
 import type { ResetPasswordFormProps } from "../types";
+import { AuthInput } from "./auth-input";
 import { AuthLayout } from "./auth-layout";
 
 export function ResetPasswordForm({
@@ -80,16 +81,13 @@ export function ResetPasswordForm({
 											New password
 										</FormLabel>
 										<FormControl>
-											<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
-												<Lock className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
-												<input
-													type="password"
-													placeholder="At least 6 characters"
-													autoComplete="new-password"
-													className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-													{...field}
-												/>
-											</div>
+											<AuthInput
+												icon={Lock}
+												type="password"
+												placeholder="At least 6 characters"
+												autoComplete="new-password"
+												{...field}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -105,16 +103,13 @@ export function ResetPasswordForm({
 											Confirm new password
 										</FormLabel>
 										<FormControl>
-											<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
-												<Lock className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
-												<input
-													type="password"
-													placeholder="Re-enter your password"
-													autoComplete="new-password"
-													className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-													{...field}
-												/>
-											</div>
+											<AuthInput
+												icon={Lock}
+												type="password"
+												placeholder="Re-enter your password"
+												autoComplete="new-password"
+												{...field}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { type ForgotPasswordFormValues, forgotPasswordSchema } from "../schema";
 import type { ForgotPasswordFormProps } from "../types";
+import { AuthInput } from "./auth-input";
 import { AuthLayout } from "./auth-layout";
 
 export function ForgotPasswordForm({
@@ -77,16 +78,13 @@ export function ForgotPasswordForm({
 									<FormItem>
 										<FormLabel className="text-sm font-[600]">Email</FormLabel>
 										<FormControl>
-											<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
-												<Mail className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
-												<input
-													type="email"
-													placeholder="you@example.com"
-													autoComplete="email"
-													className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-													{...field}
-												/>
-											</div>
+											<AuthInput
+												icon={Mail}
+												type="email"
+												placeholder="you@example.com"
+												autoComplete="email"
+												{...field}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
