@@ -1,112 +1,68 @@
-import {
-	createContext,
-	type ReactNode,
-	useContext,
-	useEffect,
-	useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark" | "system";
+type Theme = "dark" | "light" | "system";
 
-interface ThemeContextValue {
+interface ThemeProviderState {
 	theme: Theme;
 	setTheme: (theme: Theme) => void;
-	resolvedTheme: "light" | "dark";
 }
 
-const ThemeContext = createContext<ThemeContextValue>({
+const initialState: ThemeProviderState = {
 	theme: "system",
-	setTheme: () => {},
-	resolvedTheme: "light",
-});
+	setTheme: () => null,
+};
+
+const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 const STORAGE_KEY = "lume-theme";
 
-function getSystemTheme(): "light" | "dark" {
-	if (typeof window === "undefined") return "light";
-	return window.matchMedia("(prefers-color-scheme: dark)").matches
-		? "dark"
-		: "light";
-}
-
-function resolveTheme(theme: Theme): "light" | "dark" {
-	if (theme === "system") return getSystemTheme();
-	return theme;
-}
-
-export function ThemeProvider({ children }: { children: ReactNode }) {
-	const [theme, setThemeState] = useState<Theme>(() => {
-		if (typeof window === "undefined") return "system";
-		return (localStorage.getItem(STORAGE_KEY) as Theme) || "system";
+export function ThemeProvider({
+	children,
+	defaultTheme = "system",
+}: {
+	children: React.ReactNode;
+	defaultTheme?: Theme;
+}) {
+	const [theme, setTheme] = useState<Theme>(() => {
+		if (typeof window === "undefined") return defaultTheme;
+		return (localStorage.getItem(STORAGE_KEY) as Theme) || defaultTheme;
 	});
 
-	const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(() =>
-		resolveTheme(theme),
-	);
-
-	function setTheme(newTheme: Theme) {
-		setThemeState(newTheme);
-		localStorage.setItem(STORAGE_KEY, newTheme);
-	}
-
-	// Apply .dark class to <html> and update resolved theme
 	useEffect(() => {
-		const root = document.documentElement;
-		const resolved = resolveTheme(theme);
-		setResolvedTheme(resolved);
+		const root = window.document.documentElement;
 
-		if (resolved === "dark") {
-			root.classList.add("dark");
-		} else {
-			root.classList.remove("dark");
+		root.classList.remove("light", "dark");
+
+		if (theme === "system") {
+			const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+				.matches
+				? "dark"
+				: "light";
+
+			root.classList.add(systemTheme);
+			return;
 		}
 
-		// Update theme-color meta tag
-		const meta = document.querySelector('meta[name="theme-color"]');
-		if (meta) {
-			meta.setAttribute("content", resolved === "dark" ? "#0a0a0a" : "#ffffff");
-		}
+		root.classList.add(theme);
 	}, [theme]);
 
-	// Listen for system theme changes when in "system" mode
-	useEffect(() => {
-		if (theme !== "system") return;
+	const value = {
+		theme,
+		setTheme: (newTheme: Theme) => {
+			localStorage.setItem(STORAGE_KEY, newTheme);
+			setTheme(newTheme);
+		},
+	};
 
-		const mql = window.matchMedia("(prefers-color-scheme: dark)");
-		function handler() {
-			const resolved = resolveTheme("system");
-			setResolvedTheme(resolved);
-			const root = document.documentElement;
-			if (resolved === "dark") {
-				root.classList.add("dark");
-			} else {
-				root.classList.remove("dark");
-			}
-
-			const meta = document.querySelector('meta[name="theme-color"]');
-			if (meta) {
-				meta.setAttribute(
-					"content",
-					resolved === "dark" ? "#0a0a0a" : "#ffffff",
-				);
-			}
-		}
-
-		mql.addEventListener("change", handler);
-		return () => mql.removeEventListener("change", handler);
-	}, [theme]);
-
-	return (
-		<ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
-			{children}
-		</ThemeContext.Provider>
-	);
+	return <ThemeProviderContext value={value}>{children}</ThemeProviderContext>;
 }
 
 export function useTheme() {
-	const context = useContext(ThemeContext);
-	if (!context) {
+	const context = useContext(ThemeProviderContext);
+
+	if (context === undefined) {
 		throw new Error("useTheme must be used within a ThemeProvider");
 	}
+
 	return context;
 }

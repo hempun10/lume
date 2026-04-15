@@ -1,19 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { FormInput } from "@/components/form/form-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { type SignupFormValues, signupSchema } from "../schema";
 import type { SignupFormProps } from "../types";
-import { AuthInput } from "./auth-input";
 import { AuthLayout } from "./auth-layout";
 
 export function SignupForm({ onSubmit, error, onToggleMode }: SignupFormProps) {
@@ -44,49 +37,24 @@ export function SignupForm({ onSubmit, error, onToggleMode }: SignupFormProps) {
 							</Alert>
 						)}
 
-						{/* Email */}
-						<FormField
-							control={form.control}
+						<FormInput
 							name="email"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel className="text-sm font-[600]">Email</FormLabel>
-									<FormControl>
-										<AuthInput
-											icon={Mail}
-											type="email"
-											placeholder="you@example.com"
-											autoComplete="email"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
+							label="Email"
+							icon={Mail}
+							type="email"
+							placeholder="you@example.com"
+							autoComplete="email"
 						/>
 
-						{/* Password */}
-						<FormField
-							control={form.control}
+						<FormInput
 							name="password"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel className="text-sm font-[600]">Password</FormLabel>
-									<FormControl>
-										<AuthInput
-											icon={Lock}
-											type="password"
-											placeholder="At least 6 characters"
-											autoComplete="new-password"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
+							label="Password"
+							icon={Lock}
+							type="password"
+							placeholder="At least 6 characters"
+							autoComplete="new-password"
 						/>
 
-						{/* Submit */}
 						<Button
 							type="submit"
 							className="w-full rounded-2xl"

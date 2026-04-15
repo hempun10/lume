@@ -44,6 +44,24 @@ async function createUser(user: SeedUser) {
 		throw new Error(`Failed to create ${user.email}: ${error.message}`);
 	}
 
+	// Update profile with onboarding fields
+	const { error: profileError } = await supabase
+		.from("profiles")
+		.update({
+			date_of_birth: user.dateOfBirth,
+			gender: user.gender,
+			region: user.region ?? null,
+			interests: user.interests,
+			onboarding_completed: true,
+		})
+		.eq("id", data.user.id);
+
+	if (profileError) {
+		console.warn(
+			`  Warning: profile update failed for ${user.email}: ${profileError.message}`,
+		);
+	}
+
 	console.log(`  Created user: ${data.user.email} (${data.user.id})`);
 }
 

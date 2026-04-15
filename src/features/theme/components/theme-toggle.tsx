@@ -17,6 +17,7 @@ export function ThemeToggle() {
 			className="flex items-center justify-center rounded-xl p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
 			aria-label={`Current theme: ${theme}. Click to switch.`}
 			title={`Theme: ${theme}`}
+			suppressHydrationWarning
 		>
 			{theme === "light" && <Sun className="h-4 w-4" />}
 			{theme === "dark" && <Moon className="h-4 w-4" />}

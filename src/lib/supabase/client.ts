@@ -14,8 +14,10 @@ export const supabase = createClient<Database>(
  *
  * On a fresh page load, `supabase.auth.getSession()` can return `null` if called
  * before the auth client has initialised. This helper waits for the
- * `INITIAL_SESSION` event first, then delegates to `getSession()` so it always
- * returns the latest session (including after login/logout).
+ * `INITIAL_SESSION` event first, then reads the current session via `getSession()`.
+ *
+ * We only cache the initialisation wait, NOT the session itself — so the
+ * returned session is always up-to-date (e.g. after sign-in/sign-out).
  *
  * Safe to call multiple times — the initialisation wait resolves immediately
  * after the first `INITIAL_SESSION` event.

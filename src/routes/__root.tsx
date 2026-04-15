@@ -1,17 +1,23 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
+import type { QueryClient } from "@tanstack/react-query";
 import {
-	createRootRoute,
+	createRootRouteWithContext,
 	HeadContent,
+	Link,
 	Scripts,
 	useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { Button } from "../components/ui/button";
 import { AuthProvider } from "../features/auth/context/auth-context";
 import { ThemeProvider } from "../features/theme";
 import Footer from "../layout/Footer";
 import Header from "../layout/Header";
-
 import appCss from "../styles.css?url";
+
+interface RouterContext {
+	queryClient: QueryClient;
+}
 
 /**
  * Inline script injected into <head> to prevent flash of wrong theme (FOUC).
@@ -21,7 +27,7 @@ const themeScript = `(function(){try{var t=localStorage.getItem("lume-theme");va
 
 const SITE_URL = "https://lume.chat";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
@@ -90,7 +96,27 @@ export const Route = createRootRoute({
 		],
 	}),
 	shellComponent: RootDocument,
+	notFoundComponent: NotFound,
 });
+
+function NotFound() {
+	return (
+		<div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-24 text-center">
+			<p className="font-mono text-6xl font-medium text-muted-foreground">
+				404
+			</p>
+			<h1 className="text-2xl font-semibold tracking-tight text-foreground">
+				Page not found
+			</h1>
+			<p className="max-w-md text-muted-foreground">
+				The page you're looking for doesn't exist or has been moved.
+			</p>
+			<Button asChild className="mt-2 rounded-xl">
+				<Link to="/">Back to home</Link>
+			</Button>
+		</div>
+	);
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (

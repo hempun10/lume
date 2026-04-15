@@ -1,9 +1,10 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { useAuth } from "@/features/auth";
 import type { OnboardingFormValues } from "@/features/onboarding";
 import { OnboardingForm } from "@/features/onboarding";
-import { supabase } from "@/lib/supabase/client";
+import { completeOnboarding } from "@/features/onboarding/mutations";
+import { profileKeys } from "@/features/onboarding/queries";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
 	head: () => ({
@@ -15,28 +16,33 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 function OnboardingPage() {
 	const { user } = useAuth();
 	const navigate = useNavigate();
-	const [error, setError] = useState<string | null>(null);
+	const queryClient = useQueryClient();
+
+	const mutation = useMutation({
+		mutationFn: (data: OnboardingFormValues) => {
+			if (!user) throw new Error("You must be signed in.");
+			return completeOnboarding({ userId: user.id, data });
+		},
+		onSuccess: async () => {
+			// Wait for cache invalidation before navigating so the auth guard
+			// in _authenticated sees the updated onboarding_completed flag.
+			if (user) {
+				await queryClient.invalidateQueries({
+					queryKey: profileKeys.detail(user.id),
+				});
+			}
+			navigate({ to: "/dashboard" });
+		},
+	});
 
 	async function handleSubmit(data: OnboardingFormValues) {
-		setError(null);
-
-		if (!user) {
-			setError("You must be signed in.");
-			return;
-		}
-
-		const { error: updateError } = await supabase
-			.from("profiles")
-			.update({ display_name: data.displayName })
-			.eq("id", user.id);
-
-		if (updateError) {
-			setError(updateError.message);
-			return;
-		}
-
-		navigate({ to: "/dashboard" });
+		mutation.mutate(data);
 	}
 
-	return <OnboardingForm onSubmit={handleSubmit} error={error} />;
+	return (
+		<OnboardingForm
+			onSubmit={handleSubmit}
+			error={mutation.error?.message ?? null}
+		/>
+	);
 }

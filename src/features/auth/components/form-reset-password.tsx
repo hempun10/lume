@@ -1,19 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { FormInput } from "@/components/form/form-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { type ResetPasswordFormValues, resetPasswordSchema } from "../schema";
 import type { ResetPasswordFormProps } from "../types";
-import { AuthInput } from "./auth-input";
 import { AuthLayout } from "./auth-layout";
 
 export function ResetPasswordForm({
@@ -72,48 +65,22 @@ export function ResetPasswordForm({
 								</Alert>
 							)}
 
-							<FormField
-								control={form.control}
+							<FormInput
 								name="password"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel className="text-sm font-[600]">
-											New password
-										</FormLabel>
-										<FormControl>
-											<AuthInput
-												icon={Lock}
-												type="password"
-												placeholder="At least 6 characters"
-												autoComplete="new-password"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
+								label="New password"
+								icon={Lock}
+								type="password"
+								placeholder="At least 6 characters"
+								autoComplete="new-password"
 							/>
 
-							<FormField
-								control={form.control}
+							<FormInput
 								name="confirmPassword"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel className="text-sm font-[600]">
-											Confirm new password
-										</FormLabel>
-										<FormControl>
-											<AuthInput
-												icon={Lock}
-												type="password"
-												placeholder="Re-enter your password"
-												autoComplete="new-password"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
+								label="Confirm new password"
+								icon={Lock}
+								type="password"
+								placeholder="Re-enter your password"
+								autoComplete="new-password"
 							/>
 
 							<Button

@@ -1,10 +1,10 @@
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import {
 	ForgotPasswordForm,
 	type ForgotPasswordFormValues,
 } from "@/features/auth";
-import { supabase } from "@/lib/supabase/client";
+import { resetPasswordForEmail } from "@/features/auth/mutations";
 
 export const Route = createFileRoute("/forgot-password")({
 	head: () => ({
@@ -21,28 +21,22 @@ export const Route = createFileRoute("/forgot-password")({
 });
 
 function ForgotPasswordPage() {
-	const [error, setError] = useState<string | null>(null);
-	const [success, setSuccess] = useState(false);
+	const mutation = useMutation({
+		mutationFn: resetPasswordForEmail,
+	});
 
 	async function handleSubmit(data: ForgotPasswordFormValues) {
-		setError(null);
-		const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+		mutation.mutate({
+			email: data.email,
 			redirectTo: `${window.location.origin}/reset-password`,
 		});
-
-		if (error) {
-			setError(error.message);
-			return;
-		}
-
-		setSuccess(true);
 	}
 
 	return (
 		<ForgotPasswordForm
 			onSubmit={handleSubmit}
-			error={error}
-			success={success}
+			error={mutation.error?.message ?? null}
+			success={mutation.isSuccess}
 		/>
 	);
 }
