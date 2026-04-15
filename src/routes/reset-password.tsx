@@ -26,11 +26,14 @@ function ResetPasswordPage() {
 	const [hasSession, setHasSession] = useState(false);
 
 	useEffect(() => {
-		supabase.auth.onAuthStateChange((event) => {
+		const {
+			data: { subscription },
+		} = supabase.auth.onAuthStateChange((event) => {
 			if (event === "PASSWORD_RECOVERY") {
 				setHasSession(true);
 			}
 		});
+		return () => subscription.unsubscribe();
 	}, []);
 
 	async function handleSubmit(data: ResetPasswordFormValues) {
