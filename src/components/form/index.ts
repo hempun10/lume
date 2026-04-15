@@ -1,2 +1,1 @@
-export { FieldPassword } from "./field-password";
-export { FieldText } from "./field-text";
+export { FormInput } from "./form-input";

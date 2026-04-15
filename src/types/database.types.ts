@@ -37,20 +37,35 @@ export type Database = {
 			profiles: {
 				Row: {
 					created_at: string;
+					date_of_birth: string | null;
 					display_name: string | null;
+					gender: string | null;
 					id: string;
+					interests: string[];
+					onboarding_completed: boolean;
+					region: string | null;
 					updated_at: string;
 				};
 				Insert: {
 					created_at?: string;
+					date_of_birth?: string | null;
 					display_name?: string | null;
+					gender?: string | null;
 					id: string;
+					interests?: string[];
+					onboarding_completed?: boolean;
+					region?: string | null;
 					updated_at?: string;
 				};
 				Update: {
 					created_at?: string;
+					date_of_birth?: string | null;
 					display_name?: string | null;
+					gender?: string | null;
 					id?: string;
+					interests?: string[];
+					onboarding_completed?: boolean;
+					region?: string | null;
 					updated_at?: string;
 				};
 				Relationships: [];

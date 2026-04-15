@@ -2,6 +2,11 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { ThemeToggle } from "@/features/theme";
+import { cn } from "@/lib/utils";
+
+interface AuthLayoutClasses {
+	leftFormClassName?: string;
+}
 
 interface AuthLayoutProps {
 	children: ReactNode;
@@ -9,6 +14,8 @@ interface AuthLayoutProps {
 	quote?: string;
 	/** Caption below the quote in the right branding panel. */
 	caption?: string;
+	/** Additional classes for the left form card. */
+	classNames?: AuthLayoutClasses;
 }
 
 const DEFAULT_QUOTE =
@@ -25,6 +32,7 @@ export function AuthLayout({
 	children,
 	quote = DEFAULT_QUOTE,
 	caption = DEFAULT_CAPTION,
+	classNames,
 }: AuthLayoutProps) {
 	return (
 		<div className="flex h-screen flex-col">
@@ -44,11 +52,12 @@ export function AuthLayout({
 			<div className="flex min-h-0 flex-1">
 				{/* Left — form side */}
 				<div className="flex w-full items-center justify-center bg-muted p-6 lg:w-1/2 lg:p-10">
-					<div className="w-full max-w-[400px]">
-						{/* Logo icon */}
-						<div className="mb-6 flex h-9 w-9 items-center justify-center rounded-lg bg-foreground">
-							<Sparkles className="h-5 w-5 text-background" />
-						</div>
+					<div
+						className={cn(
+							"w-full max-w-[400px]",
+							classNames?.leftFormClassName,
+						)}
+					>
 						{children}
 					</div>
 				</div>

@@ -12,12 +12,15 @@ interface ThemeContextValue {
 	theme: Theme;
 	setTheme: (theme: Theme) => void;
 	resolvedTheme: "light" | "dark";
+	/** `false` during SSR and until the first client-side effect runs. */
+	mounted: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
 	theme: "system",
 	setTheme: () => {},
 	resolvedTheme: "light",
+	mounted: false,
 });
 
 const STORAGE_KEY = "lume-theme";
@@ -35,19 +38,25 @@ function resolveTheme(theme: Theme): "light" | "dark" {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-	const [theme, setThemeState] = useState<Theme>(() => {
-		if (typeof window === "undefined") return "system";
-		return (localStorage.getItem(STORAGE_KEY) as Theme) || "system";
-	});
-
-	const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(() =>
-		resolveTheme(theme),
-	);
+	// Always start with "system" so server and client produce identical HTML.
+	// The real stored preference is read in the mount effect below.
+	const [theme, setThemeState] = useState<Theme>("system");
+	const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+	const [mounted, setMounted] = useState(false);
 
 	function setTheme(newTheme: Theme) {
 		setThemeState(newTheme);
 		localStorage.setItem(STORAGE_KEY, newTheme);
 	}
+
+	// Read the stored theme on mount (client-only) to avoid hydration mismatch
+	useEffect(() => {
+		const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+		if (stored) {
+			setThemeState(stored);
+		}
+		setMounted(true);
+	}, []);
 
 	// Apply .dark class to <html> and update resolved theme
 	useEffect(() => {
@@ -97,7 +106,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 	}, [theme]);
 
 	return (
-		<ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
+		<ThemeContext.Provider value={{ theme, setTheme, resolvedTheme, mounted }}>
 			{children}
 		</ThemeContext.Provider>
 	);

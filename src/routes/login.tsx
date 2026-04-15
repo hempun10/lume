@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
@@ -5,8 +6,10 @@ import {
 	type LoginFormValues,
 	SignupForm,
 	type SignupFormValues,
+	useAuth,
 } from "@/features/auth";
-import { getSessionReady, supabase } from "@/lib/supabase/client";
+import { signInWithPassword, signUp } from "@/features/auth/mutations";
+import { getSessionReady } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/login")({
 	head: () => ({
@@ -19,6 +22,10 @@ export const Route = createFileRoute("/login")({
 		],
 	}),
 	async beforeLoad() {
+		// Server has no access to the client-side Supabase session (localStorage).
+		// Skip redirect check during SSR — the client will handle it after hydration.
+		if (typeof window === "undefined") return;
+
 		const session = await getSessionReady();
 
 		if (session) {
@@ -30,68 +37,58 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
 	const navigate = useNavigate();
+	const { session, isLoading } = useAuth();
 	const [mode, setMode] = useState<"login" | "signup">("login");
-	const [error, setError] = useState<string | null>(null);
 
-	// Client-side fallback: on a full page load (e.g. page.goto), beforeLoad runs
-	// on the server where there's no localStorage session. This effect catches the
-	// case where the client has a valid session after hydration.
+	// After SSR hydration, beforeLoad doesn't re-run. If the user is already
+	// signed in (session restored from localStorage), redirect to dashboard.
 	useEffect(() => {
-		getSessionReady().then((session) => {
-			if (session) {
-				navigate({ to: "/dashboard" });
-			}
-		});
-	}, [navigate]);
+		if (!isLoading && session) {
+			navigate({ to: "/dashboard" });
+		}
+	}, [isLoading, session, navigate]);
+
+	const loginMutation = useMutation({
+		mutationFn: signInWithPassword,
+		onSuccess: () => navigate({ to: "/dashboard" }),
+	});
+
+	const signupMutation = useMutation({
+		mutationFn: signUp,
+		// With email confirmations disabled, signUp auto-signs in the user.
+		// Redirect to onboarding so they can set their display name.
+		onSuccess: () => navigate({ to: "/onboarding" }),
+	});
 
 	function toggleMode() {
 		setMode((m) => (m === "login" ? "signup" : "login"));
-		setError(null);
+		loginMutation.reset();
+		signupMutation.reset();
 	}
 
 	async function handleLogin(data: LoginFormValues) {
-		setError(null);
-		const { error } = await supabase.auth.signInWithPassword({
-			email: data.email,
-			password: data.password,
-		});
-
-		if (error) {
-			setError(error.message);
-			return;
-		}
-
-		navigate({ to: "/dashboard" });
+		loginMutation.mutate({ email: data.email, password: data.password });
 	}
 
 	async function handleSignup(data: SignupFormValues) {
-		setError(null);
-		const { error } = await supabase.auth.signUp({
-			email: data.email,
-			password: data.password,
-		});
-
-		if (error) {
-			setError(error.message);
-			return;
-		}
-
-		// With email confirmations disabled, signUp auto-signs in the user.
-		// Redirect to onboarding so they can set their display name.
-		navigate({ to: "/onboarding" });
+		signupMutation.mutate({ email: data.email, password: data.password });
 	}
 
 	if (mode === "signup") {
 		return (
 			<SignupForm
 				onSubmit={handleSignup}
-				error={error}
+				error={signupMutation.error?.message ?? null}
 				onToggleMode={toggleMode}
 			/>
 		);
 	}
 
 	return (
-		<LoginForm onSubmit={handleLogin} error={error} onToggleMode={toggleMode} />
+		<LoginForm
+			onSubmit={handleLogin}
+			error={loginMutation.error?.message ?? null}
+			onToggleMode={toggleMode}
+		/>
 	);
 }

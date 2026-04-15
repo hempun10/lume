@@ -2,19 +2,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { FormInput } from "@/components/form/form-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { type ForgotPasswordFormValues, forgotPasswordSchema } from "../schema";
 import type { ForgotPasswordFormProps } from "../types";
-import { AuthInput } from "./auth-input";
 import { AuthLayout } from "./auth-layout";
 
 export function ForgotPasswordForm({
@@ -50,7 +43,7 @@ export function ForgotPasswordForm({
 											href="http://127.0.0.1:54324"
 											target="_blank"
 											rel="noreferrer"
-											className="underline font-medium"
+											className="font-medium underline"
 										>
 											http://127.0.0.1:54324
 										</a>
@@ -71,24 +64,13 @@ export function ForgotPasswordForm({
 								</Alert>
 							)}
 
-							<FormField
-								control={form.control}
+							<FormInput
 								name="email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel className="text-sm font-[600]">Email</FormLabel>
-										<FormControl>
-											<AuthInput
-												icon={Mail}
-												type="email"
-												placeholder="you@example.com"
-												autoComplete="email"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
+								label="Email"
+								icon={Mail}
+								type="email"
+								placeholder="you@example.com"
+								autoComplete="email"
 							/>
 
 							<Button

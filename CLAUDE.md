@@ -11,6 +11,7 @@ Originally scaffolded from a TanStack Start + Supabase Auth starter template, in
 
 - **Framework**: TanStack Start v1 (React 19, Vite 7, Nitro SSR)
 - **Auth & DB**: Supabase (email/password auth, PostgreSQL, RLS)
+- **Data Fetching**: TanStack Query (React Query) for caching, mutations, and server state; integrated with TanStack Router via `@tanstack/react-router-ssr-query` for automatic SSR dehydration/hydration
 - **Styling**: Tailwind CSS v4, shadcn/ui (Radix primitives), Lucide icons
 - **Code Quality**: Biome (lint/format), TypeScript (strict)
 - **Analytics**: Vercel Analytics (automatic page view tracking)
@@ -22,7 +23,7 @@ Originally scaffolded from a TanStack Start + Supabase Auth starter template, in
 src/
 ├── components/
 │   ├── ui/              # shadcn/ui primitives (button, card, input, label, alert, dialog, checkbox, form)
-│   ├── form/            # Reusable form field wrappers (FieldText, FieldPassword)
+│   ├── form/            # Reusable form field wrappers (FormInput)
 │   └── errors/          # Error handling components (ErrorBoundary, ErrorPage, NotFound)
 ├── features/            # Domain-based feature modules (each with components/, context/, guards/, types/, schema.ts)
 │   ├── auth/            # Auth feature
@@ -33,8 +34,8 @@ src/
 │   │   ├── schema.ts    # Zod validation schemas + inferred form value types
 │   │   └── index.ts     # Barrel exports (public API)
 │   ├── onboarding/      # Onboarding feature (post-signup profile setup)
-│   │   ├── components/  # OnboardingForm (display name input)
-│   │   ├── schema.ts    # Zod schema for onboarding form
+│   │   ├── components/  # OnboardingForm, InterestTagSelector, AuthSelect
+│   │   ├── schema.ts    # Zod schema + constants (GENDER_OPTIONS, INTEREST_OPTIONS)
 │   │   └── index.ts     # Barrel exports
 │   ├── dashboard/       # Dashboard feature
 │   │   ├── components/  # DashboardContent
@@ -73,10 +74,11 @@ src/
 - `src/features/auth/components/auth-layout.tsx` — Split-screen auth layout (UserJot-inspired: form left, branding panel right, customizable quote/caption)
 - `src/features/auth/components/auth-input.tsx` — Reusable styled input with left-side icon, used across all auth & onboarding forms
 - `src/features/auth/components/form-login.tsx` / `form-signup.tsx` / `form-forgot-password.tsx` / `form-reset-password.tsx` — Auth form components using React Hook Form + Zod
-- `src/features/onboarding/components/onboarding-form.tsx` — Post-signup onboarding form (display name)
-- `src/features/onboarding/schema.ts` — Zod schema for onboarding form
+- `src/features/onboarding/components/onboarding-form.tsx` — Post-signup onboarding form (display name, DOB, gender, region, interests)
+- `src/features/onboarding/components/interest-tag-selector.tsx` — Toggleable tag chip grid for selecting interests
+- `src/features/onboarding/schema.ts` — Zod schema for onboarding form + GENDER_OPTIONS + INTEREST_OPTIONS constants
 - `src/lib/supabase/client.ts` — Supabase client singleton + `getSessionReady()` helper
-- `src/components/form/field-text.tsx` / `field-password.tsx` — Reusable form field components wrapping shadcn Form primitives
+- `src/components/form/form-input.tsx` — Generic reusable form field component using `useFormContext()`, renders AuthInput by default or accepts children render function for custom controls
 - `src/components/errors/error-boundary.tsx` / `error-page.tsx` / `not-found.tsx` — Error handling components
 - `src/layout/Header.tsx` / `Footer.tsx` — App layout components
 - `src/layout/nav-config.ts` — Centralized navigation link definitions
@@ -100,14 +102,16 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 
 - **Protected routes** use `_authenticated.tsx` layout with a `beforeLoad` hook that checks auth state and redirects. It also checks if the user's profile is complete (has `display_name`); if not, it redirects to `/onboarding`.
 - **Auth flow** — Email/password only, no OAuth. Email confirmation is disabled (`enable_confirmations = false` in `supabase/config.toml`). Signup auto-signs in the user and redirects to `/onboarding`. Login redirects to `/dashboard`. Auth UI uses a UserJot-inspired split-screen layout (form card left, branding panel with dot-grid right).
-- **Onboarding** — New users are redirected to `/onboarding` after signup to set their display name. The `_authenticated` layout guard also redirects to onboarding if `display_name` is null, catching users who somehow skip it.
+- **Onboarding** — New users are redirected to `/onboarding` after signup to complete their profile (display name, date of birth, gender, region, interests). The `_authenticated` layout guard redirects to onboarding if `onboarding_completed` is false, catching users who somehow skip it. Users must be 18+ (DOB validated client-side). Region is optional. Interests use a tag chip selector (1–8 selections from a predefined list).
+- **Profiles table** has columns: `id`, `display_name`, `date_of_birth`, `gender`, `region`, `interests` (text[]), `onboarding_completed` (boolean), `created_at`, `updated_at`
 - **Session initialisation** — `getSessionReady()` in `src/lib/supabase/client.ts` waits for Supabase's `INITIAL_SESSION` event before calling `getSession()`. This prevents race conditions on fresh page loads where `getSession()` returns `null` before localStorage is restored. All `beforeLoad` guards use this helper via `requireAuth()`. The login page also has a client-side `useEffect` fallback because SSR `beforeLoad` runs server-side without access to localStorage.
 - **Auth state** is managed via `AuthContext` in `src/features/auth/` — access with `useAuth()` hook anywhere in the component tree
 - **Forms** use React Hook Form + Zod for type-safe validation. Reusable field components live in `src/components/form/`. Auth form components live in `src/features/auth/` and accept `onSubmit` callbacks with validated data.
 - **Feature-based architecture** — domain code is grouped by feature (`features/auth/`, `features/onboarding/`, `features/dashboard/`). Route files are thin shells that import UI from features and handle navigation/auth calls.
 - **Database types** are auto-generated from the Supabase schema — run `npm run db:types` after migration changes
-- **Profiles table** is auto-created on signup via a PostgreSQL trigger (`handle_new_user`)
+- **Profiles table** is auto-created on signup via a PostgreSQL trigger (`handle_new_user`). Profile fields (display_name, DOB, gender, region, interests) are set during onboarding.
 - **RLS policies** ensure users can only read/update their own profile
+- **Gender constraint** — Database CHECK constraint limits values to: male, female, non-binary, prefer-not-to-say
 - **Path alias**: `@/*` maps to `src/*`
 - **Dark mode** uses the `class` strategy (`@custom-variant dark` in styles.css). `ThemeProvider` in `src/features/theme/` manages light/dark/system preference with localStorage persistence (`lume-theme` key). An inline `<script>` in `__root.tsx` prevents flash of wrong theme. All UI uses shadcn semantic tokens (`text-foreground`, `bg-background`, `border-border`, etc.) — avoid hardcoded gray/neutral colors.
 - **Homepage** is the Lume landing page (hero, features, comparison, FAQ, CTA), always accessible (no auth redirect)

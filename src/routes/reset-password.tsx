@@ -1,9 +1,11 @@
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
 	ResetPasswordForm,
 	type ResetPasswordFormValues,
 } from "@/features/auth";
+import { updateUserPassword } from "@/features/auth/mutations";
 import { supabase } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/reset-password")({
@@ -21,8 +23,6 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
 	const navigate = useNavigate();
-	const [error, setError] = useState<string | null>(null);
-	const [success, setSuccess] = useState(false);
 	const [hasSession, setHasSession] = useState(false);
 
 	useEffect(() => {
@@ -36,26 +36,22 @@ function ResetPasswordPage() {
 		return () => subscription.unsubscribe();
 	}, []);
 
+	const mutation = useMutation({
+		mutationFn: updateUserPassword,
+		onSuccess: () => {
+			setTimeout(() => navigate({ to: "/dashboard" }), 2000);
+		},
+	});
+
 	async function handleSubmit(data: ResetPasswordFormValues) {
-		setError(null);
-		const { error } = await supabase.auth.updateUser({
-			password: data.password,
-		});
-
-		if (error) {
-			setError(error.message);
-			return;
-		}
-
-		setSuccess(true);
-		setTimeout(() => navigate({ to: "/dashboard" }), 2000);
+		mutation.mutate({ password: data.password });
 	}
 
 	return (
 		<ResetPasswordForm
 			onSubmit={handleSubmit}
-			error={error}
-			success={success}
+			error={mutation.error?.message ?? null}
+			success={mutation.isSuccess}
 			hasSession={hasSession}
 		/>
 	);
