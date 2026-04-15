@@ -5,7 +5,7 @@ import { DashboardContent } from "@/features/dashboard";
 export const Route = createFileRoute("/_authenticated/dashboard")({
 	head: () => ({
 		meta: [
-			{ title: "Dashboard | TanStack Start + Supabase Auth" },
+			{ title: "Dashboard | Lume" },
 			{ name: "robots", content: "noindex" },
 		],
 	}),

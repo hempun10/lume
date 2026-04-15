@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { LandingPage } from "@/features/landing";
 
 export const Route = createFileRoute("/")({
 	head: () => ({
 		meta: [
 			{
-				title:
-					"TanStack Start + Supabase Auth | Production-Ready Starter Template",
+				title: "Lume — Meet New People Through Chat & Games",
 			},
 			{
 				name: "description",
-				content: "Get started quickly with TanStack Start and Supabase Auth.",
+				content:
+					"Lume connects you with real people worldwide for spontaneous text chats and multiplayer games. Free, safe, and instant. The modern alternative to Omegle.",
 			},
 		],
 	}),
@@ -17,9 +18,5 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-	return (
-		<div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
-			<p className="text-muted-foreground">Welcome</p>
-		</div>
-	);
+	return <LandingPage />;
 }

@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase/client";
 export const Route = createFileRoute("/reset-password")({
 	head: () => ({
 		meta: [
-			{ title: "Reset Password | TanStack Start + Supabase Auth" },
+			{ title: "Reset Password | Lume" },
 			{
 				name: "description",
 				content: "Set a new password for your account.",

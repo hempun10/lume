@@ -1,10 +1,8 @@
-# TanStack Start + Supabase Auth Starter
+# Lume
 
-A production-ready starter template combining TanStack Start (full-stack React SSR framework) with Supabase authentication, protected routes, and shadcn/ui.
+A social platform for meeting strangers through text chat and multiplayer games — an alternative to Omegle and rumi.social. Built with TanStack Start (full-stack React SSR framework), Supabase authentication, protected routes, and shadcn/ui.
 
-This repository should be used as a guide for developers to be able to quickly reach for and create a TanStack Start project, with a Supabase backend. The documentation should be created in a way that allows uers to get started with minimal fuss.
-
-This has been inspired by the NextJs with Supabase example documentation and guide.
+Originally scaffolded from a TanStack Start + Supabase Auth starter template, inspired by:
 
 - https://github.com/vercel/next.js/blob/canary/examples/with-supabase/README.md
 - https://supabase.com/docs/guides/getting-started/quickstarts/nextjs
@@ -38,6 +36,9 @@ src/
 │       ├── components/  # DashboardContent
 │       ├── types/       # TypeScript interfaces
 │       └── index.ts     # Barrel exports
+│   └── landing/         # Landing page feature
+│       ├── components/  # Hero, Stats, Features, Comparison, HowItWorks, FAQ, CTA sections
+│       └── index.tsx    # LandingPage composite component
 ├── layout/              # App-wide layout components (Header, Footer, nav-config)
 ├── lib/                 # Library configurations
 │   ├── supabase/        # Supabase client singleton + getSessionReady()
@@ -94,7 +95,7 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 - **Profiles table** is auto-created on signup via a PostgreSQL trigger (`handle_new_user`)
 - **RLS policies** ensure users can only read/update their own profile
 - **Path alias**: `@/*` maps to `src/*`
-- **Homepage** is a minimal welcome page, always accessible (no auth redirect)
+- **Homepage** is the Lume landing page (hero, features, comparison, FAQ, CTA), always accessible (no auth redirect)
 
 ## Environment Variables
 

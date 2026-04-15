@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase/client";
 export const Route = createFileRoute("/forgot-password")({
 	head: () => ({
 		meta: [
-			{ title: "Forgot Password | TanStack Start + Supabase Auth" },
+			{ title: "Forgot Password | Lume" },
 			{
 				name: "description",
 				content:
