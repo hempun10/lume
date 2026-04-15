@@ -1,95 +1,134 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Lock, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { FieldPassword, FieldText } from "@/components/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
 import { type SignupFormValues, signupSchema } from "../schema";
 import type { SignupFormProps } from "../types";
+import { AuthLayout } from "./auth-layout";
 
 export function SignupForm({ onSubmit, error, onToggleMode }: SignupFormProps) {
 	const form = useForm<SignupFormValues>({
 		resolver: zodResolver(signupSchema),
-		defaultValues: {
-			displayName: "",
-			email: "",
-			password: "",
-			confirmPassword: "",
-		},
+		defaultValues: { email: "", password: "" },
 	});
 
 	return (
-		<div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4">
-			<Card className="w-full max-w-md">
-				<CardHeader>
-					<CardTitle className="text-2xl">Create account</CardTitle>
-					<CardDescription>Create an account to get started.</CardDescription>
-				</CardHeader>
+		<AuthLayout>
+			{/* Card */}
+			<div className="rounded-2xl border border-foreground/8 bg-card px-8 pb-7 pt-8 shadow-xl dark:border-foreground/10">
+				<h1 className="text-xl font-[600] tracking-[-0.01em] text-foreground">
+					Create an account
+				</h1>
+				<p className="mt-1.5 text-sm text-muted-foreground">
+					Get started with Lume in seconds.
+				</p>
+
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)}>
-						<CardContent className="space-y-4">
-							{error && (
-								<Alert variant="destructive">
-									<AlertDescription>{error}</AlertDescription>
-								</Alert>
+					<form
+						onSubmit={form.handleSubmit(onSubmit)}
+						className="mt-6 space-y-4"
+					>
+						{error && (
+							<Alert variant="destructive">
+								<AlertDescription>{error}</AlertDescription>
+							</Alert>
+						)}
+
+						{/* Email */}
+						<FormField
+							control={form.control}
+							name="email"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel className="text-sm font-[600]">Email</FormLabel>
+									<FormControl>
+										<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
+											<Mail className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
+											<input
+												type="email"
+												placeholder="you@example.com"
+												autoComplete="email"
+												className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+												{...field}
+											/>
+										</div>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
 							)}
-							<FieldText
-								control={form.control}
-								name="displayName"
-								label="Display name"
-								placeholder="Your name"
-								autoComplete="name"
-							/>
-							<FieldText
-								control={form.control}
-								name="email"
-								label="Email"
-								type="email"
-								placeholder="you@example.com"
-								autoComplete="email"
-							/>
-							<FieldPassword
-								control={form.control}
-								name="password"
-								label="Password"
-								autoComplete="new-password"
-							/>
-							<FieldPassword
-								control={form.control}
-								name="confirmPassword"
-								label="Confirm password"
-								autoComplete="new-password"
-							/>
-						</CardContent>
-						<CardFooter className="flex flex-col gap-4">
-							<Button
-								type="submit"
-								className="w-full"
-								disabled={form.formState.isSubmitting}
-							>
-								{form.formState.isSubmitting
-									? "Creating account..."
-									: "Create account"}
-							</Button>
-							<button
-								type="button"
-								onClick={onToggleMode}
-								className="text-sm text-muted-foreground hover:underline"
-							>
-								Already have an account? Log in
-							</button>
-						</CardFooter>
+						/>
+
+						{/* Password */}
+						<FormField
+							control={form.control}
+							name="password"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel className="text-sm font-[600]">Password</FormLabel>
+									<FormControl>
+										<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
+											<Lock className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
+											<input
+												type="password"
+												placeholder="At least 6 characters"
+												autoComplete="new-password"
+												className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+												{...field}
+											/>
+										</div>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						{/* Submit */}
+						<Button
+							type="submit"
+							className="w-full rounded-2xl"
+							disabled={form.formState.isSubmitting}
+						>
+							{form.formState.isSubmitting
+								? "Creating account..."
+								: "Create account"}
+						</Button>
 					</form>
 				</Form>
-			</Card>
-		</div>
+
+				{/* Terms */}
+				<p className="mt-4 text-center text-xs text-muted-foreground">
+					By creating an account, you agree to our{" "}
+					<a href="/terms" className="underline underline-offset-4">
+						Terms
+					</a>{" "}
+					and{" "}
+					<a href="/privacy" className="underline underline-offset-4">
+						Privacy Policy
+					</a>
+					.
+				</p>
+
+				{/* Toggle */}
+				<p className="mt-4 text-center text-sm text-muted-foreground">
+					Already have an account?{" "}
+					<button
+						type="button"
+						onClick={onToggleMode}
+						className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80"
+					>
+						Sign in
+					</button>
+				</p>
+			</div>
+		</AuthLayout>
 	);
 }

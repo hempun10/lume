@@ -29,8 +29,3 @@ export interface ResetPasswordFormProps {
 	success?: boolean;
 	hasSession: boolean;
 }
-
-export interface SignupSuccessProps {
-	email: string;
-	onBackToLogin: () => void;
-}

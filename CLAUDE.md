@@ -26,12 +26,16 @@ src/
 │   └── errors/          # Error handling components (ErrorBoundary, ErrorPage, NotFound)
 ├── features/            # Domain-based feature modules (each with components/, context/, guards/, types/, schema.ts)
 │   ├── auth/            # Auth feature
-│   │   ├── components/  # Form components (form-login, form-signup, etc.)
+│   │   ├── components/  # AuthLayout (split-screen), form-login, form-signup, form-forgot-password, form-reset-password
 │   │   ├── context/     # AuthContext provider + useAuth hook
 │   │   ├── guards/      # Route guard (guard-authenticated)
 │   │   ├── types/       # TypeScript interfaces (component props)
 │   │   ├── schema.ts    # Zod validation schemas + inferred form value types
 │   │   └── index.ts     # Barrel exports (public API)
+│   └── onboarding/      # Onboarding feature (post-signup profile setup)
+│       ├── components/  # OnboardingForm (display name input)
+│       ├── schema.ts    # Zod schema for onboarding form
+│       └── index.ts     # Barrel exports
 │   └── dashboard/       # Dashboard feature
 │       ├── components/  # DashboardContent
 │       ├── types/       # TypeScript interfaces
@@ -49,9 +53,10 @@ src/
 │   └── utils.ts         # cn() helper (shadcn)
 ├── routes/              # File-based routing (TanStack Router) — thin shells importing from features
 │   ├── __root.tsx       # Root layout (ThemeProvider, AuthProvider, Header, Footer)
-│   ├── _authenticated.tsx # Route guard layout (redirects to /login if unauthenticated)
+│   ├── _authenticated.tsx # Route guard layout (redirects to /login if unauthenticated, to /onboarding if profile incomplete)
 │   ├── _authenticated/dashboard.tsx # Protected dashboard page
-│   ├── login.tsx        # Combined login/signup (delegates to LoginForm/SignupForm/SignupSuccess)
+│   ├── _authenticated/onboarding.tsx # Post-signup onboarding (set display name)
+│   ├── login.tsx        # Combined login/signup (delegates to LoginForm/SignupForm)
 │   ├── forgot-password.tsx / reset-password.tsx # Password reset flow
 │   └── logout.tsx       # Sign out and redirect
 ├── types/               # TypeScript types (database.types.ts — auto-generated)
@@ -62,11 +67,13 @@ src/
 
 ### Key files
 
-- `src/features/auth/AuthContext.tsx` — React context providing `session`, `user`, `isLoading` via `useAuth()` hook
-- `src/features/auth/auth-guard.ts` — `requireAuth()` guard used by protected route layouts
-- `src/features/auth/schemas.ts` — Zod validation schemas for all auth forms (login, signup, forgot-password, reset-password)
-- `src/features/auth/LoginForm.tsx` / `SignupForm.tsx` / `ForgotPasswordForm.tsx` / `ResetPasswordForm.tsx` — Auth form components using React Hook Form + Zod
-- `src/features/auth/SignupSuccess.tsx` — Post-signup email confirmation UI
+- `src/features/auth/context/auth-context.tsx` — React context providing `session`, `user`, `isLoading` via `useAuth()` hook
+- `src/features/auth/guards/guard-authenticated.ts` — `requireAuth()` guard used by protected route layouts
+- `src/features/auth/schema.ts` — Zod validation schemas for auth forms (login: email+password, signup: email+password, forgot-password, reset-password)
+- `src/features/auth/components/auth-layout.tsx` — Split-screen auth layout (UserJot-inspired: form left, branding panel right)
+- `src/features/auth/components/form-login.tsx` / `form-signup.tsx` / `form-forgot-password.tsx` / `form-reset-password.tsx` — Auth form components using React Hook Form + Zod
+- `src/features/onboarding/components/onboarding-form.tsx` — Post-signup onboarding form (display name)
+- `src/features/onboarding/schema.ts` — Zod schema for onboarding form
 - `src/lib/supabase/client.ts` — Supabase client singleton + `getSessionReady()` helper
 - `src/components/form/field-text.tsx` / `field-password.tsx` — Reusable form field components wrapping shadcn Form primitives
 - `src/components/errors/error-boundary.tsx` / `error-page.tsx` / `not-found.tsx` — Error handling components
@@ -90,11 +97,13 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 
 ## Key Patterns
 
-- **Protected routes** use `_authenticated.tsx` layout with a `beforeLoad` hook that checks auth state and redirects
+- **Protected routes** use `_authenticated.tsx` layout with a `beforeLoad` hook that checks auth state and redirects. It also checks if the user's profile is complete (has `display_name`); if not, it redirects to `/onboarding`.
+- **Auth flow** — Email/password only, no OAuth. Email confirmation is disabled (`enable_confirmations = false` in `supabase/config.toml`). Signup auto-signs in the user and redirects to `/onboarding`. Login redirects to `/dashboard`. Auth UI uses a UserJot-inspired split-screen layout (form card left, branding panel with dot-grid right).
+- **Onboarding** — New users are redirected to `/onboarding` after signup to set their display name. The `_authenticated` layout guard also redirects to onboarding if `display_name` is null, catching users who somehow skip it.
 - **Session initialisation** — `getSessionReady()` in `src/lib/supabase/client.ts` waits for Supabase's `INITIAL_SESSION` event before calling `getSession()`. This prevents race conditions on fresh page loads where `getSession()` returns `null` before localStorage is restored. All `beforeLoad` guards use this helper via `requireAuth()`. The login page also has a client-side `useEffect` fallback because SSR `beforeLoad` runs server-side without access to localStorage.
 - **Auth state** is managed via `AuthContext` in `src/features/auth/` — access with `useAuth()` hook anywhere in the component tree
 - **Forms** use React Hook Form + Zod for type-safe validation. Reusable field components live in `src/components/form/`. Auth form components live in `src/features/auth/` and accept `onSubmit` callbacks with validated data.
-- **Feature-based architecture** — domain code is grouped by feature (`features/auth/`, `features/dashboard/`). Route files are thin shells that import UI from features and handle navigation/auth calls.
+- **Feature-based architecture** — domain code is grouped by feature (`features/auth/`, `features/onboarding/`, `features/dashboard/`). Route files are thin shells that import UI from features and handle navigation/auth calls.
 - **Database types** are auto-generated from the Supabase schema — run `npm run db:types` after migration changes
 - **Profiles table** is auto-created on signup via a PostgreSQL trigger (`handle_new_user`)
 - **RLS policies** ensure users can only read/update their own profile

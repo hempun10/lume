@@ -1,19 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { FieldPassword } from "@/components/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
 import { type ResetPasswordFormValues, resetPasswordSchema } from "../schema";
 import type { ResetPasswordFormProps } from "../types";
+import { AuthLayout } from "./auth-layout";
 
 export function ResetPasswordForm({
 	onSubmit,
@@ -28,73 +28,112 @@ export function ResetPasswordForm({
 
 	if (!hasSession) {
 		return (
-			<div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4">
-				<Card className="w-full max-w-md">
-					<CardHeader>
-						<CardTitle className="text-2xl">Reset password</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className="text-muted-foreground">
-							Verifying your reset link...
-						</p>
-					</CardContent>
-				</Card>
-			</div>
+			<AuthLayout>
+				<div className="rounded-2xl border border-foreground/8 bg-card px-8 pb-7 pt-8 shadow-xl dark:border-foreground/10">
+					<h1 className="text-xl font-[600] tracking-[-0.01em] text-foreground">
+						Reset password
+					</h1>
+					<p className="mt-4 text-sm text-muted-foreground">
+						Verifying your reset link...
+					</p>
+				</div>
+			</AuthLayout>
 		);
 	}
 
 	return (
-		<div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4">
-			<Card className="w-full max-w-md">
-				<CardHeader>
-					<CardTitle className="text-2xl">Set new password</CardTitle>
-					<CardDescription>Enter your new password below.</CardDescription>
-				</CardHeader>
+		<AuthLayout>
+			<div className="rounded-2xl border border-foreground/8 bg-card px-8 pb-7 pt-8 shadow-xl dark:border-foreground/10">
+				<h1 className="text-xl font-[600] tracking-[-0.01em] text-foreground">
+					Set new password
+				</h1>
+				<p className="mt-1.5 text-sm text-muted-foreground">
+					Enter your new password below.
+				</p>
+
 				{success ? (
-					<CardContent>
+					<div className="mt-6">
 						<Alert>
 							<AlertDescription>
 								Password updated successfully. Redirecting to dashboard...
 							</AlertDescription>
 						</Alert>
-					</CardContent>
+					</div>
 				) : (
 					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)}>
-							<CardContent className="space-y-4">
-								{error && (
-									<Alert variant="destructive">
-										<AlertDescription>{error}</AlertDescription>
-									</Alert>
+						<form
+							onSubmit={form.handleSubmit(onSubmit)}
+							className="mt-6 space-y-4"
+						>
+							{error && (
+								<Alert variant="destructive">
+									<AlertDescription>{error}</AlertDescription>
+								</Alert>
+							)}
+
+							<FormField
+								control={form.control}
+								name="password"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-[600]">
+											New password
+										</FormLabel>
+										<FormControl>
+											<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
+												<Lock className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
+												<input
+													type="password"
+													placeholder="At least 6 characters"
+													autoComplete="new-password"
+													className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+													{...field}
+												/>
+											</div>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
 								)}
-								<FieldPassword
-									control={form.control}
-									name="password"
-									label="New password"
-									autoComplete="new-password"
-								/>
-								<FieldPassword
-									control={form.control}
-									name="confirmPassword"
-									label="Confirm new password"
-									autoComplete="new-password"
-								/>
-							</CardContent>
-							<CardFooter>
-								<Button
-									type="submit"
-									className="w-full"
-									disabled={form.formState.isSubmitting}
-								>
-									{form.formState.isSubmitting
-										? "Updating..."
-										: "Update password"}
-								</Button>
-							</CardFooter>
+							/>
+
+							<FormField
+								control={form.control}
+								name="confirmPassword"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-[600]">
+											Confirm new password
+										</FormLabel>
+										<FormControl>
+											<div className="flex items-center rounded-lg border border-foreground/10 transition-colors hover:border-foreground/20 focus-within:ring-2 focus-within:ring-ring dark:border-foreground/10">
+												<Lock className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
+												<input
+													type="password"
+													placeholder="Re-enter your password"
+													autoComplete="new-password"
+													className="h-9 w-full bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+													{...field}
+												/>
+											</div>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<Button
+								type="submit"
+								className="w-full rounded-2xl"
+								disabled={form.formState.isSubmitting}
+							>
+								{form.formState.isSubmitting
+									? "Updating..."
+									: "Update password"}
+							</Button>
 						</form>
 					</Form>
 				)}
-			</Card>
-		</div>
+			</div>
+		</AuthLayout>
 	);
 }
