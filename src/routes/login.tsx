@@ -12,7 +12,7 @@ import { getSessionReady, supabase } from "@/lib/supabase/client";
 export const Route = createFileRoute("/login")({
 	head: () => ({
 		meta: [
-			{ title: "Sign In | TanStack Start + Supabase Auth" },
+			{ title: "Sign In | Lume" },
 			{
 				name: "description",
 				content: "Sign in or create an account to access your dashboard.",

@@ -1,4 +1,4 @@
-# TanStack Start + Supabase Auth
+# Lume
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
@@ -6,11 +6,13 @@
 ![TanStack Start](https://img.shields.io/badge/TanStack_Start-latest-orange)
 ![Supabase](https://img.shields.io/badge/Supabase-Auth-green)
 
-A starter template demonstrating **TanStack Start** with **Supabase Auth**, protected routes, and **shadcn/ui**.
+A social platform for meeting strangers through text chat and multiplayer games. An alternative to **Omegle** and **rumi.social**.
 
-[![Live Demo](public/og-image.png)](https://tanstack-start-supabase.vercel.app/)
+Built with **TanStack Start**, **Supabase Auth**, protected routes, and **shadcn/ui**.
 
-**[Live Demo](https://tanstack-start-supabase.vercel.app/)**
+[![Live Demo](public/og-image.svg)](https://lume.chat)
+
+**[Live Demo](https://lume.chat)**
 
 ## What's Included
 
