@@ -20,36 +20,53 @@ This has been inspired by the NextJs with Supabase example documentation and gui
 
 ## Project Structure
 
-- `src/routes/` — File-based routing (TanStack Router)
-  - `__root.tsx` — Root layout (AuthProvider, Header, Vercel Analytics)
-  - `_authenticated.tsx` — Route guard layout (redirects to `/login` if unauthenticated)
-  - `_authenticated/dashboard.tsx` — Protected dashboard page
-  - `(clean-up)/` — Pathless route group containing optional demo pages (removable via `npm run cleanup`)
-    - `about.tsx` — Public about page with project info and links
-    - `cleanup.tsx` — Cleanup script info page (what it removes, how it works, route group explanation)
-    - `features.tsx` — Public features overview with detailed feature grid
-    - `release-notes/index.tsx` — Release notes listing page
-    - `release-notes/v1-0-0.tsx` etc. — Individual release note pages (use hyphens not dots for TanStack Router)
-  - `login.tsx` — Combined login/signup form (includes client-side `useEffect` redirect fallback for SSR)
-  - `forgot-password.tsx` / `reset-password.tsx` — Password reset flow
-- `src/data/releases.ts` — Single source of truth for release metadata (`ReleaseMetadata` interface, `releases` array, `getReleaseByVersion()` helper)
-- `src/components/release-notes/ReleaseNoteLayout.tsx` — Shared layout wrapper for individual release note pages (background, article, header, sections)
-- `src/components/release-notes/ReleaseNoteHeader.tsx` — Shared header component (back link, version badge, title, date, GitHub issue links)
-- `src/components/release-notes/ReleaseNoteDetail.tsx` — Renders release sections from data (supports backtick-delimited inline code in items)
-- `src/context/AuthContext.tsx` — React context providing `session`, `user`, `isLoading` via `useAuth()` hook
-- `src/utils/supabase.ts` — Supabase client singleton + `getSessionReady()` helper (waits for `INITIAL_SESSION` before checking auth, then delegates to `getSession()` for latest state)
-- `src/utils/auth.ts` — `requireAuth()` guard used by protected route layouts (uses `getSessionReady()`)
-- `src/utils/clipboard.ts` — `copyToClipboard()` utility for clipboard operations
-- `src/hooks/useCopyToClipboard.ts` — React hook wrapping clipboard utility with copied state
-- `src/components/Footer.tsx` — Site-wide footer (release notes link, GitHub link)
-- `src/components/ui/` — shadcn/ui components (button, card, input, label, alert, dialog, checkbox)
-- `src/components/tutorial/` — Onboarding tutorial components (TutorialStep, ConnectSupabaseSteps, SignUpUserSteps)
-- `src/hooks/useSetupStatus.ts` — Hook that detects setup progress (env vars, Supabase reachability, user sign-up)
-- `src/types/database.types.ts` — Auto-generated Supabase schema types
-- `supabase/migrations/` — SQL migrations (profiles table, RLS policies, triggers)
-- `supabase/seed-data.ts` — Single source of truth for seed/test user data
-- `supabase/seed.ts` — Seed script (imports from seed-data.ts)
-- `scripts/cleanup.ts` — Interactive CLI to remove optional features (demo pages, analytics) and rename the project (see `docs/cleanup/1-read-me.md`)
+```
+src/
+├── components/
+│   ├── ui/              # shadcn/ui primitives (button, card, input, label, alert, dialog, checkbox, form)
+│   ├── form/            # Reusable form field wrappers (FieldText, FieldPassword)
+│   └── errors/          # Error handling components (ErrorBoundary, ErrorPage, NotFound)
+├── features/            # Domain-based feature modules (each with components/, context/, guards/, types/, schema.ts)
+│   ├── auth/            # Auth feature
+│   │   ├── components/  # Form components (form-login, form-signup, etc.)
+│   │   ├── context/     # AuthContext provider + useAuth hook
+│   │   ├── guards/      # Route guard (guard-authenticated)
+│   │   ├── types/       # TypeScript interfaces (component props)
+│   │   ├── schema.ts    # Zod validation schemas + inferred form value types
+│   │   └── index.ts     # Barrel exports (public API)
+│   └── dashboard/       # Dashboard feature
+│       ├── components/  # DashboardContent
+│       ├── types/       # TypeScript interfaces
+│       └── index.ts     # Barrel exports
+├── layout/              # App-wide layout components (Header, Footer, nav-config)
+├── lib/                 # Library configurations
+│   ├── supabase/        # Supabase client singleton + getSessionReady()
+│   └── utils.ts         # cn() helper (shadcn)
+├── routes/              # File-based routing (TanStack Router) — thin shells importing from features
+│   ├── __root.tsx       # Root layout (AuthProvider, Header, Footer)
+│   ├── _authenticated.tsx # Route guard layout (redirects to /login if unauthenticated)
+│   ├── _authenticated/dashboard.tsx # Protected dashboard page
+│   ├── login.tsx        # Combined login/signup (delegates to LoginForm/SignupForm/SignupSuccess)
+│   ├── forgot-password.tsx / reset-password.tsx # Password reset flow
+│   └── logout.tsx       # Sign out and redirect
+├── types/               # TypeScript types (database.types.ts — auto-generated)
+├── router.tsx
+├── routeTree.gen.ts
+└── styles.css
+```
+
+### Key files
+
+- `src/features/auth/AuthContext.tsx` — React context providing `session`, `user`, `isLoading` via `useAuth()` hook
+- `src/features/auth/auth-guard.ts` — `requireAuth()` guard used by protected route layouts
+- `src/features/auth/schemas.ts` — Zod validation schemas for all auth forms (login, signup, forgot-password, reset-password)
+- `src/features/auth/LoginForm.tsx` / `SignupForm.tsx` / `ForgotPasswordForm.tsx` / `ResetPasswordForm.tsx` — Auth form components using React Hook Form + Zod
+- `src/features/auth/SignupSuccess.tsx` — Post-signup email confirmation UI
+- `src/lib/supabase/client.ts` — Supabase client singleton + `getSessionReady()` helper
+- `src/components/form/field-text.tsx` / `field-password.tsx` — Reusable form field components wrapping shadcn Form primitives
+- `src/components/errors/error-boundary.tsx` / `error-page.tsx` / `not-found.tsx` — Error handling components
+- `src/layout/Header.tsx` / `Footer.tsx` — App layout components
+- `src/layout/nav-config.ts` — Centralized navigation link definitions
 
 ## Key Commands
 
@@ -69,13 +86,15 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 ## Key Patterns
 
 - **Protected routes** use `_authenticated.tsx` layout with a `beforeLoad` hook that checks auth state and redirects
-- **Session initialisation** — `getSessionReady()` in `src/utils/supabase.ts` waits for Supabase's `INITIAL_SESSION` event before calling `getSession()`. This prevents race conditions on fresh page loads where `getSession()` returns `null` before localStorage is restored. All `beforeLoad` guards use this helper via `requireAuth()`. The login page also has a client-side `useEffect` fallback because SSR `beforeLoad` runs server-side without access to localStorage.
-- **Auth state** is managed via `AuthContext` — access with `useAuth()` hook anywhere in the component tree
+- **Session initialisation** — `getSessionReady()` in `src/lib/supabase/client.ts` waits for Supabase's `INITIAL_SESSION` event before calling `getSession()`. This prevents race conditions on fresh page loads where `getSession()` returns `null` before localStorage is restored. All `beforeLoad` guards use this helper via `requireAuth()`. The login page also has a client-side `useEffect` fallback because SSR `beforeLoad` runs server-side without access to localStorage.
+- **Auth state** is managed via `AuthContext` in `src/features/auth/` — access with `useAuth()` hook anywhere in the component tree
+- **Forms** use React Hook Form + Zod for type-safe validation. Reusable field components live in `src/components/form/`. Auth form components live in `src/features/auth/` and accept `onSubmit` callbacks with validated data.
+- **Feature-based architecture** — domain code is grouped by feature (`features/auth/`, `features/dashboard/`). Route files are thin shells that import UI from features and handle navigation/auth calls.
 - **Database types** are auto-generated from the Supabase schema — run `npm run db:types` after migration changes
 - **Profiles table** is auto-created on signup via a PostgreSQL trigger (`handle_new_user`)
 - **RLS policies** ensure users can only read/update their own profile
 - **Path alias**: `@/*` maps to `src/*`
-- **Homepage tutorial** shows auto-checking checklists that detect setup progress (env vars → Supabase connection → user sign-up). The homepage is always accessible (no auth redirect) for SEO and onboarding
+- **Homepage** is a minimal welcome page, always accessible (no auth redirect)
 
 ## Environment Variables
 

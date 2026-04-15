@@ -1,6 +1,5 @@
 {
-  "name": "tanstack-start-supabase-auth",
-  "version": "1.4.0",
+  "name": "zingr",
   "private": true,
   "type": "module",
   "imports": {
@@ -20,10 +19,10 @@
     "db:seed": "tsx --env-file=.env supabase/seed.ts",
     "db:types": "supabase gen types typescript --local > src/types/database.types.ts && biome check --write src/types/database.types.ts",
     "db:migrate": "supabase migration up --local && npm run db:types",
-    "cleanup": "tsx scripts/cleanup.ts",
     "prepare": "husky"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@supabase/supabase-js": "2.97.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "^0.7.0",
@@ -32,20 +31,20 @@
     "@tanstack/react-router-ssr-query": "^1.131.7",
     "@tanstack/react-start": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
-    "@vercel/analytics": "^1.6.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "0.545.0",
     "nitro": "npm:nitro-nightly@latest",
-    "radix-ui": "1.4.3",
+    "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-hook-form": "^7.72.1",
     "tailwind-merge": "3.5.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
-    "@clack/prompts": "1.0.1",
     "@tanstack/devtools-vite": "^0.3.11",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",
