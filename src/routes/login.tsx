@@ -1,6 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import {
+	createFileRoute,
+	Navigate,
+	redirect,
+	useNavigate,
+} from "@tanstack/react-router";
+import { useState } from "react";
 import {
 	LoginForm,
 	type LoginFormValues,
@@ -40,14 +45,6 @@ function LoginPage() {
 	const { session, isLoading } = useAuth();
 	const [mode, setMode] = useState<"login" | "signup">("login");
 
-	// After SSR hydration, beforeLoad doesn't re-run. If the user is already
-	// signed in (session restored from localStorage), redirect to dashboard.
-	useEffect(() => {
-		if (!isLoading && session) {
-			navigate({ to: "/dashboard" });
-		}
-	}, [isLoading, session, navigate]);
-
 	const loginMutation = useMutation({
 		mutationFn: signInWithPassword,
 		onSuccess: () => navigate({ to: "/dashboard" }),
@@ -59,6 +56,12 @@ function LoginPage() {
 		// Redirect to onboarding so they can set their display name.
 		onSuccess: () => navigate({ to: "/onboarding" }),
 	});
+
+	// After SSR hydration, beforeLoad doesn't re-run. If the user is already
+	// signed in (session restored from localStorage), redirect to dashboard.
+	if (!isLoading && session) {
+		return <Navigate to="/dashboard" />;
+	}
 
 	function toggleMode() {
 		setMode((m) => (m === "login" ? "signup" : "login"));

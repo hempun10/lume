@@ -2,12 +2,11 @@ import type { Session } from "@supabase/supabase-js";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
+	Navigate,
 	Outlet,
 	redirect,
 	useLocation,
-	useNavigate,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { requireAuth, useAuth } from "@/features/auth";
 import { profileOnboardingOptions } from "@/features/onboarding/queries";
 
@@ -69,19 +68,27 @@ function AuthPending() {
  * beforeLoad, so the route context stays null. We use useAuth() (backed by
  * Supabase's onAuthStateChange listener) to detect the real session after
  * hydration and guard accordingly.
+ *
+ * To avoid a race condition after sign-in (where beforeLoad has already
+ * confirmed auth via Supabase client, but useAuth()'s React state hasn't
+ * processed the SIGNED_IN event yet), we fall back to the route context
+ * session from beforeLoad.
  */
 function AuthenticatedLayout() {
-	const { session, user, isLoading } = useAuth();
-	const navigate = useNavigate();
+	const { session: routeSession } = Route.useRouteContext();
+	const { session: authSession, isLoading } = useAuth();
 
-	useEffect(() => {
-		if (!isLoading && !session) {
-			navigate({ to: "/login" });
-		}
-	}, [isLoading, session, navigate]);
+	// Use whichever session is available — reactive auth state takes priority,
+	// falling back to the route context session that beforeLoad already verified.
+	const session = authSession ?? routeSession;
+	const user = session?.user ?? null;
 
-	if (isLoading || !session || !user) {
+	if (isLoading) {
 		return <AuthPending />;
+	}
+
+	if (!session || !user) {
+		return <Navigate to="/login" />;
 	}
 
 	return <OnboardingGate userId={user.id} />;
@@ -92,20 +99,15 @@ function AuthenticatedLayout() {
  * This runs as a component (not in beforeLoad) to cover the SSR → hydration
  * path where beforeLoad doesn't re-run. Uses useSuspenseQuery so the data
  * is guaranteed available when rendering — the pending boundary is AuthPending.
+ *
+ * Uses declarative <Navigate> instead of useEffect + navigate for redirects.
  */
 function OnboardingGate({ userId }: { userId: string }) {
 	const { data: profile } = useSuspenseQuery(profileOnboardingOptions(userId));
-	const navigate = useNavigate();
 	const { pathname } = useLocation();
 
-	useEffect(() => {
-		if (!profile?.onboarding_completed && pathname !== "/onboarding") {
-			navigate({ to: "/onboarding" });
-		}
-	}, [profile, pathname, navigate]);
-
 	if (!profile?.onboarding_completed && pathname !== "/onboarding") {
-		return <AuthPending />;
+		return <Navigate to="/onboarding" />;
 	}
 
 	return <Outlet />;
