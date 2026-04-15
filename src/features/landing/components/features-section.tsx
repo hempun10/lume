@@ -151,7 +151,6 @@ function FeatureBlock({
 					))}
 				</div>
 			</div>
-
 			{callout && (
 				<div className="mt-10 flex max-w-2xl gap-4">
 					<div className="w-1 shrink-0 rounded-full bg-brand-500" />
@@ -166,7 +165,8 @@ function FeatureBlock({
 
 export function FeaturesSection() {
 	return (
-		<>
+		// biome-ignore lint/correctness/useUniqueElementIds: anchor ID for in-page navigation
+		<div id="features">
 			<FeatureBlock
 				label="Text Chat"
 				labelColor="bg-brand-500"
@@ -196,6 +196,6 @@ export function FeaturesSection() {
 				description="We built Lume because the alternatives treat safety as a checkbox. Our AI moderation, instant blocking, and anonymous-first design mean you can be yourself without worrying."
 				features={safetyFeatures}
 			/>
-		</>
+		</div>
 	);
 }

@@ -1,27 +1,23 @@
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "../context/theme-context";
 
 export function ThemeToggle() {
 	const { theme, setTheme } = useTheme();
 
-	function cycle() {
-		if (theme === "light") setTheme("dark");
-		else if (theme === "dark") setTheme("system");
-		else setTheme("light");
+	function toggle() {
+		setTheme(theme === "dark" ? "light" : "dark");
 	}
 
 	return (
 		<button
 			type="button"
-			onClick={cycle}
-			className="flex items-center justify-center rounded-xl p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-			aria-label={`Current theme: ${theme}. Click to switch.`}
-			title={`Theme: ${theme}`}
+			onClick={toggle}
+			className="relative flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+			aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
 			suppressHydrationWarning
 		>
-			{theme === "light" && <Sun className="h-4 w-4" />}
-			{theme === "dark" && <Moon className="h-4 w-4" />}
-			{theme === "system" && <Monitor className="h-4 w-4" />}
+			<Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+			<Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
 		</button>
 	);
 }

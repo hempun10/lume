@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "dark" | "light" | "system";
+type Theme = "dark" | "light";
 
 interface ThemeProviderState {
 	theme: Theme;
@@ -8,7 +8,7 @@ interface ThemeProviderState {
 }
 
 const initialState: ThemeProviderState = {
-	theme: "system",
+	theme: "light",
 	setTheme: () => null,
 };
 
@@ -18,7 +18,7 @@ const STORAGE_KEY = "lume-theme";
 
 export function ThemeProvider({
 	children,
-	defaultTheme = "system",
+	defaultTheme = "light",
 }: {
 	children: React.ReactNode;
 	defaultTheme?: Theme;
@@ -32,17 +32,6 @@ export function ThemeProvider({
 		const root = window.document.documentElement;
 
 		root.classList.remove("light", "dark");
-
-		if (theme === "system") {
-			const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-				.matches
-				? "dark"
-				: "light";
-
-			root.classList.add(systemTheme);
-			return;
-		}
-
 		root.classList.add(theme);
 	}, [theme]);
 

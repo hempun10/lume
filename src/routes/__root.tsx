@@ -5,14 +5,12 @@ import {
 	HeadContent,
 	Link,
 	Scripts,
-	useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Button } from "../components/ui/button";
+import { TooltipProvider } from "../components/ui/tooltip";
 import { AuthProvider } from "../features/auth/context/auth-context";
 import { ThemeProvider } from "../features/theme";
-import Footer from "../layout/Footer";
-import Header from "../layout/Header";
 import appCss from "../styles.css?url";
 
 interface RouterContext {
@@ -22,8 +20,9 @@ interface RouterContext {
 /**
  * Inline script injected into <head> to prevent flash of wrong theme (FOUC).
  * Runs before React hydrates — reads localStorage and applies .dark class immediately.
+ * Only checks for "dark" — light is the default.
  */
-const themeScript = `(function(){try{var t=localStorage.getItem("lume-theme");var d=document.documentElement;if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)){d.classList.add("dark")}}catch(e){}})();`;
+const themeScript = `(function(){try{if(localStorage.getItem("lume-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
 
 const SITE_URL = "https://lume.chat";
 
@@ -129,47 +128,24 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<body>
 				<ThemeProvider>
 					<AuthProvider>
-						<AppShell>{children}</AppShell>
-						<TanStackDevtools
-							config={{
-								position: "bottom-right",
-							}}
-							plugins={[
-								{
-									name: "Tanstack Router",
-									render: <TanStackRouterDevtoolsPanel />,
-								},
-							]}
-						/>
-						<Scripts />
+						<TooltipProvider>
+							{children}
+							<TanStackDevtools
+								config={{
+									position: "bottom-right",
+								}}
+								plugins={[
+									{
+										name: "Tanstack Router",
+										render: <TanStackRouterDevtoolsPanel />,
+									},
+								]}
+							/>
+							<Scripts />
+						</TooltipProvider>
 					</AuthProvider>
 				</ThemeProvider>
 			</body>
 		</html>
-	);
-}
-
-/** Routes that use AuthLayout (full-screen with own nav) — hide global Header/Footer. */
-const AUTH_ROUTES = [
-	"/login",
-	"/forgot-password",
-	"/reset-password",
-	"/onboarding",
-];
-
-function AppShell({ children }: { children: React.ReactNode }) {
-	const { pathname } = useLocation();
-	const isAuthPage = AUTH_ROUTES.includes(pathname);
-
-	if (isAuthPage) {
-		return <>{children}</>;
-	}
-
-	return (
-		<>
-			<Header />
-			{children}
-			<Footer />
-		</>
 	);
 }
