@@ -14,7 +14,7 @@ This has been inspired by the NextJs with Supabase example documentation and gui
 - **Framework**: TanStack Start v1 (React 19, Vite 7, Nitro SSR)
 - **Auth & DB**: Supabase (email/password auth, PostgreSQL, RLS)
 - **Styling**: Tailwind CSS v4, shadcn/ui (Radix primitives), Lucide icons
-- **Code Quality**: Biome (lint/format), TypeScript (strict), Vitest
+- **Code Quality**: Biome (lint/format), TypeScript (strict)
 - **Analytics**: Vercel Analytics (automatic page view tracking)
 - **Deployment**: Vercel via GitHub Actions CI/CD
 
@@ -49,13 +49,7 @@ This has been inspired by the NextJs with Supabase example documentation and gui
 - `supabase/migrations/` — SQL migrations (profiles table, RLS policies, triggers)
 - `supabase/seed-data.ts` — Single source of truth for seed/test user data
 - `supabase/seed.ts` — Seed script (imports from seed-data.ts)
-- `e2e/` — Playwright E2E tests
-- `e2e/auth.spec.ts` — Unauthenticated auth flow tests (login, bad credentials, logout, redirect guard)
-- `e2e/auth-redirect.spec.ts` — Authenticated redirect tests (runs under `authenticated` CI project)
-- `e2e/helpers.ts` — Shared test utilities (imports seed users from seed-data.ts)
-- `playwright.config.ts` — Playwright configuration (local vs CI project setup)
-- `vitest.config.ts` — Vitest configuration (excludes `e2e/` directory)
-- `scripts/cleanup.ts` — Interactive CLI to remove optional features (demo pages, e2e, analytics) and rename the project (see `docs/cleanup/1-read-me.md`)
+- `scripts/cleanup.ts` — Interactive CLI to remove optional features (demo pages, analytics) and rename the project (see `docs/cleanup/1-read-me.md`)
 
 ## Key Commands
 
@@ -69,10 +63,7 @@ npm run lint             # Biome lint
 npm run format           # Biome format
 npm run check            # Lint + format
 npm run typecheck        # TypeScript type checking
-npm run test             # Vitest unit tests
-npm run test:e2e         # Playwright E2E tests
-npm run test:e2e:ui      # Playwright E2E tests (interactive UI)
-npm run cleanup          # Interactive cleanup — remove demo pages, e2e, analytics; rename project
+npm run cleanup          # Interactive cleanup — remove demo pages, analytics; rename project
 ```
 
 ## Key Patterns
@@ -105,17 +96,7 @@ npm run cleanup          # Interactive cleanup — remove demo pages, e2e, analy
 
 ## Seed Data
 
-Seed data lives in `supabase/seed-data.ts` as the single source of truth. Always reference seed data from this file rather than hardcoding values (in tests, scripts, etc.). Keep `seed-data.ts` and `seed.ts` up to date when schema or test data changes.
-
-## E2E Tests
-
-See `docs/e2e-tests/1-read-me.md` for full documentation. Key points:
-
-- Tests run against a real local Supabase instance
-- Local: single `chromium` project, tests handle their own auth
-- CI: three projects (`setup`, `authenticated`, `unauthenticated`) with storageState for speed
-- Global setup checks Supabase connectivity before running tests
-- Branch name, commit message, or PR title containing `no-e2e-test` skips E2E in CI
+Seed data lives in `supabase/seed-data.ts` as the single source of truth. Always reference seed data from this file rather than hardcoding values (in scripts, etc.). Keep `seed-data.ts` and `seed.ts` up to date when schema or data changes.
 
 ## Updates made by Claude
 
@@ -127,6 +108,3 @@ Allow claude to run the following commands;
 - npm run typecheck
 - npm run check
 - npm run lint
-- npm run test
-- npm run test:e2e
-- npx playwright test --list

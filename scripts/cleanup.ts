@@ -1,7 +1,7 @@
 /**
  * Interactive cleanup script for the starter template.
  *
- * Lets users remove optional features (demo pages, e2e tests, analytics)
+ * Lets users remove optional features (demo pages, analytics)
  * and rename the project — all in one go.
  *
  * Usage:  npx tsx scripts/cleanup.ts   (or:  npm run cleanup)
@@ -77,31 +77,6 @@ export function transformIndexRemoveDemoPages(content: string): string {
 
 export function transformPackageJsonRemoveVersion(content: string): string {
 	return content.replace(/\s+"version": "[^"]+",\n/, "\n");
-}
-
-export function transformPackageJsonRemoveE2E(content: string): string {
-	let result = content;
-	result = result.replace(/\s+"test:e2e": "[^"]+",\n/, "\n");
-	result = result.replace(/\s+"test:e2e:ui": "[^"]+",\n/, "\n");
-	result = result.replace(/\s+"@playwright\/test": "[^"]+",\n/, "\n");
-	return result;
-}
-
-export function transformVitestConfigRemoveE2E(content: string): string {
-	return content.replace('"e2e/**", ', "");
-}
-
-export function transformCiYmlRemoveE2E(content: string): string {
-	let result = removeMarkedBlocks(content, "e2e");
-	result = result.replace(
-		"name: E2E Tests + Database Migration (if detected)",
-		"name: Test Database Migrations (if detected)",
-	);
-	return result;
-}
-
-export function transformGitignoreRemovePlaywright(content: string): string {
-	return removeMarkedBlocks(content, "e2e");
 }
 
 export function transformRootRemoveAnalytics(content: string): string {
@@ -232,43 +207,6 @@ function removeReleases(): void {
 	}
 }
 
-function removeE2ETests(): void {
-	// Delete files and directories
-	remove("e2e");
-	remove("playwright.config.ts");
-	remove("docs/e2e-tests");
-	removeDirIfEmpty("docs");
-
-	// Modify package.json — remove e2e scripts and playwright dependency
-	if (existsSync(join(ROOT, "package.json"))) {
-		write("package.json", transformPackageJsonRemoveE2E(read("package.json")));
-	}
-
-	// Modify vitest.config.ts — remove e2e from exclude
-	if (existsSync(join(ROOT, "vitest.config.ts"))) {
-		write(
-			"vitest.config.ts",
-			transformVitestConfigRemoveE2E(read("vitest.config.ts")),
-		);
-	}
-
-	// Modify ci.yml — remove e2e-related jobs (keep only code-quality)
-	if (existsSync(join(ROOT, ".github/workflows/ci.yml"))) {
-		write(
-			".github/workflows/ci.yml",
-			transformCiYmlRemoveE2E(read(".github/workflows/ci.yml")),
-		);
-	}
-
-	// Modify .gitignore — remove Playwright block
-	if (existsSync(join(ROOT, ".gitignore"))) {
-		write(
-			".gitignore",
-			transformGitignoreRemovePlaywright(read(".gitignore")),
-		);
-	}
-}
-
 function removeAnalytics(): void {
 	// Modify __root.tsx — remove Analytics import and component
 	if (existsSync(join(ROOT, "src/routes/__root.tsx"))) {
@@ -368,18 +306,9 @@ async function main() {
 		process.exit(0);
 	}
 
-	const willRemoveE2E = await p.confirm({
-		message: "Remove e2e tests? (Playwright, CI e2e jobs)",
-	});
-
-	if (p.isCancel(willRemoveE2E)) {
-		p.cancel("Cancelled.");
-		process.exit(0);
-	}
-
 	const willRename = projectName !== currentName;
 
-	if (!willRename && !willCleanup && !willRemoveReleases && !willRemoveE2E) {
+	if (!willRename && !willCleanup && !willRemoveReleases) {
 		p.outro("Nothing to do.");
 		return;
 	}
@@ -402,22 +331,15 @@ async function main() {
 		s.stop("Removed automatic releases.");
 	}
 
-	if (willRemoveE2E) {
-		s.start("Removing e2e tests...");
-		removeE2ETests();
-		s.stop("Removed e2e tests.");
-	}
-
 	if (willRename) {
 		s.start("Renaming project...");
 		renameProject(projectName);
 		s.stop(`Renamed to "${projectName}".`);
 	}
 
-	// Remove the cleanup script itself, its tests, docs, and dependencies
+	// Remove the cleanup script itself, docs, and dependencies
 	s.start("Removing cleanup script...");
 	remove("scripts/cleanup.ts");
-	remove("scripts/cleanup.test.ts");
 	remove("docs/cleanup");
 	removeDirIfEmpty("docs");
 	if (existsSync(join(ROOT, "package.json"))) {
@@ -446,9 +368,6 @@ async function main() {
 	}
 	if (willRemoveReleases) {
 		summary.push("removed automatic releases");
-	}
-	if (willRemoveE2E) {
-		summary.push("removed e2e tests");
 	}
 	if (willRename) {
 		summary.push(`renamed to "${projectName}"`);
