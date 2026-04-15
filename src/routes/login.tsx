@@ -5,7 +5,6 @@ import {
 	type LoginFormValues,
 	SignupForm,
 	type SignupFormValues,
-	SignupSuccess,
 } from "@/features/auth";
 import { getSessionReady, supabase } from "@/lib/supabase/client";
 
@@ -33,7 +32,6 @@ function LoginPage() {
 	const navigate = useNavigate();
 	const [mode, setMode] = useState<"login" | "signup">("login");
 	const [error, setError] = useState<string | null>(null);
-	const [signupEmail, setSignupEmail] = useState<string | null>(null);
 
 	// Client-side fallback: on a full page load (e.g. page.goto), beforeLoad runs
 	// on the server where there's no localStorage session. This effect catches the
@@ -49,7 +47,6 @@ function LoginPage() {
 	function toggleMode() {
 		setMode((m) => (m === "login" ? "signup" : "login"));
 		setError(null);
-		setSignupEmail(null);
 	}
 
 	async function handleLogin(data: LoginFormValues) {
@@ -72,7 +69,6 @@ function LoginPage() {
 		const { error } = await supabase.auth.signUp({
 			email: data.email,
 			password: data.password,
-			options: { data: { display_name: data.displayName } },
 		});
 
 		if (error) {
@@ -80,11 +76,9 @@ function LoginPage() {
 			return;
 		}
 
-		setSignupEmail(data.email);
-	}
-
-	if (signupEmail) {
-		return <SignupSuccess email={signupEmail} onBackToLogin={toggleMode} />;
+		// With email confirmations disabled, signUp auto-signs in the user.
+		// Redirect to onboarding so they can set their display name.
+		navigate({ to: "/onboarding" });
 	}
 
 	if (mode === "signup") {

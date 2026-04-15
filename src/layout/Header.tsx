@@ -19,7 +19,7 @@ export default function Header() {
 
 	return (
 		<>
-			<header className="sticky top-0 z-40 bg-background">
+			<header className="sticky top-0 z-40 bg-background shadow-sm">
 				<nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4 sm:px-8 lg:px-10">
 					{/* Logo */}
 					<Link to="/" className="flex items-center gap-2.5">

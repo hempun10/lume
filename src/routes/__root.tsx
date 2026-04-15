@@ -1,5 +1,10 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+	createRootRoute,
+	HeadContent,
+	Scripts,
+	useLocation,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AuthProvider } from "../features/auth/context/auth-context";
 import { ThemeProvider } from "../features/theme";
@@ -98,9 +103,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<body>
 				<ThemeProvider>
 					<AuthProvider>
-						<Header />
-						{children}
-						<Footer />
+						<AppShell>{children}</AppShell>
 						<TanStackDevtools
 							config={{
 								position: "bottom-right",
@@ -117,5 +120,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				</ThemeProvider>
 			</body>
 		</html>
+	);
+}
+
+/** Routes that use AuthLayout (full-screen with own nav) — hide global Header/Footer. */
+const AUTH_ROUTES = [
+	"/login",
+	"/forgot-password",
+	"/reset-password",
+	"/onboarding",
+];
+
+function AppShell({ children }: { children: React.ReactNode }) {
+	const { pathname } = useLocation();
+	const isAuthPage = AUTH_ROUTES.includes(pathname);
+
+	if (isAuthPage) {
+		return <>{children}</>;
+	}
+
+	return (
+		<>
+			<Header />
+			{children}
+			<Footer />
+		</>
 	);
 }
