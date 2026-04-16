@@ -131,6 +131,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 							acceptedGameId={gameInvite.acceptedGameId}
 							onInvite={gameInvite.sendInvite}
 							onResetInvite={gameInvite.reset}
+							onLeaveGame={gameInvite.leaveGame}
 							onClose={handleCloseGame}
 						/>
 					</div>
