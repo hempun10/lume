@@ -23,7 +23,7 @@ const footerLinks = {
 	],
 };
 
-export default function Footer() {
+export function Footer() {
 	return (
 		<footer>
 			<div className="mx-auto mt-16 max-w-4xl border-t border-border px-6 pb-8 pt-16 sm:px-8 lg:px-10">
