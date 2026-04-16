@@ -28,17 +28,15 @@ import { ThemeToggle } from "@/features/theme";
 
 interface SidebarNavItem {
 	label: string;
-	to: string;
+	to: "/dashboard" | "/chat" | "/games" | "/settings";
 	icon: LucideIcon;
-	/** Use <a> instead of <Link> for routes that don't exist yet */
-	useAnchor?: boolean;
 }
 
 const sidebarNav: SidebarNavItem[] = [
 	{ label: "Lobby", to: "/dashboard", icon: Home },
 	{ label: "Chat", to: "/chat", icon: MessageCircle },
 	{ label: "Games", to: "/games", icon: Gamepad2 },
-	{ label: "Settings", to: "/settings", icon: Settings, useAnchor: true },
+	{ label: "Settings", to: "/settings", icon: Settings },
 ];
 
 export function DashboardTopBar() {
@@ -99,10 +97,10 @@ export function DashboardTopBar() {
 						</div>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem asChild>
-							<a href="/settings" className="cursor-pointer">
+							<Link to="/settings" className="cursor-pointer">
 								<User className="mr-2 h-4 w-4" />
 								Profile
-							</a>
+							</Link>
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem asChild>
@@ -128,26 +126,19 @@ export function DashboardSidebar() {
 					item.to === "/dashboard"
 						? pathname === "/dashboard"
 						: pathname.startsWith(item.to);
-				const className = `flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-					isActive
-						? "bg-primary text-primary-foreground"
-						: "text-muted-foreground hover:bg-accent hover:text-foreground"
-				}`;
 				return (
 					<Tooltip key={item.label}>
 						<TooltipTrigger asChild>
-							{item.useAnchor ? (
-								<a href={item.to} className={className}>
-									<item.icon className="h-5 w-5" />
-								</a>
-							) : (
-								<Link
-									to={item.to as "/dashboard" | "/chat" | "/games"}
-									className={className}
-								>
-									<item.icon className="h-5 w-5" />
-								</Link>
-							)}
+							<Link
+								to={item.to}
+								className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+									isActive
+										? "bg-primary text-primary-foreground"
+										: "text-muted-foreground hover:bg-accent hover:text-foreground"
+								}`}
+							>
+								<item.icon className="h-5 w-5" />
+							</Link>
 						</TooltipTrigger>
 						<TooltipContent side="right">{item.label}</TooltipContent>
 					</Tooltip>
