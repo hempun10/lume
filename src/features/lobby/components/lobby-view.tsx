@@ -20,7 +20,7 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 
 	const userId = user?.id ?? "";
 
-	const { data: profile } = useQuery({
+	const { data: profile, isSuccess: profileLoaded } = useQuery({
 		queryKey: ["profiles", userId, "lobby"],
 		queryFn: async () => {
 			const { data, error } = await supabase
@@ -65,6 +65,7 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 			)}
 
 			<LobbyHeroCard
+				key={profileLoaded ? "ready" : "pending"}
 				defaultInterests={interests}
 				onStartMatching={startMatching}
 			/>
