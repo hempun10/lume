@@ -122,7 +122,10 @@ export function DashboardSidebar() {
 	return (
 		<aside className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-border/50 bg-background py-3">
 			{sidebarNav.map((item) => {
-				const isActive = pathname === item.to;
+				const isActive =
+					item.to === "/dashboard"
+						? pathname === "/dashboard"
+						: pathname.startsWith(item.to);
 				return (
 					<Tooltip key={item.label}>
 						<TooltipTrigger asChild>
