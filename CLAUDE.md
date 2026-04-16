@@ -38,8 +38,19 @@ src/
 │   │   ├── schema.ts    # Zod schema + constants (GENDER_OPTIONS, INTEREST_OPTIONS)
 │   │   └── index.ts     # Barrel exports
 │   ├── lobby/           # Lobby/matching feature (main dashboard view)
-│   │   ├── components/  # LobbyView, MatchConfigCard, InterestInput
+│   │   ├── components/  # LobbyView, MatchConfigCard, InterestInput, SearchingView
+│   │   ├── hooks/       # useMatchState (idle/searching/matched state machine)
 │   │   ├── types/       # MatchMode, LobbyViewProps
+│   │   └── index.ts     # Barrel exports
+│   ├── chat/            # Chat feature (1-on-1 stranger chat)
+│   │   ├── components/  # ChatView, ChatHeader, MessageList, MessageInput, ChatEndedView
+│   │   ├── hooks/       # useChat (mock stranger responses + typing indicator)
+│   │   ├── types/       # ChatMessage, ChatSession, ChatStatus
+│   │   └── index.ts     # Barrel exports
+│   ├── games/           # Games catalog feature
+│   │   ├── components/  # GamesView (page layout + grid), GameCard (individual game card)
+│   │   ├── data/        # games.ts (game definitions — Tic Tac Toe, Trivia, Word Chain, etc.)
+│   │   ├── types/       # Game, GameStatus types
 │   │   └── index.ts     # Barrel exports
 │   ├── landing/         # Landing page feature
 │   │   ├── components/  # Hero, Stats, Features, Comparison, HowItWorks, FAQ, CTA sections
@@ -61,6 +72,8 @@ src/
 │   ├── _landing/index.tsx # Landing page route (renders LandingPage)
 │   ├── _authenticated.tsx # Route guard layout (redirects to /login if unauthenticated, to /onboarding if incomplete, wraps in DashboardShell)
 │   ├── _authenticated/dashboard.tsx # Lobby/matching page
+│   ├── _authenticated/chat.tsx    # 1-on-1 stranger chat
+│   ├── _authenticated/games.tsx   # Game catalog
 │   ├── _authenticated/onboarding.tsx # Post-signup onboarding (set display name)
 │   ├── login.tsx        # Combined login/signup (delegates to LoginForm/SignupForm)
 │   ├── forgot-password.tsx / reset-password.tsx # Password reset flow
@@ -85,11 +98,16 @@ src/
 - `src/features/lobby/components/lobby-view.tsx` — Main lobby interface (greeting + match config card)
 - `src/features/lobby/components/match-config-card.tsx` — Mode toggle (text/games), interest input, Start Matching button, online counter
 - `src/features/lobby/components/interest-input.tsx` — Tag input with suggestions, add/remove interests for matching
+- `src/features/chat/components/chat-view.tsx` — Main chat layout (header + messages + input, post-chat ended state)
+- `src/features/chat/hooks/use-chat.ts` — Mock chat hook (simulates stranger messages with typing indicator)
+- `src/features/games/components/games-view.tsx` — Game catalog page with available/coming-soon sections
+- `src/features/games/components/game-card.tsx` — Individual game card (icon, name, description, players, duration, play button)
+- `src/features/games/data/games.ts` — Game definitions (Tic Tac Toe, Trivia, Word Chain, Chess, Connect Four, Draw & Guess)
 - `src/lib/supabase/client.ts` — Supabase client singleton + `getSessionReady()` helper
 - `src/components/form/form-input.tsx` — Generic reusable form field component using `useFormContext()`, renders AuthInput by default or accepts children render function for custom controls
 - `src/components/errors/error-boundary.tsx` / `error-page.tsx` / `not-found.tsx` — Error handling components
 - `src/layout/landing-header.tsx` — Landing page header with logo, centered nav (Features, How it works, FAQ with anchor scroll), theme toggle, Sign In button, mobile Sheet
-- `src/layout/dashboard-shell.tsx` — Dashboard shell: DashboardTopBar (logo, online indicator, avatar dropdown), DashboardSidebar (icon nav: Lobby, Chat, Games, Settings with tooltips), DashboardShell wrapper
+- `src/layout/dashboard-shell.tsx` — Dashboard shell: DashboardTopBar (logo, online indicator, avatar dropdown), DashboardSidebar (icon nav: Lobby, Chat, Games, Settings with tooltips — uses `<Link>` for existing routes, `<a>` for routes not yet created), DashboardShell wrapper
 - `src/layout/Footer.tsx` — Footer component
 
 ## Layout Architecture
@@ -103,7 +121,7 @@ The app uses TanStack Router layout routes to switch between two distinct layout
 
 ### Dashboard Layout (inside `_authenticated.tsx`)
 - **Top bar** (48px): Lume logo left, online status indicator center, theme toggle + user avatar/dropdown right
-- **Sidebar** (56px): Icon-based nav — Lobby (`/dashboard`), Chat (`/chat`), Games (`/games`), Settings (`/settings`). Uses tooltips for labels.
+- **Sidebar** (56px): Icon-based nav — Lobby (`/dashboard`), Chat (`/chat`), Games (`/games`), Settings (`/settings`). Uses tooltips for labels. Routes with existing route files use `<Link>` for client-side navigation; routes not yet created use `<a>` tags (TanStack Router type-checks `<Link to="...">` against the route tree).
 - **Main area**: Full-height content area, no footer
 - **Onboarding** (`/onboarding`) renders WITHOUT the dashboard shell (its own full-screen layout)
 
@@ -133,6 +151,7 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 - **Auth flow** — Email/password only, no OAuth. Email confirmation is disabled (`enable_confirmations = false` in `supabase/config.toml`). Signup auto-signs in the user and redirects to `/onboarding`. Login redirects to `/dashboard`. Auth UI uses a UserJot-inspired split-screen layout (form card left, branding panel with dot-grid right).
 - **Onboarding** — New users are redirected to `/onboarding` after signup to complete their profile (display name, date of birth, gender, region, interests). The `_authenticated` layout guard redirects to onboarding if `onboarding_completed` is false, catching users who somehow skip it. Users must be 18+ (DOB validated client-side). Region is optional. Interests use a tag chip selector (1–8 selections from a predefined list).
 - **Lobby/Dashboard** — The main authenticated view at `/dashboard`. No "overview" page — the lobby IS the matching interface. Users configure match preferences (mode: text/games, interests) and click Start Matching. The lobby reuses `INTEREST_OPTIONS` from `src/features/onboarding/schema.ts` for matching interests.
+- **Games** — Game catalog at `/games` showing available and coming-soon games in a responsive card grid. Game definitions live in `src/features/games/data/games.ts`. Each game card shows icon, name, description, player count, duration, and a Play/Soon button. Games are UI-only for now (no actual gameplay logic).
 - **Profiles table** has columns: `id`, `display_name`, `date_of_birth`, `gender`, `region`, `interests` (text[]), `onboarding_completed` (boolean), `created_at`, `updated_at`
 - **Session initialisation** — `getSessionReady()` in `src/lib/supabase/client.ts` waits for Supabase's `INITIAL_SESSION` event before calling `getSession()`. This prevents race conditions on fresh page loads where `getSession()` returns `null` before localStorage is restored. All `beforeLoad` guards use this helper via `requireAuth()`. The login page also has a client-side `useEffect` fallback because SSR `beforeLoad` runs server-side without access to localStorage.
 - **Auth state** is managed via `AuthContext` in `src/features/auth/` — access with `useAuth()` hook anywhere in the component tree
