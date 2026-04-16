@@ -28,7 +28,7 @@ import { ThemeToggle } from "@/features/theme";
 
 interface SidebarNavItem {
 	label: string;
-	to: string;
+	to: "/dashboard" | "/chat" | "/games" | "/settings";
 	icon: LucideIcon;
 }
 
@@ -97,10 +97,10 @@ export function DashboardTopBar() {
 						</div>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem asChild>
-							<a href="/settings" className="cursor-pointer">
+							<Link to="/settings" className="cursor-pointer">
 								<User className="mr-2 h-4 w-4" />
 								Profile
-							</a>
+							</Link>
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem asChild>
@@ -120,7 +120,7 @@ export function DashboardSidebar() {
 	const { pathname } = useLocation();
 
 	return (
-		<aside className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-border/50 bg-background py-3">
+		<aside className="hidden w-14 shrink-0 flex-col items-center gap-1 border-r border-border/50 bg-background py-3 md:flex">
 			{sidebarNav.map((item) => {
 				const isActive =
 					item.to === "/dashboard"
@@ -129,8 +129,8 @@ export function DashboardSidebar() {
 				return (
 					<Tooltip key={item.label}>
 						<TooltipTrigger asChild>
-							<a
-								href={item.to}
+							<Link
+								to={item.to}
 								className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
 									isActive
 										? "bg-primary text-primary-foreground"
@@ -138,7 +138,7 @@ export function DashboardSidebar() {
 								}`}
 							>
 								<item.icon className="h-5 w-5" />
-							</a>
+							</Link>
 						</TooltipTrigger>
 						<TooltipContent side="right">{item.label}</TooltipContent>
 					</Tooltip>
@@ -148,14 +148,42 @@ export function DashboardSidebar() {
 	);
 }
 
+function MobileTabBar() {
+	const { pathname } = useLocation();
+
+	return (
+		<nav className="flex h-14 shrink-0 items-center justify-around border-t border-border/50 bg-background md:hidden">
+			{sidebarNav.map((item) => {
+				const isActive =
+					item.to === "/dashboard"
+						? pathname === "/dashboard"
+						: pathname.startsWith(item.to);
+				return (
+					<Link
+						key={item.label}
+						to={item.to}
+						className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
+							isActive ? "text-primary" : "text-muted-foreground"
+						}`}
+					>
+						<item.icon className="h-5 w-5" />
+						<span className="text-[10px] font-medium">{item.label}</span>
+					</Link>
+				);
+			})}
+		</nav>
+	);
+}
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
 	return (
 		<div className="flex h-screen flex-col">
 			<DashboardTopBar />
 			<div className="flex flex-1 overflow-hidden">
 				<DashboardSidebar />
-				<main className="flex-1 overflow-y-auto p-6">{children}</main>
+				<main className="flex-1 overflow-y-auto">{children}</main>
 			</div>
+			<MobileTabBar />
 		</div>
 	);
 }

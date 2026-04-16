@@ -1,14 +1,28 @@
+import { useMatchState } from "../hooks/use-match-state";
 import type { MatchMode } from "../types";
 import { MatchConfigCard } from "./match-config-card";
+import { SearchingView } from "./searching-view";
 
 interface LobbyViewProps {
 	displayName: string;
 }
 
 export function LobbyView({ displayName }: LobbyViewProps) {
+	const { state, startSearching, cancelSearching } = useMatchState();
+
 	function handleStartMatching(mode: MatchMode, interests: string[]) {
-		// TODO: Integrate with matching state machine in PR 2
-		console.log("Start matching:", { mode, interests });
+		startSearching(mode, interests);
+	}
+
+	if (state.status === "searching") {
+		return (
+			<SearchingView
+				mode={state.mode}
+				interests={state.interests}
+				elapsedSeconds={state.elapsedSeconds}
+				onCancel={cancelSearching}
+			/>
+		);
 	}
 
 	return (
