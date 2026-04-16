@@ -119,7 +119,7 @@ src/
 - `src/components/form/form-input.tsx` — Generic reusable form field component using `useFormContext()`, renders AuthInput by default or accepts children render function for custom controls
 - `src/components/errors/error-boundary.tsx` / `error-page.tsx` / `not-found.tsx` — Error handling components
 - `src/layout/landing-header.tsx` — Landing page header with logo, centered nav (Features, How it works, FAQ with anchor scroll), theme toggle, Sign In button, mobile Sheet
-- `src/layout/dashboard-shell.tsx` — Dashboard shell: DashboardTopBar (logo, online indicator, avatar dropdown with Profile link), DashboardSidebar (icon nav: Lobby, Chat, Games, Settings with tooltips — all use `<Link>` for client-side navigation), DashboardShell wrapper
+- `src/layout/dashboard-shell.tsx` — Dashboard shell: DashboardTopBar (logo, online indicator, avatar dropdown with Profile link), DashboardSidebar (icon nav: Lobby, Chat, Games, Settings with tooltips — hidden on mobile), MobileTabBar (bottom tab nav — visible on mobile only), DashboardShell wrapper
 - `src/layout/Footer.tsx` — Footer component
 
 ## Layout Architecture
@@ -133,8 +133,10 @@ The app uses TanStack Router layout routes to switch between two distinct layout
 
 ### Dashboard Layout (inside `_authenticated.tsx`)
 - **Top bar** (48px): Lume logo left, online status indicator center, theme toggle + user avatar/dropdown right
-- **Sidebar** (56px): Icon-based nav — Lobby (`/dashboard`), Chat (`/chat`), Games (`/games`), Settings (`/settings`). Uses tooltips for labels. All links use `<Link>` for client-side navigation.
-- **Main area**: Full-height content area, no footer
+- **Sidebar** (56px, desktop only): Icon-based nav — Lobby (`/dashboard`), Chat (`/chat`), Games (`/games`), Settings (`/settings`). Uses tooltips for labels. All links use `<Link>` for client-side navigation. Hidden on mobile (`hidden md:flex`).
+- **Mobile tab bar** (56px, mobile only): Bottom navigation bar with icon + label for each nav item. Visible below `md` breakpoint (`flex md:hidden`). Active tab highlighted with `text-primary`.
+- **Main area**: Full-height content area, no footer. Content shrinks to accommodate both topbar and mobile tab bar on small screens.
+- **Responsive padding**: Page components use tighter padding on mobile (`px-4 py-6`) and wider on desktop (`md:px-6 md:py-8`). Centered card layouts (lobby, searching, chat-ended) use `px-4` and are naturally mobile-friendly.
 - **Onboarding** (`/onboarding`) renders WITHOUT the dashboard shell (its own full-screen layout)
 
 ### Theme

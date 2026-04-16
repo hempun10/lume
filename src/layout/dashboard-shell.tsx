@@ -120,7 +120,7 @@ export function DashboardSidebar() {
 	const { pathname } = useLocation();
 
 	return (
-		<aside className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-border/50 bg-background py-3">
+		<aside className="hidden w-14 shrink-0 flex-col items-center gap-1 border-r border-border/50 bg-background py-3 md:flex">
 			{sidebarNav.map((item) => {
 				const isActive =
 					item.to === "/dashboard"
@@ -148,6 +148,33 @@ export function DashboardSidebar() {
 	);
 }
 
+function MobileTabBar() {
+	const { pathname } = useLocation();
+
+	return (
+		<nav className="flex h-14 shrink-0 items-center justify-around border-t border-border/50 bg-background md:hidden">
+			{sidebarNav.map((item) => {
+				const isActive =
+					item.to === "/dashboard"
+						? pathname === "/dashboard"
+						: pathname.startsWith(item.to);
+				return (
+					<Link
+						key={item.label}
+						to={item.to}
+						className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
+							isActive ? "text-primary" : "text-muted-foreground"
+						}`}
+					>
+						<item.icon className="h-5 w-5" />
+						<span className="text-[10px] font-medium">{item.label}</span>
+					</Link>
+				);
+			})}
+		</nav>
+	);
+}
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
 	return (
 		<div className="flex h-screen flex-col">
@@ -156,6 +183,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 				<DashboardSidebar />
 				<main className="flex-1 overflow-y-auto">{children}</main>
 			</div>
+			<MobileTabBar />
 		</div>
 	);
 }
