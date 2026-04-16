@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "@/features/auth";
+import { GAMES } from "@/features/games/data/games";
+import {
+	clearPendingGame,
+	getPendingGame,
+} from "@/features/games/data/pending-game";
 import { supabase } from "@/lib/supabase/client";
 import { useMatchmaking } from "../hooks/use-matchmaking";
 import { GamesRail } from "./games-rail";
@@ -37,18 +43,54 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 
 	const interests = profile?.interests ?? [];
 
+	/**
+	 * If the user got here via a game-card "Play" click, auto-start
+	 * matching with their saved interests as soon as the profile has
+	 * loaded. Gated by a ref so we only ever fire once per mount, and
+	 * a pending-game lookup that we don't clear here — the chat view
+	 * will clear it after sending the invite.
+	 */
+	const autoStartedRef = useRef(false);
+	useEffect(() => {
+		if (autoStartedRef.current) return;
+		if (!profileLoaded) return;
+		if (state.status !== "idle") return;
+		const pending = getPendingGame();
+		if (!pending) return;
+		const known = GAMES.some(
+			(g) => g.id === pending && g.status === "available",
+		);
+		if (!known) {
+			clearPendingGame();
+			return;
+		}
+		autoStartedRef.current = true;
+		startMatching(interests);
+	}, [profileLoaded, interests, startMatching, state.status]);
+
 	if (
 		state.status === "searching" ||
 		state.status === "queuing" ||
 		state.status === "matched" ||
 		state.status === "navigating"
 	) {
+		const pending = getPendingGame();
+		const pendingGame = pending
+			? (GAMES.find((g) => g.id === pending)?.name ?? undefined)
+			: undefined;
+
+		function handleCancel() {
+			clearPendingGame();
+			cancelMatching();
+		}
+
 		return (
 			<SearchingView
 				interests={state.interests}
 				elapsedSeconds={state.elapsedSeconds}
 				matchStatus={state.status}
-				onCancel={cancelMatching}
+				onCancel={handleCancel}
+				gameName={pendingGame}
 			/>
 		);
 	}

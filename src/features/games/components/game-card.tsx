@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import {
 	Brain,
 	CircleDot,
@@ -10,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { setPendingGame } from "../data/pending-game";
 import type { Game } from "../types";
 
 const iconMap: Record<string, LucideIcon> = {
@@ -29,6 +31,16 @@ interface GameCardProps {
 export function GameCard({ game, onPlay }: GameCardProps) {
 	const Icon = iconMap[game.icon] ?? Grid3X3;
 	const isAvailable = game.status === "available";
+	const navigate = useNavigate();
+
+	function handlePlay() {
+		if (onPlay) {
+			onPlay();
+			return;
+		}
+		setPendingGame(game.id);
+		navigate({ to: "/dashboard", search: { play: game.id } });
+	}
 
 	return (
 		<Card className="flex flex-col gap-4 p-5">
@@ -60,7 +72,7 @@ export function GameCard({ game, onPlay }: GameCardProps) {
 					size="sm"
 					variant={isAvailable ? "default" : "outline"}
 					disabled={!isAvailable}
-					onClick={onPlay}
+					onClick={handlePlay}
 					className="h-8 px-3 text-xs"
 				>
 					{isAvailable ? "Play" : "Soon"}
