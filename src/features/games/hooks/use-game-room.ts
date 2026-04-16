@@ -65,142 +65,152 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: channel setup runs once
 	useEffect(() => {
 		if (!userId || !roomId) return;
+		let cancelled = false;
 
-		const channel = supabase.channel(`game:${roomId}`, {
-			config: { broadcast: { self: false }, presence: { key: userId } },
-		});
-		channelRef.current = channel;
+		async function setup() {
+			// Fetch room data FIRST so we know who is user_a (X) and user_b (O)
+			const { data } = await supabase
+				.from("rooms")
+				.select("user_a, user_b")
+				.eq("id", roomId)
+				.single();
 
-		// Fetch room data to know who is user_a (X) and user_b (O)
-		supabase
-			.from("rooms")
-			.select("user_a, user_b")
-			.eq("id", roomId)
-			.single()
-			.then(({ data }) => {
-				if (!data) return;
-				roomDataRef.current = {
-					user_a: data.user_a,
-					user_b: data.user_b,
-				};
-			});
-
-		// --- Broadcast: game_start ---
-		channel.on("broadcast", { event: "game_start" }, (payload) => {
-			const data = payload.payload as BroadcastGameStartPayload;
-			const state = createInitialState(data.player_a, data.player_b);
-			// Keep roomDataRef in sync so future rematches swap correctly
+			if (cancelled || !data) return;
 			roomDataRef.current = {
-				user_a: data.player_a,
-				user_b: data.player_b,
+				user_a: data.user_a,
+				user_b: data.user_b,
 			};
-			setGameState(state);
-			setRoomStatus("playing");
-			setRematchRequested(false);
-			setOpponentWantsRematch(false);
-		});
 
-		// --- Broadcast: move ---
-		channel.on("broadcast", { event: "move" }, (payload) => {
-			const data = payload.payload as BroadcastMovePayload;
-			if (data.sender_id === userId) return;
-
-			setGameState((prev) => {
-				if (!prev) return prev;
-				const result = applyMove(prev, data.position, data.sender_id);
-				if (result.ok) {
-					if (result.state.result !== "playing") {
-						setRoomStatus("finished");
-					}
-					return result.state;
-				}
-				return prev;
+			const channel = supabase.channel(`game:${roomId}`, {
+				config: { broadcast: { self: false }, presence: { key: userId } },
 			});
-		});
+			channelRef.current = channel;
 
-		// --- Broadcast: rematch ---
-		channel.on("broadcast", { event: "rematch" }, (payload) => {
-			const data = payload.payload as BroadcastRematchPayload;
-			if (data.sender_id === userId) return;
-			setOpponentWantsRematch(true);
-
-			// If we also requested rematch, start new game
-			setRematchRequested((myRequest) => {
-				if (myRequest) {
-					// Both want rematch — start new game with swapped roles
-					const room = roomDataRef.current;
-					if (room) {
-						const state = createInitialState(room.user_b, room.user_a);
-						// Swap for next game
-						roomDataRef.current = {
-							user_a: room.user_b,
-							user_b: room.user_a,
-						};
-						setGameState(state);
-						setRoomStatus("playing");
-						setOpponentWantsRematch(false);
-						// Broadcast new game start
-						channel.send({
-							type: "broadcast",
-							event: "game_start",
-							payload: {
-								player_a: room.user_b,
-								player_b: room.user_a,
-								game_type: "tic-tac-toe",
-							} satisfies BroadcastGameStartPayload,
-						});
-					}
-					return false;
-				}
-				return myRequest;
+			// --- Broadcast: game_start ---
+			channel.on("broadcast", { event: "game_start" }, (payload) => {
+				const data = payload.payload as BroadcastGameStartPayload;
+				const state = createInitialState(data.player_a, data.player_b);
+				// Keep roomDataRef in sync so future rematches swap correctly
+				roomDataRef.current = {
+					user_a: data.player_a,
+					user_b: data.player_b,
+				};
+				setGameState(state);
+				setRoomStatus("playing");
+				setRematchRequested(false);
+				setOpponentWantsRematch(false);
 			});
-		});
 
-		// --- Presence ---
-		channel.on("presence", { event: "sync" }, () => {
-			const state = channel.presenceState();
-			const playerCount = Object.keys(state).length;
+			// --- Broadcast: move ---
+			channel.on("broadcast", { event: "move" }, (payload) => {
+				const data = payload.payload as BroadcastMovePayload;
+				if (data.sender_id === userId) return;
 
-			if (playerCount >= 2) {
-				// Both players present — user_a initiates the game
-				setRoomStatus((prev) => {
-					if (
-						prev === "waiting_for_opponent" &&
-						roomDataRef.current?.user_a === userId
-					) {
-						const room = roomDataRef.current;
-						const gameStartState = createInitialState(room.user_a, room.user_b);
-						setGameState(gameStartState);
-
-						// Broadcast game start to other player
-						channel.send({
-							type: "broadcast",
-							event: "game_start",
-							payload: {
-								player_a: room.user_a,
-								player_b: room.user_b,
-								game_type: "tic-tac-toe",
-							} satisfies BroadcastGameStartPayload,
-						});
-
-						return "playing";
+				setGameState((prev) => {
+					if (!prev) return prev;
+					const result = applyMove(prev, data.position, data.sender_id);
+					if (result.ok) {
+						if (result.state.result !== "playing") {
+							setRoomStatus("finished");
+						}
+						return result.state;
 					}
 					return prev;
 				});
-			}
-		});
+			});
 
-		// Subscribe and track
-		channel.subscribe(async (status) => {
-			if (status === "SUBSCRIBED") {
-				await channel.track({ user_id: userId, joined_at: Date.now() });
-				setRoomStatus("waiting_for_opponent");
-			}
-		});
+			// --- Broadcast: rematch ---
+			channel.on("broadcast", { event: "rematch" }, (payload) => {
+				const data = payload.payload as BroadcastRematchPayload;
+				if (data.sender_id === userId) return;
+				setOpponentWantsRematch(true);
+
+				// If we also requested rematch, start new game
+				setRematchRequested((myRequest) => {
+					if (myRequest) {
+						// Both want rematch — start new game with swapped roles
+						const room = roomDataRef.current;
+						if (room) {
+							const state = createInitialState(room.user_b, room.user_a);
+							// Swap for next game
+							roomDataRef.current = {
+								user_a: room.user_b,
+								user_b: room.user_a,
+							};
+							setGameState(state);
+							setRoomStatus("playing");
+							setOpponentWantsRematch(false);
+							// Broadcast new game start
+							channel.send({
+								type: "broadcast",
+								event: "game_start",
+								payload: {
+									player_a: room.user_b,
+									player_b: room.user_a,
+									game_type: "tic-tac-toe",
+								} satisfies BroadcastGameStartPayload,
+							});
+						}
+						return false;
+					}
+					return myRequest;
+				});
+			});
+
+			// --- Presence ---
+			channel.on("presence", { event: "sync" }, () => {
+				const state = channel.presenceState();
+				const playerCount = Object.keys(state).length;
+
+				if (playerCount >= 2) {
+					// Both players present — user_a initiates the game
+					setRoomStatus((prev) => {
+						if (
+							prev === "waiting_for_opponent" &&
+							roomDataRef.current?.user_a === userId
+						) {
+							const room = roomDataRef.current;
+							const gameStartState = createInitialState(
+								room.user_a,
+								room.user_b,
+							);
+							setGameState(gameStartState);
+
+							// Broadcast game start to other player
+							channel.send({
+								type: "broadcast",
+								event: "game_start",
+								payload: {
+									player_a: room.user_a,
+									player_b: room.user_b,
+									game_type: "tic-tac-toe",
+								} satisfies BroadcastGameStartPayload,
+							});
+
+							return "playing";
+						}
+						return prev;
+					});
+				}
+			});
+
+			// Subscribe and track
+			channel.subscribe(async (status) => {
+				if (status === "SUBSCRIBED") {
+					await channel.track({ user_id: userId, joined_at: Date.now() });
+					setRoomStatus("waiting_for_opponent");
+				}
+			});
+		}
+
+		setup();
 
 		return () => {
-			supabase.removeChannel(channel);
-			channelRef.current = null;
+			cancelled = true;
+			if (channelRef.current) {
+				supabase.removeChannel(channelRef.current);
+				channelRef.current = null;
+			}
 		};
 	}, [userId, roomId]);
 
