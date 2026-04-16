@@ -89,6 +89,11 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 		channel.on("broadcast", { event: "game_start" }, (payload) => {
 			const data = payload.payload as BroadcastGameStartPayload;
 			const state = createInitialState(data.player_a, data.player_b);
+			// Keep roomDataRef in sync so future rematches swap correctly
+			roomDataRef.current = {
+				user_a: data.player_a,
+				user_b: data.player_b,
+			};
 			setGameState(state);
 			setRoomStatus("playing");
 			setRematchRequested(false);
