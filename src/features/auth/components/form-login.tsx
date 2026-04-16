@@ -44,7 +44,7 @@ export function LoginForm({ onSubmit, error, onToggleMode }: LoginFormProps) {
 							icon={Mail}
 							type="email"
 							placeholder="you@example.com"
-							autoComplete="email"
+							autoComplete="off"
 						/>
 
 						<FormInput
@@ -53,7 +53,7 @@ export function LoginForm({ onSubmit, error, onToggleMode }: LoginFormProps) {
 							icon={Lock}
 							type="password"
 							placeholder="Enter your password"
-							autoComplete="current-password"
+							autoComplete="off"
 						/>
 
 						<Button
