@@ -563,3 +563,128 @@ Restructure the matching/chat/game flow: remove mode-based matching, use profile
 5. **Navigation**: No /games or /game routes. Sidebar only shows Lobby + Settings. Chat route still works with roomId.
 6. **Mobile**: Game panel is a bottom sheet or stacked below chat.
 7. **`npm run check`** passes (Biome + typecheck)
+
+---
+
+# Refactoring Plan
+
+## Summary
+
+Systematic refactoring pass to enforce single responsibility, eliminate duplication, fix naming inconsistencies, and bring all files under 150 lines. No feature changes — purely structural improvements following the React Component Refactoring Skill guidelines.
+
+## Audit Findings
+
+- **7 files over 200 lines** (excluding shadcn/ui generated files)
+- **3 files with tangled logic** (business logic mixed with UI)
+- **~70 lines of duplicated code** (DOB picker, gender select across onboarding + settings)
+- **Naming/export inconsistencies** (Footer.tsx PascalCase + default export, empty barrel files)
+- **Inline schemas** in settings instead of dedicated files
+
+## Approach: 8 PRs (stacked or parallel)
+
+Each PR is independently reviewable and mergeable.
+
+---
+
+### PR 1: `refactor/shared-form-components` — Extract DateOfBirthPicker + GenderSelect
+
+**Problem:** Nearly identical ~35-line DOB calendar popover and gender select blocks duplicated in `onboarding-form.tsx` and `profile-section.tsx`. `MAX_DOB` constant defined twice.
+
+**Changes:**
+- `src/components/form/date-of-birth-picker.tsx` — NEW: Extracted `<DateOfBirthPicker />` using FormInput + Popover + Calendar
+- `src/components/form/gender-select.tsx` — NEW: Extracted `<GenderSelect />` using FormInput + Select
+- `src/lib/constants.ts` — NEW: Move `MAX_DOB` here
+- `src/features/onboarding/components/onboarding-form.tsx` — Replace inline DOB/gender blocks with shared components
+- `src/features/settings/components/profile-section.tsx` — Same replacement
+- `src/components/form/index.ts` — Update barrel exports
+
+---
+
+### PR 2: `refactor/use-game-room` — Break up use-game-room.ts (294 → ~150 lines)
+
+**Problem:** 150-line useEffect with inline broadcast handlers. Rematch logic duplicated between broadcast handler and `requestRematch` callback.
+
+**Changes:**
+- `src/features/games/hooks/use-game-room.ts` — Refactor:
+  - Extract `startNewGame(roomDataRef, setGameState, setRoomStatus, channel)` helper
+  - Extract broadcast event handlers into named functions: `handleGameStart`, `handleGameMove`, `handleRematchRequest`, `handleRematchAccepted`
+  - Break the monolithic useEffect into a `setupGameChannel()` async function composed of smaller pieces
+
+---
+
+### PR 3: `refactor/settings-cleanup` — Extract schema + mutations hook
+
+**Problem:** Inline Zod schema in `profile-section.tsx`. Mutation definitions + success timers tangled in `settings-view.tsx`.
+
+**Changes:**
+- `src/features/settings/schema.ts` — NEW: Extract profile form schema from profile-section.tsx
+- `src/features/settings/hooks/use-settings-mutations.ts` — NEW: Extract `useSettingsMutations()` hook from settings-view.tsx (profile + preferences mutations, success state, cache invalidation)
+- `src/features/settings/components/settings-view.tsx` — Slim down to pure layout orchestration
+- `src/features/settings/components/profile-section.tsx` — Import schema from dedicated file
+- `src/features/settings/index.ts` — Update barrel exports
+
+---
+
+### PR 4: `refactor/naming-consistency` — Fix naming, exports, barrel files
+
+**Problem:** `Footer.tsx` is PascalCase with default export (only file in codebase). Chat/games have empty barrel files. Inconsistent patterns.
+
+**Changes:**
+- `src/layout/Footer.tsx` → `src/layout/footer.tsx` — Rename + change to named export
+- `src/layout/dashboard-shell.tsx` — Update Footer import
+- `src/routes/_landing.tsx` — Update Footer import
+- `src/features/chat/index.ts` — Populate with proper barrel exports (ChatView, useRealtimeChat, types)
+- `src/features/games/index.ts` — Populate with proper barrel exports (TicTacToeBoard, useGameRoom, types)
+
+---
+
+### PR 5: `refactor/game-panel-decomposition` — Split game-panel.tsx (271 → ~100 lines)
+
+**Problem:** 4 sub-components in one file. `ActiveGame` is ~135 lines with 6-level deep nesting.
+
+**Changes:**
+- `src/features/chat/components/active-game.tsx` — NEW: Extract ActiveGame component
+- `src/features/chat/components/game-panel.tsx` — Keep as orchestrator importing ActiveGame, GamePickerCard, GameInviteModal
+- `src/features/chat/components/game-status-bar.tsx` — NEW: Extract the game status/turn indicator (optional, if ActiveGame is still >150 lines)
+
+---
+
+### PR 6: `refactor/login-extraction` — Move login logic to feature
+
+**Problem:** `login.tsx` route has mutation definitions, mode state, and SSR guards inline — inconsistent with other routes being thin shells.
+
+**Changes:**
+- `src/features/auth/components/login-view.tsx` — NEW: Extract login page component with auth mode toggle + mutations
+- `src/routes/login.tsx` — Slim to thin route shell importing LoginView
+- `src/features/auth/index.ts` — Update barrel exports
+
+---
+
+### PR 7: `refactor/dashboard-shell-split` — Split dashboard-shell.tsx (179 lines, 4 components)
+
+**Problem:** DashboardTopBar, DashboardSidebar, MobileTabBar, and DashboardShell all in one file.
+
+**Changes:**
+- `src/layout/dashboard-topbar.tsx` — NEW: Extract DashboardTopBar
+- `src/layout/dashboard-sidebar.tsx` — NEW: Extract DashboardSidebar
+- `src/layout/mobile-tab-bar.tsx` — NEW: Extract MobileTabBar
+- `src/layout/dashboard-shell.tsx` — Keep as orchestrator composing the above
+
+---
+
+### PR 8: `refactor/realtime-chat-cleanup` — Tidy use-realtime-chat.ts (259 lines)
+
+**Problem:** Large useEffect with 5 inline channel event handlers.
+
+**Changes:**
+- `src/features/chat/hooks/use-realtime-chat.ts` — Extract named handler functions (`handleNewMessage`, `handleTyping`, `handlePresenceSync`, `handlePresenceLeave`), compose them in a cleaner `setupChatChannel()` function
+
+---
+
+## Verification
+
+For every PR:
+1. `npm run typecheck` passes
+2. `npm run check` passes (Biome lint + format)
+3. Manual test: matchmaking → chat → game invite → tic tac toe → rematch all still work
+4. No behavioral changes — purely structural
