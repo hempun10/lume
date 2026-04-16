@@ -53,9 +53,9 @@ export function SearchingView({
 					</div>
 				) : (
 					<>
-						<span className="absolute size-full rounded-full bg-primary/15 motion-safe:animate-ping" />
-						<span className="absolute size-2/3 rounded-full bg-primary/20 motion-safe:animate-ping motion-safe:[animation-delay:500ms]" />
-						<span className="absolute size-1/3 rounded-full bg-primary/25 motion-safe:animate-ping motion-safe:[animation-delay:1000ms]" />
+						<span className="absolute size-full rounded-full bg-primary/15 motion-safe:animate-ping motion-safe:[animation-duration:2.5s]" />
+						<span className="absolute size-2/3 rounded-full bg-primary/20 motion-safe:animate-ping motion-safe:[animation-delay:800ms] motion-safe:[animation-duration:2.5s]" />
+						<span className="absolute size-1/3 rounded-full bg-primary/25 motion-safe:animate-ping motion-safe:[animation-delay:1600ms] motion-safe:[animation-duration:2.5s]" />
 						<span className="relative size-3 rounded-full bg-primary" />
 					</>
 				)}
