@@ -8,7 +8,7 @@ import type { PreferencesFormValues, ProfileData } from "../types";
 
 interface PreferencesSectionProps {
 	profile: ProfileData;
-	onSave: (data: PreferencesFormValues) => Promise<void>;
+	onSave: (data: PreferencesFormValues) => void;
 	isSaving: boolean;
 	saveError: string | null;
 	saveSuccess: boolean;

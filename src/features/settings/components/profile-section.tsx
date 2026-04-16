@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Globe, User } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { DateOfBirthPicker } from "@/components/form/date-of-birth-picker";
 import { FormInput } from "@/components/form/form-input";
 import { GenderSelect } from "@/components/form/gender-select";
@@ -9,23 +8,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
+import { profileSchema } from "../schema";
 import type { ProfileData, ProfileFormValues } from "../types";
-
-const profileSchema = z.object({
-	displayName: z
-		.string()
-		.min(1, "Display name is required")
-		.max(50, "Display name must be 50 characters or less"),
-	dateOfBirth: z.string().min(1, "Date of birth is required"),
-	gender: z.enum(["male", "female", "non-binary", "prefer-not-to-say", ""], {
-		message: "Please select a gender",
-	}),
-	region: z.string().max(100, "Region must be 100 characters or less"),
-});
 
 interface ProfileSectionProps {
 	profile: ProfileData;
-	onSave: (data: ProfileFormValues) => Promise<void>;
+	onSave: (data: ProfileFormValues) => void;
 	isSaving: boolean;
 	saveError: string | null;
 	saveSuccess: boolean;
