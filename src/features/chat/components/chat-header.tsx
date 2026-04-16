@@ -11,6 +11,8 @@ interface ChatHeaderProps {
 	startedAt: Date;
 	onEnd: () => void;
 	isStrangerConnected: boolean;
+	showGame: boolean;
+	onToggleGame: () => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -23,6 +25,8 @@ export function ChatHeader({
 	startedAt,
 	onEnd,
 	isStrangerConnected,
+	showGame,
+	onToggleGame,
 }: ChatHeaderProps) {
 	const [elapsed, setElapsed] = useState(0);
 
@@ -60,11 +64,17 @@ export function ChatHeader({
 			<div className="flex items-center gap-1">
 				<Tooltip>
 					<TooltipTrigger asChild>
-						<Button variant="ghost" size="icon-sm" disabled>
+						<Button
+							variant={showGame ? "secondary" : "ghost"}
+							size="icon-sm"
+							onClick={onToggleGame}
+						>
 							<Gamepad2 className="h-4 w-4" />
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>Invite to game (coming soon)</TooltipContent>
+					<TooltipContent>
+						{showGame ? "Hide game" : "Play a game"}
+					</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

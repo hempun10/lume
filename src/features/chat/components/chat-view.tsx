@@ -1,8 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useAuth } from "@/features/auth";
 import { useRealtimeChat } from "../hooks/use-realtime-chat";
 import { ChatEndedView } from "./chat-ended-view";
 import { ChatHeader } from "./chat-header";
+import { GamePanel } from "./game-panel";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
 
@@ -22,6 +24,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 		isStrangerConnected,
 	} = useRealtimeChat(roomId);
 	const navigate = useNavigate();
+	const [showGame, setShowGame] = useState(false);
 
 	function handleBackToLobby() {
 		navigate({ to: "/dashboard" });
@@ -56,18 +59,32 @@ export function ChatView({ roomId }: ChatViewProps) {
 	}
 
 	return (
-		<div className="flex h-full flex-col">
-			<ChatHeader
-				startedAt={session.startedAt}
-				onEnd={endChat}
-				isStrangerConnected={isStrangerConnected}
-			/>
-			<MessageList
-				messages={session.messages}
-				isStrangerTyping={isStrangerTyping}
-				userId={userId}
-			/>
-			<MessageInput onSend={sendMessage} onTyping={broadcastTyping} />
+		<div className="flex h-full">
+			{/* Chat column */}
+			<div className="flex flex-1 flex-col min-w-0">
+				<ChatHeader
+					startedAt={session.startedAt}
+					onEnd={endChat}
+					isStrangerConnected={isStrangerConnected}
+					showGame={showGame}
+					onToggleGame={() => setShowGame((prev) => !prev)}
+				/>
+				<MessageList
+					messages={session.messages}
+					isStrangerTyping={isStrangerTyping}
+					userId={userId}
+				/>
+				<MessageInput onSend={sendMessage} onTyping={broadcastTyping} />
+			</div>
+
+			{/* Game panel — side-by-side on desktop, hidden on mobile for now */}
+			{showGame && (
+				<div className="hidden w-96 shrink-0 border-l border-border/50 md:flex">
+					<div className="flex-1">
+						<GamePanel roomId={roomId} onClose={() => setShowGame(false)} />
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
