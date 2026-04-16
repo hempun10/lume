@@ -55,7 +55,7 @@ export function SettingsView() {
 	}
 
 	return (
-		<div className="mx-auto max-w-2xl px-6 py-8">
+		<div className="mx-auto max-w-2xl px-4 py-6 md:px-6 md:py-8">
 			{/* Header */}
 			<div className="mb-8 flex items-center gap-3">
 				<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
