@@ -18,7 +18,6 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LandingIndexRouteImport } from './routes/_landing/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
-import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/games'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 
@@ -65,11 +64,6 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedGamesRoute = AuthenticatedGamesRouteImport.update({
-  id: '/games',
-  path: '/games',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -89,7 +83,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/games': typeof AuthenticatedGamesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
@@ -101,7 +94,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/games': typeof AuthenticatedGamesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
@@ -115,7 +107,6 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/games': typeof AuthenticatedGamesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_landing/': typeof LandingIndexRoute
@@ -130,7 +121,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/chat'
     | '/dashboard'
-    | '/games'
     | '/onboarding'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
@@ -142,7 +132,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/chat'
     | '/dashboard'
-    | '/games'
     | '/onboarding'
     | '/settings'
   id:
@@ -155,7 +144,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/chat'
     | '/_authenticated/dashboard'
-    | '/_authenticated/games'
     | '/_authenticated/onboarding'
     | '/_authenticated/settings'
     | '/_landing/'
@@ -235,13 +223,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/games': {
-      id: '/_authenticated/games'
-      path: '/games'
-      fullPath: '/games'
-      preLoaderRoute: typeof AuthenticatedGamesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -262,7 +243,6 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedGamesRoute: typeof AuthenticatedGamesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
@@ -270,7 +250,6 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedGamesRoute: AuthenticatedGamesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }

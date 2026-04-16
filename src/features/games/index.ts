@@ -1,1 +1,1 @@
-export { GamesView } from "./components/games-view";
+export { GameCard } from "./components/game-card";

@@ -4,10 +4,15 @@ import { Button } from "@/components/ui/button";
 
 interface MessageInputProps {
 	onSend: (text: string) => void;
+	onTyping?: () => void;
 	disabled?: boolean;
 }
 
-export function MessageInput({ onSend, disabled }: MessageInputProps) {
+export function MessageInput({
+	onSend,
+	onTyping,
+	disabled,
+}: MessageInputProps) {
 	const [value, setValue] = useState("");
 
 	function handleSubmit(e: React.FormEvent) {
@@ -24,6 +29,11 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
 		}
 	}
 
+	function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+		setValue(e.target.value);
+		onTyping?.();
+	}
+
 	return (
 		<form
 			onSubmit={handleSubmit}
@@ -31,7 +41,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
 		>
 			<textarea
 				value={value}
-				onChange={(e) => setValue(e.target.value)}
+				onChange={handleChange}
 				onKeyDown={handleKeyDown}
 				placeholder="Type a message..."
 				disabled={disabled}

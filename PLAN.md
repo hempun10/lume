@@ -400,3 +400,166 @@ Each PR:
 - **Alerting**: Add queue depth alerts and avg wait time monitoring when user volume warrants it.
 - **Staging environment**: Dedicated Supabase staging project (free tier) for pre-production testing.
 - **Rate limiting**: Prevent queue spam (rapid insert/cancel cycles) via RLS or Edge Function throttling.
+
+---
+
+# UX Redesign Plan (PR 5: `feat/ux-redesign`)
+
+## Summary
+
+Restructure the matching/chat/game flow: remove mode-based matching, use profile-based soft-preference matching (interests, gender, age, region), integrate games as a side-by-side panel within chat, remove standalone game routes, and add conversation prompt cards.
+
+## User Decisions
+
+| Question | Answer |
+|----------|--------|
+| Interest source for matching | Both: default to profile interests, allow editing before match |
+| Game + chat layout | Side-by-side: chat left, game right (desktop); stacked on mobile |
+| Games catalog page | Remove it — game selection happens inline within chat |
+| Matching filters (gender/age/region) | Soft preferences: prefer similar, fall back to any after timeout |
+| Prompt cards | Auto-generated from stranger's interests |
+
+## System Impact
+
+### Source of Truth Changes
+- **Before**: `match_queue.mode` determines room type (chat vs game). Interests entered per-session.
+- **After**: No mode. All rooms start as `chat`. Interests sourced from `profiles` table (editable pre-match). Gender/DOB/region from profiles used for scoring.
+
+### State Ownership Changes
+- **Game panel toggle**: New client-side state in ChatView (`showGame: boolean`, `selectedGame: string | null`)
+- **Stranger's profile**: Chat needs to fetch partner's profile (interests, display_name) for prompt cards. Currently not fetched.
+
+### Removed Concepts
+- `MatchMode` type (`"text" | "games"`) — eliminated
+- `match_queue.mode` column — no longer used for pairing (backward-compat: keep column, stop grouping by it)
+- `/games` route and `/game` route — removed
+- Games sidebar nav item — removed
+
+### New Concepts
+- **Match scoring**: Multi-factor score (interests + gender + age proximity + region) replaces interest-only scoring
+- **Prompt cards**: Generated from stranger's interests, shown before first message
+- **Inline game picker**: Small UI within chat header/toolbar to select and start a game
+
+## Approach
+
+### PR Breakdown (3 sub-PRs to keep changes manageable)
+
+**PR 5a: `feat/ux-sidebar-and-matching`** — Remove mode, update sidebar, profile-based matching
+**PR 5b: `feat/ux-chat-games-integration`** — Side-by-side game panel in chat, remove /games and /game routes
+**PR 5c: `feat/ux-prompt-cards`** — Conversation starter prompt cards
+
+---
+
+### PR 5a: Sidebar + Matching Redesign
+
+#### Changes
+
+- `src/layout/dashboard-shell.tsx` — Remove "Chat" and "Games" from `sidebarNav`. Keep only Lobby and Settings.
+
+- `src/features/lobby/types/index.ts` — Remove `MatchMode` type. Export new `MatchPreferences` type:
+  ```ts
+  interface MatchPreferences {
+    interests: string[];
+    // gender/age/region pulled from profile server-side
+  }
+  ```
+
+- `src/features/lobby/components/match-config-card.tsx` — Remove mode toggle. Show profile interests (pre-filled from profile, editable). Remove mode param from `onStartMatching`.
+
+- `src/features/lobby/hooks/use-matchmaking.ts` — Remove `mode` from state and queue insert. Always navigate to `/chat` on match. Fetch profile interests as defaults.
+
+- `supabase/functions/match-users/index.ts` — Replace `byMode` grouping with single pool. Add multi-factor scoring:
+  ```
+  score = interestOverlap * 3 + genderMatch * 2 + regionMatch * 2 + ageProximity * 1
+  ```
+  Edge Function needs to JOIN profiles table to get gender/DOB/region for scoring.
+
+- `supabase/migrations/XXXXXXXX_update_match_queue_for_redesign.sql` — 
+  - Make `mode` column nullable or give default (keep for backward compat, stop using for pairing)
+  - All rooms created as type `'chat'` (games are a feature within chat, not a room type)
+
+#### Files Modified
+- `src/layout/dashboard-shell.tsx` — Remove Chat + Games nav items
+- `src/features/lobby/types/index.ts` — Replace MatchMode
+- `src/features/lobby/components/match-config-card.tsx` — Remove mode toggle, pre-fill interests
+- `src/features/lobby/components/lobby-view.tsx` — Remove initialMode prop
+- `src/features/lobby/hooks/use-matchmaking.ts` — Remove mode logic
+- `src/routes/_authenticated/dashboard.tsx` — Remove mode search param
+- `supabase/functions/match-users/index.ts` — Multi-factor scoring
+- New migration for schema changes
+
+---
+
+### PR 5b: Chat + Games Integration
+
+#### Changes
+
+- `src/features/chat/components/chat-view.tsx` — Add game panel state. Side-by-side layout:
+  ```
+  Desktop: [Chat (flex-1)] [Game Panel (w-96, collapsible)]
+  Mobile: [Chat] with slide-up game sheet
+  ```
+  Add game toggle button in ChatHeader.
+
+- `src/features/chat/components/chat-header.tsx` — Add "Play a game" button/icon that opens game picker.
+
+- `src/features/chat/components/game-panel.tsx` (NEW) — Wrapper that shows game picker or active game. Contains:
+  - Game picker (list of available games from `games/data/games.ts`)
+  - Active game view (renders TicTacToeBoard etc.)
+  - Uses existing `useGameRoom` hook
+
+- `src/features/games/hooks/use-game-room.ts` — Minor: accept roomId that's already a chat room (no separate game room needed). Game state synced via `game:{roomId}` Broadcast channel (already works this way).
+
+- Remove routes:
+  - Delete `src/routes/_authenticated/game.tsx`
+  - Delete `src/routes/_authenticated/games.tsx`
+
+- `src/features/games/components/games-view.tsx` — Delete (catalog page)
+- `src/features/games/components/game-view.tsx` — Refactor into `game-panel.tsx` (reuse logic, different layout)
+
+#### Files Modified
+- `src/features/chat/components/chat-view.tsx` — Side-by-side layout with game panel
+- `src/features/chat/components/chat-header.tsx` — Add game toggle
+- `src/features/chat/components/game-panel.tsx` — NEW: inline game panel
+- `src/routes/_authenticated/game.tsx` — DELETE
+- `src/routes/_authenticated/games.tsx` — DELETE
+- `src/features/games/components/games-view.tsx` — DELETE
+- `src/features/games/components/game-view.tsx` — DELETE (logic moves to game-panel)
+- `src/features/games/index.ts` — Update barrel exports
+
+---
+
+### PR 5c: Prompt Cards
+
+#### Changes
+
+- `src/features/chat/hooks/use-stranger-profile.ts` (NEW) — Fetch stranger's profile (interests, display_name) using the partnerId from the room. Cached via TanStack Query.
+
+- `src/features/chat/components/prompt-cards.tsx` (NEW) — Shows 3-4 clickable prompt cards based on stranger's interests. Examples:
+  - Interest "hiking" → "What's the best trail you've ever hiked?"
+  - Interest "anime" → "What anime are you watching right now?"
+  - No interests → generic prompts ("What's something interesting that happened today?")
+  Clicking a card populates the message input.
+
+- `src/features/chat/components/message-list.tsx` — Show prompt cards when messages array is empty and stranger is connected.
+
+- `src/features/chat/data/prompt-templates.ts` (NEW) — Map of interest keywords to prompt templates. Fallback generic prompts.
+
+#### Files Modified
+- `src/features/chat/hooks/use-stranger-profile.ts` — NEW
+- `src/features/chat/components/prompt-cards.tsx` — NEW
+- `src/features/chat/data/prompt-templates.ts` — NEW
+- `src/features/chat/components/message-list.tsx` — Integrate prompt cards
+- `src/features/chat/index.ts` — Update exports
+
+---
+
+## Verification
+
+1. **Matching**: Two users with overlapping interests match faster than those without. Users with no overlap still match after 30s fallback. Gender/region preferences improve match quality but don't block.
+2. **Chat**: After match, both users land in chat. Chat works as before.
+3. **Games**: Click game icon in chat header → game picker appears → select Tic Tac Toe → side-by-side panel shows board. Game plays normally alongside chat.
+4. **Prompt cards**: First message view shows interest-based prompts. Clicking populates input. Cards hide after first message sent.
+5. **Navigation**: No /games or /game routes. Sidebar only shows Lobby + Settings. Chat route still works with roomId.
+6. **Mobile**: Game panel is a bottom sheet or stacked below chat.
+7. **`npm run check`** passes (Biome + typecheck)

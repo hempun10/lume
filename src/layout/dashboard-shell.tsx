@@ -1,14 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import {
-	Gamepad2,
-	Home,
-	LogOut,
-	MessageCircle,
-	Settings,
-	Sparkles,
-	User,
-} from "lucide-react";
+import { Home, LogOut, Settings, Sparkles, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,14 +20,12 @@ import { ThemeToggle } from "@/features/theme";
 
 interface SidebarNavItem {
 	label: string;
-	to: "/dashboard" | "/chat" | "/games" | "/settings";
+	to: "/dashboard" | "/settings";
 	icon: LucideIcon;
 }
 
 const sidebarNav: SidebarNavItem[] = [
 	{ label: "Lobby", to: "/dashboard", icon: Home },
-	{ label: "Chat", to: "/chat", icon: MessageCircle },
-	{ label: "Games", to: "/games", icon: Gamepad2 },
 	{ label: "Settings", to: "/settings", icon: Settings },
 ];
 

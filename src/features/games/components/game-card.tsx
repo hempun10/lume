@@ -23,9 +23,10 @@ const iconMap: Record<string, LucideIcon> = {
 
 interface GameCardProps {
 	game: Game;
+	onPlay?: () => void;
 }
 
-export function GameCard({ game }: GameCardProps) {
+export function GameCard({ game, onPlay }: GameCardProps) {
 	const Icon = iconMap[game.icon] ?? Grid3X3;
 	const isAvailable = game.status === "available";
 
@@ -59,6 +60,7 @@ export function GameCard({ game }: GameCardProps) {
 					size="sm"
 					variant={isAvailable ? "default" : "outline"}
 					disabled={!isAvailable}
+					onClick={onPlay}
 					className="h-8 px-3 text-xs"
 				>
 					{isAvailable ? "Play" : "Soon"}

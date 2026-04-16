@@ -1,4 +1,4 @@
-import { Clock, Gamepad2, LogOut } from "lucide-react";
+import { Ban, Clock, Gamepad2, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,11 @@ import {
 interface ChatHeaderProps {
 	startedAt: Date;
 	onEnd: () => void;
+	isStrangerConnected: boolean;
+	showGame: boolean;
+	onToggleGame: () => void;
+	isGameBanned: boolean;
+	onToggleBan: () => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -18,7 +23,15 @@ function formatDuration(seconds: number): string {
 	return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function ChatHeader({ startedAt, onEnd }: ChatHeaderProps) {
+export function ChatHeader({
+	startedAt,
+	onEnd,
+	isStrangerConnected,
+	showGame,
+	onToggleGame,
+	isGameBanned,
+	onToggleBan,
+}: ChatHeaderProps) {
 	const [elapsed, setElapsed] = useState(0);
 
 	useEffect(() => {
@@ -33,10 +46,18 @@ export function ChatHeader({ startedAt, onEnd }: ChatHeaderProps) {
 			<div className="flex items-center gap-3">
 				<div className="flex items-center gap-2">
 					<span className="relative flex h-2 w-2">
-						<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-						<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+						{isStrangerConnected ? (
+							<>
+								<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+								<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+							</>
+						) : (
+							<span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground/50" />
+						)}
 					</span>
-					<span className="text-sm font-medium text-foreground">Stranger</span>
+					<span className="text-sm font-medium text-foreground">
+						{isStrangerConnected ? "Stranger" : "Disconnected"}
+					</span>
 				</div>
 				<div className="flex items-center gap-1 text-xs text-muted-foreground">
 					<Clock className="h-3 w-3" />
@@ -47,11 +68,37 @@ export function ChatHeader({ startedAt, onEnd }: ChatHeaderProps) {
 			<div className="flex items-center gap-1">
 				<Tooltip>
 					<TooltipTrigger asChild>
-						<Button variant="ghost" size="icon-sm" disabled>
+						<Button
+							variant={isGameBanned ? "destructive" : "ghost"}
+							size="icon-sm"
+							onClick={onToggleBan}
+							className={
+								isGameBanned
+									? ""
+									: "text-muted-foreground hover:text-foreground"
+							}
+						>
+							<Ban className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						{isGameBanned ? "Unblock game requests" : "Block game requests"}
+					</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							variant={showGame ? "secondary" : "ghost"}
+							size="icon-sm"
+							onClick={onToggleGame}
+						>
 							<Gamepad2 className="h-4 w-4" />
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>Invite to game (coming soon)</TooltipContent>
+					<TooltipContent>
+						{showGame ? "Hide game" : "Play a game"}
+					</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

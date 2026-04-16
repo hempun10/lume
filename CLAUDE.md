@@ -39,17 +39,19 @@ src/
 │   │   └── index.ts     # Barrel exports
 │   ├── lobby/           # Lobby/matching feature (main dashboard view)
 │   │   ├── components/  # LobbyView, MatchConfigCard, InterestInput, SearchingView
-│   │   ├── hooks/       # useMatchState (idle/searching/matched state machine)
+│   │   ├── hooks/       # useMatchmaking (real Supabase queue + Broadcast matching)
 │   │   ├── types/       # MatchMode, LobbyViewProps
 │   │   └── index.ts     # Barrel exports
 │   ├── chat/            # Chat feature (1-on-1 stranger chat)
 │   │   ├── components/  # ChatView, ChatHeader, MessageList, MessageInput, ChatEndedView
-│   │   ├── hooks/       # useChat (mock stranger responses + typing indicator)
-│   │   ├── types/       # ChatMessage, ChatSession, ChatStatus
+│   │   ├── hooks/       # useRealtimeChat (Supabase Broadcast messages + Presence)
+│   │   ├── types/       # ChatMessage (senderId-based), ChatSession, ChatStatus
 │   │   └── index.ts     # Barrel exports
-│   ├── games/           # Games catalog feature
-│   │   ├── components/  # GamesView (page layout + grid), GameCard (individual game card)
-│   │   ├── data/        # games.ts (game definitions — Tic Tac Toe, Trivia, Word Chain, etc.)
+│   ├── games/           # Games catalog + playable games
+│   │   ├── components/  # GamesView, GameCard, GameView (game room wrapper), TicTacToeBoard
+│   │   ├── engines/     # tic-tac-toe.ts (pure function game engine)
+│   │   ├── hooks/       # useGameRoom (Broadcast moves + Presence + rematch)
+│   │   ├── data/        # games.ts (game definitions — only Tic Tac Toe available)
 │   │   ├── types/       # Game, GameStatus types
 │   │   └── index.ts     # Barrel exports
 │   ├── settings/        # Settings/profile feature
@@ -78,7 +80,8 @@ src/
 │   ├── _landing/index.tsx # Landing page route (renders LandingPage)
 │   ├── _authenticated.tsx # Route guard layout (redirects to /login if unauthenticated, to /onboarding if incomplete, wraps in DashboardShell)
 │   ├── _authenticated/dashboard.tsx # Lobby/matching page
-│   ├── _authenticated/chat.tsx    # 1-on-1 stranger chat
+│   ├── _authenticated/chat.tsx    # 1-on-1 stranger chat (roomId search param)
+│   ├── _authenticated/game.tsx    # Game room (roomId search param)
 │   ├── _authenticated/games.tsx   # Game catalog
 │   ├── _authenticated/settings.tsx # Profile & preferences settings
 │   ├── _authenticated/onboarding.tsx # Post-signup onboarding (set display name)
@@ -106,9 +109,13 @@ src/
 - `src/features/lobby/components/match-config-card.tsx` — Mode toggle (text/games), interest input, Start Matching button, online counter
 - `src/features/lobby/components/interest-input.tsx` — Tag input with suggestions, add/remove interests for matching
 - `src/features/chat/components/chat-view.tsx` — Main chat layout (header + messages + input, post-chat ended state)
-- `src/features/chat/hooks/use-chat.ts` — Mock chat hook (simulates stranger messages with typing indicator)
+- `src/features/chat/hooks/use-realtime-chat.ts` — Real-time chat hook (Broadcast messages + Presence typing/connection)
 - `src/features/games/components/games-view.tsx` — Game catalog page with available/coming-soon sections
-- `src/features/games/components/game-card.tsx` — Individual game card (icon, name, description, players, duration, play button)
+- `src/features/games/components/game-view.tsx` — Game room wrapper (connects to game room, renders board, handles rematch)
+- `src/features/games/components/tic-tac-toe-board.tsx` — 3x3 game board with animated marks and win highlighting
+- `src/features/games/engines/tic-tac-toe.ts` — Pure function game engine (createInitialState, applyMove, checkWinner, isDraw)
+- `src/features/games/hooks/use-game-room.ts` — Game room hook (Broadcast moves, Presence player detection, rematch protocol)
+- `src/features/games/components/game-card.tsx` — Individual game card (icon, name, description, players, duration, play button with onPlay callback)
 - `src/features/games/data/games.ts` — Game definitions (Tic Tac Toe, Trivia, Word Chain, Chess, Connect Four, Draw & Guess)
 - `src/features/settings/components/settings-view.tsx` — Settings page layout with profile + preferences sections
 - `src/features/settings/components/profile-section.tsx` — Editable profile form (display name, DOB, gender, region)
@@ -165,7 +172,7 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 - **Auth flow** — Email/password only, no OAuth. Email confirmation is disabled (`enable_confirmations = false` in `supabase/config.toml`). Signup auto-signs in the user and redirects to `/onboarding`. Login redirects to `/dashboard`. Auth UI uses a UserJot-inspired split-screen layout (form card left, branding panel with dot-grid right).
 - **Onboarding** — New users are redirected to `/onboarding` after signup to complete their profile (display name, date of birth, gender, region, interests). The `_authenticated` layout guard redirects to onboarding if `onboarding_completed` is false, catching users who somehow skip it. Users must be 18+ (DOB validated client-side). Region is optional. Interests use a tag chip selector (1–8 selections from a predefined list).
 - **Lobby/Dashboard** — The main authenticated view at `/dashboard`. No "overview" page — the lobby IS the matching interface. Users configure match preferences (mode: text/games, interests) and click Start Matching. The lobby reuses `INTEREST_OPTIONS` from `src/features/onboarding/schema.ts` for matching interests.
-- **Games** — Game catalog at `/games` showing available and coming-soon games in a responsive card grid. Game definitions live in `src/features/games/data/games.ts`. Each game card shows icon, name, description, player count, duration, and a Play/Soon button. Games are UI-only for now (no actual gameplay logic).
+- **Games** — Game catalog at `/games` showing available and coming-soon games in a responsive card grid. Game definitions live in `src/features/games/data/games.ts`. Only Tic Tac Toe is playable; others are marked "coming soon". Clicking "Play" navigates to `/dashboard?mode=games` to start matchmaking with game mode. After matching, users are routed to `/game?roomId={roomId}`. Game state is managed client-side via Broadcast (no DB writes for moves). The `useGameRoom` hook handles the full game lifecycle: connecting, waiting for opponent, playing, finished, and rematch.
 - **Settings** — Profile and preferences editor at `/settings`. Two card sections: Profile (display name, DOB, gender, region) and Matching Preferences (interests). Fetches profile from Supabase via `profileDetailOptions` query (reuses `profileKeys` from onboarding for cache coherence). Saves via `updateProfile` and `updatePreferences` mutations. Shows success/error feedback inline.
 - **Profiles table** has columns: `id`, `display_name`, `date_of_birth`, `gender`, `region`, `interests` (text[]), `onboarding_completed` (boolean), `created_at`, `updated_at`
 - **Session initialisation** — `getSessionReady()` in `src/lib/supabase/client.ts` waits for Supabase's `INITIAL_SESSION` event before calling `getSession()`. This prevents race conditions on fresh page loads where `getSession()` returns `null` before localStorage is restored. All `beforeLoad` guards use this helper via `requireAuth()`. The login page also has a client-side `useEffect` fallback because SSR `beforeLoad` runs server-side without access to localStorage.
@@ -183,6 +190,16 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 - **No unnecessary useEffect** — Use declarative `<Navigate>` for redirects, `beforeLoad` for route-level logic.
 - **Mutation functions** — Extract all Supabase calls into dedicated mutation/query files per feature.
 - **Homepage** is the Lume landing page (hero, features, comparison, FAQ, CTA), always accessible (no auth redirect)
+
+## Automated Matchmaking (pg_cron + pg_net)
+
+The `match-users` Edge Function is automatically invoked every 2 seconds via a pg_cron job that uses pg_net for HTTP requests. See migration `20260416070000_add_matchmaker_cron.sql`.
+
+**Local dev quirks:**
+- pg_net's libcurl **cannot resolve Docker container hostnames** (e.g., `supabase_kong_lume`). Use `host.docker.internal:54321` instead.
+- `current_setting('app.settings.service_role_key')` is **empty** in local dev (only set in hosted Supabase). The migration falls back to the hardcoded local secret key.
+- Both `apikey` and `Authorization` headers are required to call Edge Functions.
+- Verify cron responses: `docker exec -i $(docker ps --filter "name=supabase_db_lume" -q) psql -U postgres -d postgres -c "SELECT id, status_code, created FROM net._http_response ORDER BY created DESC LIMIT 5;"`
 
 ## Environment Variables
 

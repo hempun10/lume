@@ -1,5 +1,7 @@
-import { useMatchState } from "../hooks/use-match-state";
-import type { MatchMode } from "../types";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/features/auth";
+import { supabase } from "@/lib/supabase/client";
+import { useMatchmaking } from "../hooks/use-matchmaking";
 import { MatchConfigCard } from "./match-config-card";
 import { SearchingView } from "./searching-view";
 
@@ -8,19 +10,39 @@ interface LobbyViewProps {
 }
 
 export function LobbyView({ displayName }: LobbyViewProps) {
-	const { state, startSearching, cancelSearching } = useMatchState();
+	const { state, startMatching, cancelMatching } = useMatchmaking();
+	const { user } = useAuth();
 
-	function handleStartMatching(mode: MatchMode, interests: string[]) {
-		startSearching(mode, interests);
-	}
+	const userId = user?.id ?? "";
 
-	if (state.status === "searching") {
+	// Fetch profile interests to pre-fill the match config
+	const { data: profile } = useQuery({
+		queryKey: ["profiles", userId, "interests"],
+		queryFn: async () => {
+			const { data, error } = await supabase
+				.from("profiles")
+				.select("interests")
+				.eq("id", userId)
+				.single();
+			if (error) throw error;
+			return data;
+		},
+		enabled: !!userId,
+		staleTime: 1000 * 60 * 5,
+	});
+
+	if (
+		state.status === "searching" ||
+		state.status === "queuing" ||
+		state.status === "matched" ||
+		state.status === "navigating"
+	) {
 		return (
 			<SearchingView
-				mode={state.mode}
 				interests={state.interests}
 				elapsedSeconds={state.elapsedSeconds}
-				onCancel={cancelSearching}
+				matchStatus={state.status}
+				onCancel={cancelMatching}
 			/>
 		);
 	}
@@ -36,11 +58,15 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 				</p>
 			</div>
 
-			<MatchConfigCard onStartMatching={handleStartMatching} />
+			<MatchConfigCard
+				defaultInterests={profile?.interests ?? []}
+				onStartMatching={startMatching}
+			/>
 
-			{/* Recent activity — minimal for now */}
+			{state.error && <p className="text-sm text-destructive">{state.error}</p>}
+
 			<div className="text-center text-sm text-muted-foreground">
-				<p>Start a conversation or play a game with a stranger.</p>
+				<p>Start a conversation with a stranger who shares your interests.</p>
 			</div>
 		</div>
 	);
