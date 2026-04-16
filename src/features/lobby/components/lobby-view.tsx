@@ -1,4 +1,4 @@
-import { useMatchState } from "../hooks/use-match-state";
+import { useMatchmaking } from "../hooks/use-matchmaking";
 import type { MatchMode } from "../types";
 import { MatchConfigCard } from "./match-config-card";
 import { SearchingView } from "./searching-view";
@@ -8,19 +8,25 @@ interface LobbyViewProps {
 }
 
 export function LobbyView({ displayName }: LobbyViewProps) {
-	const { state, startSearching, cancelSearching } = useMatchState();
+	const { state, startMatching, cancelMatching } = useMatchmaking();
 
 	function handleStartMatching(mode: MatchMode, interests: string[]) {
-		startSearching(mode, interests);
+		startMatching(mode, interests);
 	}
 
-	if (state.status === "searching") {
+	if (
+		state.status === "searching" ||
+		state.status === "queuing" ||
+		state.status === "matched" ||
+		state.status === "navigating"
+	) {
 		return (
 			<SearchingView
 				mode={state.mode}
 				interests={state.interests}
 				elapsedSeconds={state.elapsedSeconds}
-				onCancel={cancelSearching}
+				matchStatus={state.status}
+				onCancel={cancelMatching}
 			/>
 		);
 	}
@@ -38,7 +44,8 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 
 			<MatchConfigCard onStartMatching={handleStartMatching} />
 
-			{/* Recent activity — minimal for now */}
+			{state.error && <p className="text-sm text-destructive">{state.error}</p>}
+
 			<div className="text-center text-sm text-muted-foreground">
 				<p>Start a conversation or play a game with a stranger.</p>
 			</div>

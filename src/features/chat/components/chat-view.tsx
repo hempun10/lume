@@ -5,7 +5,12 @@ import { ChatHeader } from "./chat-header";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
 
-export function ChatView() {
+interface ChatViewProps {
+	/** Room ID from matchmaking — used by useRealtimeChat in PR 3 */
+	roomId: string;
+}
+
+export function ChatView(_props: ChatViewProps) {
 	const { session, sendMessage, endChat, isStrangerTyping } = useChat();
 	const navigate = useNavigate();
 
