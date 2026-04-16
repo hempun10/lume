@@ -154,7 +154,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 			<DashboardTopBar />
 			<div className="flex flex-1 overflow-hidden">
 				<DashboardSidebar />
-				<main className="flex-1 overflow-y-auto p-6">{children}</main>
+				<main className="flex-1 overflow-y-auto">{children}</main>
 			</div>
 		</div>
 	);
