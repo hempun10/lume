@@ -4,7 +4,7 @@ import { MobileTabBar } from "./mobile-tab-bar";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
 	return (
-		<div className="flex h-screen flex-col">
+		<div className="flex h-dvh flex-col">
 			<DashboardTopbar />
 			<div className="flex flex-1 overflow-hidden">
 				<DashboardSidebar />

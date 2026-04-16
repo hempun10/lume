@@ -43,7 +43,7 @@ export function SignupForm({ onSubmit, error, onToggleMode }: SignupFormProps) {
 							icon={Mail}
 							type="email"
 							placeholder="you@example.com"
-							autoComplete="email"
+							autoComplete="off"
 						/>
 
 						<FormInput
@@ -52,7 +52,7 @@ export function SignupForm({ onSubmit, error, onToggleMode }: SignupFormProps) {
 							icon={Lock}
 							type="password"
 							placeholder="At least 6 characters"
-							autoComplete="new-password"
+							autoComplete="off"
 						/>
 
 						<Button

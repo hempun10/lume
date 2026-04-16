@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Home, Settings } from "lucide-react";
+import { Gamepad2, Home, Settings } from "lucide-react";
 import {
 	Tooltip,
 	TooltipContent,
@@ -9,12 +9,13 @@ import {
 
 interface SidebarNavItem {
 	label: string;
-	to: "/dashboard" | "/settings";
+	to: "/dashboard" | "/games" | "/settings";
 	icon: LucideIcon;
 }
 
 const sidebarNav: SidebarNavItem[] = [
 	{ label: "Lobby", to: "/dashboard", icon: Home },
+	{ label: "Games", to: "/games", icon: Gamepad2 },
 	{ label: "Settings", to: "/settings", icon: Settings },
 ];
 
