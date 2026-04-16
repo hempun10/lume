@@ -5,9 +5,14 @@ import type { ChatMessage } from "../types";
 interface MessageListProps {
 	messages: ChatMessage[];
 	isStrangerTyping: boolean;
+	userId: string;
 }
 
-export function MessageList({ messages, isStrangerTyping }: MessageListProps) {
+export function MessageList({
+	messages,
+	isStrangerTyping,
+	userId,
+}: MessageListProps) {
 	const bottomRef = useRef<HTMLDivElement>(null);
 
 	const messageCount = messages.length;
@@ -33,13 +38,13 @@ export function MessageList({ messages, isStrangerTyping }: MessageListProps) {
 					key={msg.id}
 					className={cn(
 						"flex",
-						msg.sender === "user" ? "justify-end" : "justify-start",
+						msg.senderId === userId ? "justify-end" : "justify-start",
 					)}
 				>
 					<div
 						className={cn(
 							"max-w-[75%] rounded-2xl px-4 py-2 text-sm",
-							msg.sender === "user"
+							msg.senderId === userId
 								? "rounded-br-md bg-primary text-primary-foreground"
 								: "rounded-bl-md bg-muted text-foreground",
 						)}

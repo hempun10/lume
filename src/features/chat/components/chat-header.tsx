@@ -10,6 +10,7 @@ import {
 interface ChatHeaderProps {
 	startedAt: Date;
 	onEnd: () => void;
+	isStrangerConnected: boolean;
 }
 
 function formatDuration(seconds: number): string {
@@ -18,7 +19,11 @@ function formatDuration(seconds: number): string {
 	return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function ChatHeader({ startedAt, onEnd }: ChatHeaderProps) {
+export function ChatHeader({
+	startedAt,
+	onEnd,
+	isStrangerConnected,
+}: ChatHeaderProps) {
 	const [elapsed, setElapsed] = useState(0);
 
 	useEffect(() => {
@@ -33,10 +38,18 @@ export function ChatHeader({ startedAt, onEnd }: ChatHeaderProps) {
 			<div className="flex items-center gap-3">
 				<div className="flex items-center gap-2">
 					<span className="relative flex h-2 w-2">
-						<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-						<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+						{isStrangerConnected ? (
+							<>
+								<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+								<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+							</>
+						) : (
+							<span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground/50" />
+						)}
 					</span>
-					<span className="text-sm font-medium text-foreground">Stranger</span>
+					<span className="text-sm font-medium text-foreground">
+						{isStrangerConnected ? "Stranger" : "Disconnected"}
+					</span>
 				</div>
 				<div className="flex items-center gap-1 text-xs text-muted-foreground">
 					<Clock className="h-3 w-3" />

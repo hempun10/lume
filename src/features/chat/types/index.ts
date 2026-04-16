@@ -1,11 +1,11 @@
 export interface ChatMessage {
 	id: string;
-	sender: "user" | "stranger";
+	senderId: string;
 	text: string;
 	timestamp: Date;
 }
 
-export type ChatStatus = "active" | "ended";
+export type ChatStatus = "connecting" | "active" | "ended" | "disconnected";
 
 export interface ChatSession {
 	status: ChatStatus;
