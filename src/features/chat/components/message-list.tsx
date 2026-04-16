@@ -1,17 +1,22 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "../types";
+import { PromptCards } from "./prompt-cards";
 
 interface MessageListProps {
 	messages: ChatMessage[];
 	isStrangerTyping: boolean;
 	userId: string;
+	strangerInterests?: string[];
+	onPromptSelect?: (text: string) => void;
 }
 
 export function MessageList({
 	messages,
 	isStrangerTyping,
 	userId,
+	strangerInterests = [],
+	onPromptSelect,
 }: MessageListProps) {
 	const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -22,7 +27,9 @@ export function MessageList({
 	}, [messageCount, isStrangerTyping]);
 
 	if (messages.length === 0 && !isStrangerTyping) {
-		return (
+		return onPromptSelect ? (
+			<PromptCards interests={strangerInterests} onSelect={onPromptSelect} />
+		) : (
 			<div className="flex flex-1 items-center justify-center">
 				<p className="text-sm text-muted-foreground">
 					Say hello to your stranger!

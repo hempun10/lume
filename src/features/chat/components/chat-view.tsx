@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/features/auth";
 import { useRealtimeChat } from "../hooks/use-realtime-chat";
+import { useStrangerProfile } from "../hooks/use-stranger-profile";
 import { ChatEndedView } from "./chat-ended-view";
 import { ChatHeader } from "./chat-header";
 import { GamePanel } from "./game-panel";
@@ -25,6 +26,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 	} = useRealtimeChat(roomId);
 	const navigate = useNavigate();
 	const [showGame, setShowGame] = useState(false);
+	const { data: strangerProfile } = useStrangerProfile(roomId, userId);
 
 	function handleBackToLobby() {
 		navigate({ to: "/dashboard" });
@@ -73,6 +75,8 @@ export function ChatView({ roomId }: ChatViewProps) {
 					messages={session.messages}
 					isStrangerTyping={isStrangerTyping}
 					userId={userId}
+					strangerInterests={strangerProfile?.interests}
+					onPromptSelect={sendMessage}
 				/>
 				<MessageInput onSend={sendMessage} onTyping={broadcastTyping} />
 			</div>
