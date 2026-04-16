@@ -52,7 +52,7 @@ export type Database = {
 					id?: string;
 					interests?: string[] | null;
 					matched_with?: string | null;
-					mode: string;
+					mode?: string;
 					notified?: boolean;
 					room_id?: string | null;
 					status?: string;
@@ -153,7 +153,10 @@ export type Database = {
 			[_ in never]: never;
 		};
 		Functions: {
-			[_ in never]: never;
+			match_pair: {
+				Args: { _user_a: string; _user_b: string };
+				Returns: string;
+			};
 		};
 		Enums: {
 			[_ in never]: never;
