@@ -49,7 +49,7 @@ export const GAMES: Game[] = [
 		icon: "circle-dot",
 		players: "2 players",
 		duration: "~5 min",
-		status: "coming_soon",
+		status: "available",
 	},
 	{
 		id: "drawing",

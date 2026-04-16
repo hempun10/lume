@@ -6,6 +6,8 @@
  * user_a is always X (goes first), user_b is always O.
  */
 
+import type { GameResult as EngineGameResult, GameEngine, Seat } from "./types";
+
 export type CellValue = "X" | "O" | null;
 export type Board = [
 	CellValue,
@@ -146,3 +148,30 @@ export function applyMove(
 
 	return { ok: true, state: newState };
 }
+
+function seatOf(state: TicTacToeState, userId: string): Seat {
+	if (state.players.X === userId) return "A";
+	if (state.players.O === userId) return "B";
+	return null;
+}
+
+function isFinished(state: TicTacToeState): boolean {
+	return state.result !== "playing";
+}
+
+function resultFor(state: TicTacToeState, userId: string): EngineGameResult {
+	if (state.result === "playing") return "playing";
+	if (state.result === "draw") return "draw";
+	return state.winner && state.players[state.winner] === userId
+		? "won"
+		: "lost";
+}
+
+export const TIC_TAC_TOE_ENGINE: GameEngine<TicTacToeState, number> = {
+	createInitialState,
+	applyMove,
+	isMyTurn,
+	isFinished,
+	resultFor,
+	seatOf,
+};
