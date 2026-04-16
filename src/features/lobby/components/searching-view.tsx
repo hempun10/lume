@@ -3,10 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { MatchStatus } from "../hooks/use-matchmaking";
-import type { MatchMode } from "../types";
 
 interface SearchingViewProps {
-	mode: MatchMode;
 	interests: string[];
 	elapsedSeconds: number;
 	matchStatus: MatchStatus;
@@ -35,7 +33,6 @@ function getStatusText(status: MatchStatus): string {
 }
 
 export function SearchingView({
-	mode,
 	interests,
 	elapsedSeconds,
 	matchStatus,
@@ -71,9 +68,6 @@ export function SearchingView({
 						<h2 className="text-lg font-semibold text-foreground">
 							{getStatusText(matchStatus)}
 						</h2>
-						<p className="text-sm text-muted-foreground">
-							Mode: {mode === "text" ? "Text Chat" : "Games"}
-						</p>
 					</div>
 
 					{/* Interests */}

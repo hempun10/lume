@@ -2,7 +2,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth";
 import { supabase } from "@/lib/supabase/client";
-import type { MatchMode } from "../types";
 
 export type MatchStatus =
 	| "idle"
@@ -13,7 +12,6 @@ export type MatchStatus =
 
 interface MatchState {
 	status: MatchStatus;
-	mode: MatchMode;
 	interests: string[];
 	elapsedSeconds: number;
 	roomId: string | null;
@@ -23,13 +21,12 @@ interface MatchState {
 
 interface UseMatchmakingReturn {
 	state: MatchState;
-	startMatching: (mode: MatchMode, interests: string[]) => void;
+	startMatching: (interests: string[]) => void;
 	cancelMatching: () => void;
 }
 
 const INITIAL_STATE: MatchState = {
 	status: "idle",
-	mode: "text",
 	interests: [],
 	elapsedSeconds: 0,
 	roomId: null,
@@ -43,10 +40,8 @@ const INITIAL_STATE: MatchState = {
  * Flow:
  * 1. INSERT into match_queue → status becomes "searching"
  * 2. Subscribe to Broadcast channel `match:{userId}` for match notification
- * 3. Edge Function pairs users and broadcasts match event
+ * 3. Edge Function pairs users using multi-factor scoring (interests, gender, age, region)
  * 4. On match → navigate to /chat?roomId={roomId}
- *
- * Replaces the mock useMatchState hook.
  */
 export function useMatchmaking(): UseMatchmakingReturn {
 	const [state, setState] = useState<MatchState>(INITIAL_STATE);
@@ -58,13 +53,11 @@ export function useMatchmaking(): UseMatchmakingReturn {
 	const queueEntryIdRef = useRef<string | null>(null);
 
 	const cleanup = useCallback(() => {
-		// Clear elapsed timer
 		if (timerRef.current) {
 			clearInterval(timerRef.current);
 			timerRef.current = null;
 		}
 
-		// Unsubscribe from broadcast channel
 		if (channelRef.current) {
 			supabase.removeChannel(channelRef.current);
 			channelRef.current = null;
@@ -72,12 +65,11 @@ export function useMatchmaking(): UseMatchmakingReturn {
 	}, []);
 
 	const startMatching = useCallback(
-		async (mode: MatchMode, interests: string[]) => {
+		async (interests: string[]) => {
 			if (!user) return;
 
 			setState({
 				status: "queuing",
-				mode,
 				interests,
 				elapsedSeconds: 0,
 				roomId: null,
@@ -85,12 +77,12 @@ export function useMatchmaking(): UseMatchmakingReturn {
 				error: null,
 			});
 
-			// 1. Insert into match_queue
+			// 1. Insert into match_queue (mode defaults to 'text' for backward compat)
 			const { data, error } = await supabase
 				.from("match_queue")
 				.insert({
 					user_id: user.id,
-					mode,
+					mode: "text",
 					interests,
 					status: "waiting",
 				})
@@ -98,7 +90,6 @@ export function useMatchmaking(): UseMatchmakingReturn {
 				.single();
 
 			if (error) {
-				// Handle duplicate waiting entry
 				if (error.code === "23505") {
 					setState((prev) => ({
 						...prev,
@@ -139,9 +130,8 @@ export function useMatchmaking(): UseMatchmakingReturn {
 					// Brief delay to show "matched" state, then navigate
 					setTimeout(() => {
 						setState((prev) => {
-							const destination = prev.mode === "games" ? "/game" : "/chat";
 							navigate({
-								to: destination,
+								to: "/chat",
 								search: { roomId: room_id },
 							});
 							return { ...prev, status: "navigating" };
@@ -169,7 +159,6 @@ export function useMatchmaking(): UseMatchmakingReturn {
 	const cancelMatching = useCallback(async () => {
 		cleanup();
 
-		// Cancel the queue entry in the database
 		if (queueEntryIdRef.current) {
 			await supabase
 				.from("match_queue")
@@ -186,7 +175,6 @@ export function useMatchmaking(): UseMatchmakingReturn {
 		return () => {
 			cleanup();
 
-			// Cancel queue entry if still searching when component unmounts
 			if (queueEntryIdRef.current) {
 				supabase
 					.from("match_queue")

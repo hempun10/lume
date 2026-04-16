@@ -1,29 +1,35 @@
-import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/features/auth";
+import { supabase } from "@/lib/supabase/client";
 import { useMatchmaking } from "../hooks/use-matchmaking";
-import type { MatchMode } from "../types";
 import { MatchConfigCard } from "./match-config-card";
 import { SearchingView } from "./searching-view";
 
 interface LobbyViewProps {
 	displayName: string;
-	initialMode?: MatchMode;
 }
 
-export function LobbyView({ displayName, initialMode }: LobbyViewProps) {
+export function LobbyView({ displayName }: LobbyViewProps) {
 	const { state, startMatching, cancelMatching } = useMatchmaking();
-	const autoStartedRef = useRef(false);
+	const { user } = useAuth();
 
-	// Auto-start matchmaking when navigated with initialMode (e.g. from Games page)
-	useEffect(() => {
-		if (initialMode && state.status === "idle" && !autoStartedRef.current) {
-			autoStartedRef.current = true;
-			startMatching(initialMode, []);
-		}
-	}, [initialMode, state.status, startMatching]);
+	const userId = user?.id ?? "";
 
-	function handleStartMatching(mode: MatchMode, interests: string[]) {
-		startMatching(mode, interests);
-	}
+	// Fetch profile interests to pre-fill the match config
+	const { data: profile } = useQuery({
+		queryKey: ["profiles", userId, "interests"],
+		queryFn: async () => {
+			const { data, error } = await supabase
+				.from("profiles")
+				.select("interests")
+				.eq("id", userId)
+				.single();
+			if (error) throw error;
+			return data;
+		},
+		enabled: !!userId,
+		staleTime: 1000 * 60 * 5,
+	});
 
 	if (
 		state.status === "searching" ||
@@ -33,7 +39,6 @@ export function LobbyView({ displayName, initialMode }: LobbyViewProps) {
 	) {
 		return (
 			<SearchingView
-				mode={state.mode}
 				interests={state.interests}
 				elapsedSeconds={state.elapsedSeconds}
 				matchStatus={state.status}
@@ -53,12 +58,15 @@ export function LobbyView({ displayName, initialMode }: LobbyViewProps) {
 				</p>
 			</div>
 
-			<MatchConfigCard onStartMatching={handleStartMatching} />
+			<MatchConfigCard
+				defaultInterests={profile?.interests ?? []}
+				onStartMatching={startMatching}
+			/>
 
 			{state.error && <p className="text-sm text-destructive">{state.error}</p>}
 
 			<div className="text-center text-sm text-muted-foreground">
-				<p>Start a conversation or play a game with a stranger.</p>
+				<p>Start a conversation with a stranger who shares your interests.</p>
 			</div>
 		</div>
 	);

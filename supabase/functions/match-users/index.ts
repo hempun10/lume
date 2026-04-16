@@ -4,21 +4,30 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 interface QueueEntry {
   id: string;
   user_id: string;
-  mode: string;
   interests: string[];
   status: string;
   created_at: string;
 }
 
+interface ProfileData {
+  id: string;
+  gender: string | null;
+  date_of_birth: string | null;
+  region: string | null;
+}
+
+interface EnrichedEntry extends QueueEntry {
+  profile: ProfileData | null;
+}
+
 interface MatchPair {
-  userA: QueueEntry;
-  userB: QueueEntry;
+  userA: EnrichedEntry;
+  userB: EnrichedEntry;
   score: number;
 }
 
 /**
  * Calculate interest overlap score between two users.
- * Higher score = more shared interests.
  */
 function interestScore(a: string[], b: string[]): number {
   if (!a.length || !b.length) return 0;
@@ -27,8 +36,22 @@ function interestScore(a: string[], b: string[]): number {
 }
 
 /**
+ * Calculate age proximity score (0-1) based on date of birth.
+ * Closer ages get higher scores. Within 2 years = 1.0, decays after.
+ */
+function ageProximityScore(dobA: string | null, dobB: string | null): number {
+  if (!dobA || !dobB) return 0;
+  const ageA = (Date.now() - new Date(dobA).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  const ageB = (Date.now() - new Date(dobB).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  const diff = Math.abs(ageA - ageB);
+  if (diff <= 2) return 1;
+  if (diff <= 5) return 0.7;
+  if (diff <= 10) return 0.4;
+  return 0.1;
+}
+
+/**
  * Check if a user has been waiting long enough to fall back to any match.
- * After 30 seconds, match with anyone in the same mode.
  */
 function isPastFallbackThreshold(
   createdAt: string,
@@ -38,61 +61,81 @@ function isPastFallbackThreshold(
 }
 
 /**
- * Pair waiting users by mode and interest overlap.
- * Returns an array of matched pairs.
+ * Multi-factor match scoring.
+ *
+ * Weights:
+ * - Interest overlap: x3 (primary signal)
+ * - Gender match: x2
+ * - Region match: x2
+ * - Age proximity: x1
  */
-function pairUsers(entries: QueueEntry[]): MatchPair[] {
-  const byMode: Record<string, QueueEntry[]> = {};
-  for (const entry of entries) {
-    (byMode[entry.mode] ??= []).push(entry);
+function matchScore(a: EnrichedEntry, b: EnrichedEntry): number {
+  let score = 0;
+
+  // Interest overlap (0-N, each overlap = 3 points)
+  score += interestScore(a.interests, b.interests) * 3;
+
+  // Gender match (2 points if same gender)
+  if (a.profile?.gender && b.profile?.gender && a.profile.gender === b.profile.gender) {
+    score += 2;
   }
 
+  // Region match (2 points if same region)
+  if (a.profile?.region && b.profile?.region && a.profile.region === b.profile.region) {
+    score += 2;
+  }
+
+  // Age proximity (0-1 points)
+  score += ageProximityScore(a.profile?.date_of_birth ?? null, b.profile?.date_of_birth ?? null);
+
+  return score;
+}
+
+/**
+ * Pair waiting users using multi-factor scoring.
+ * No mode grouping — all users are in a single pool.
+ */
+function pairUsers(entries: EnrichedEntry[]): MatchPair[] {
   const pairs: MatchPair[] = [];
+  const matched = new Set<string>();
 
-  for (const modeEntries of Object.values(byMode)) {
-    const matched = new Set<string>();
+  // Sort by created_at (FIFO) so older entries get priority
+  entries.sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
 
-    // Sort by created_at (FIFO) so older entries get priority
-    modeEntries.sort(
-      (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-    );
+  for (let i = 0; i < entries.length; i++) {
+    if (matched.has(entries[i].id)) continue;
 
-    for (let i = 0; i < modeEntries.length; i++) {
-      if (matched.has(modeEntries[i].id)) continue;
+    let bestMatch: { entry: EnrichedEntry; score: number } | null = null;
 
-      let bestMatch: { entry: QueueEntry; score: number } | null = null;
+    for (let j = i + 1; j < entries.length; j++) {
+      if (matched.has(entries[j].id)) continue;
 
-      for (let j = i + 1; j < modeEntries.length; j++) {
-        if (matched.has(modeEntries[j].id)) continue;
+      const score = matchScore(entries[i], entries[j]);
+      const bothNoInterests =
+        !entries[i].interests.length && !entries[j].interests.length;
+      const eitherPastThreshold =
+        isPastFallbackThreshold(entries[i].created_at) ||
+        isPastFallbackThreshold(entries[j].created_at);
 
-        const score = interestScore(
-          modeEntries[i].interests,
-          modeEntries[j].interests,
-        );
-        const bothNoInterests =
-          !modeEntries[i].interests.length && !modeEntries[j].interests.length;
-        const eitherPastThreshold =
-          isPastFallbackThreshold(modeEntries[i].created_at) ||
-          isPastFallbackThreshold(modeEntries[j].created_at);
-
-        // Match if they share interests, both have no interests, or either waited past threshold
-        if (score > 0 || bothNoInterests || eitherPastThreshold) {
-          if (!bestMatch || score > bestMatch.score) {
-            bestMatch = { entry: modeEntries[j], score };
-          }
+      // Match if they have any positive score, both have no interests, or either waited past threshold
+      if (score > 0 || bothNoInterests || eitherPastThreshold) {
+        if (!bestMatch || score > bestMatch.score) {
+          bestMatch = { entry: entries[j], score };
         }
       }
+    }
 
-      if (bestMatch) {
-        matched.add(modeEntries[i].id);
-        matched.add(bestMatch.entry.id);
-        pairs.push({
-          userA: modeEntries[i],
-          userB: bestMatch.entry,
-          score: bestMatch.score,
-        });
-      }
+    if (bestMatch) {
+      matched.add(entries[i].id);
+      matched.add(bestMatch.entry.id);
+      pairs.push({
+        userA: entries[i],
+        userB: bestMatch.entry,
+        score: bestMatch.score,
+      });
     }
   }
 
@@ -138,7 +181,6 @@ async function broadcastMatch(
 }
 
 Deno.serve(async (req) => {
-  // Only allow POST (from pg_cron or manual invocation)
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -150,9 +192,6 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Note: Advisory lock (pg_advisory_xact_lock) is not available via supabase-js RPC.
-    // We rely on pg_cron not overlapping (2s interval with fast execution < 1s).
-
     // 1. Expire stale entries (waiting > 2 minutes)
     const twoMinutesAgo = new Date(Date.now() - 120_000).toISOString();
     const { data: expired } = await supabase
@@ -199,7 +238,7 @@ Deno.serve(async (req) => {
     // 3. Fetch all waiting entries
     const { data: waiting, error: fetchError } = await supabase
       .from("match_queue")
-      .select("id, user_id, mode, interests, status, created_at")
+      .select("id, user_id, interests, status, created_at")
       .eq("status", "waiting")
       .order("created_at", { ascending: true });
 
@@ -213,19 +252,37 @@ Deno.serve(async (req) => {
       console.warn(`High queue depth: ${queueDepth}`);
     }
 
-    // 4. Pair users
-    const pairs = pairUsers(waiting ?? []);
+    // 4. Enrich entries with profile data for multi-factor scoring
+    const userIds = (waiting ?? []).map((e) => e.user_id);
+    let profileMap: Map<string, ProfileData> = new Map();
 
-    // 5. Process each pair: create room, update queue, broadcast
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, gender, date_of_birth, region")
+        .in("id", userIds);
+
+      if (profiles) {
+        profileMap = new Map(profiles.map((p) => [p.id, p]));
+      }
+    }
+
+    const enrichedEntries: EnrichedEntry[] = (waiting ?? []).map((entry) => ({
+      ...entry,
+      profile: profileMap.get(entry.user_id) ?? null,
+    }));
+
+    // 5. Pair users with multi-factor scoring
+    const pairs = pairUsers(enrichedEntries);
+
+    // 6. Process each pair: create room, update queue, broadcast
     let pairsMade = 0;
     for (const pair of pairs) {
-      const roomType = pair.userA.mode === "games" ? "game" : "chat";
-
-      // Create room
+      // All rooms are chat rooms now (games are a feature within chat)
       const { data: room, error: roomError } = await supabase
         .from("rooms")
         .insert({
-          type: roomType,
+          type: "chat",
           user_a: pair.userA.user_id,
           user_b: pair.userB.user_id,
           status: "active",
@@ -280,7 +337,6 @@ Deno.serve(async (req) => {
         }),
       ]);
 
-      // Mark as notified if broadcast succeeded
       if (okA) {
         await supabase
           .from("match_queue")
