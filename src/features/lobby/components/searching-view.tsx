@@ -1,7 +1,6 @@
-import { Check, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import type { MatchStatus } from "../hooks/use-matchmaking";
 
 interface SearchingViewProps {
@@ -14,21 +13,22 @@ interface SearchingViewProps {
 function formatTime(seconds: number): string {
 	const mins = Math.floor(seconds / 60);
 	const secs = seconds % 60;
-	return `${mins}:${secs.toString().padStart(2, "0")}`;
+	return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
-function getStatusText(status: MatchStatus): string {
+function getStatusLine(status: MatchStatus): {
+	eyebrow: string;
+	heading: string;
+} {
 	switch (status) {
 		case "queuing":
-			return "Joining queue…";
-		case "searching":
-			return "Looking for a stranger…";
+			return { eyebrow: "Queue", heading: "Joining the queue" };
 		case "matched":
-			return "Match found!";
+			return { eyebrow: "Match", heading: "Match found" };
 		case "navigating":
-			return "Connecting…";
+			return { eyebrow: "Match", heading: "Connecting you now" };
 		default:
-			return "Looking for a stranger…";
+			return { eyebrow: "Searching", heading: "Looking for someone" };
 	}
 }
 
@@ -39,68 +39,72 @@ export function SearchingView({
 	onCancel,
 }: SearchingViewProps) {
 	const isMatched = matchStatus === "matched" || matchStatus === "navigating";
+	const { eyebrow, heading } = getStatusLine(matchStatus);
 
 	return (
-		<div className="flex h-full flex-col items-center justify-center px-4">
-			<Card className="w-full max-w-sm duration-300 animate-in fade-in zoom-in-95">
-				<CardContent className="flex flex-col items-center gap-6 py-8">
-					<div className="relative">
-						{isMatched ? (
-							<div className="flex size-20 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500/10">
-								<Check className="size-10 text-emerald-500" aria-hidden />
-							</div>
-						) : (
-							<>
-								<div className="flex size-20 items-center justify-center rounded-full border-2 border-primary/20">
-									<Loader2
-										className="size-10 animate-spin text-primary motion-reduce:animate-none"
-										aria-hidden
-									/>
-								</div>
-								<span className="-bottom-1 -right-1 absolute flex size-5">
-									<span
-										className="absolute inline-flex size-full animate-ping rounded-full bg-primary/40 motion-reduce:animate-none"
-										aria-hidden
-									/>
-									<span className="relative inline-flex size-5 rounded-full bg-primary" />
-								</span>
-							</>
-						)}
+		<div className="mx-auto flex h-full w-full max-w-md flex-col items-center justify-center gap-10 px-4 py-10 duration-500 animate-in fade-in">
+			<div
+				aria-hidden
+				className="relative flex size-32 items-center justify-center"
+			>
+				{isMatched ? (
+					<div className="flex size-20 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500/10 duration-300 animate-in fade-in zoom-in-95">
+						<Check className="size-10 text-emerald-500" />
 					</div>
+				) : (
+					<>
+						<span className="absolute size-full rounded-full bg-primary/15 motion-safe:animate-ping" />
+						<span className="absolute size-2/3 rounded-full bg-primary/20 motion-safe:animate-ping motion-safe:[animation-delay:500ms]" />
+						<span className="absolute size-1/3 rounded-full bg-primary/25 motion-safe:animate-ping motion-safe:[animation-delay:1000ms]" />
+						<span className="relative size-3 rounded-full bg-primary" />
+					</>
+				)}
+			</div>
 
-					<div className="space-y-1 text-center">
-						<h2 className="text-balance font-semibold text-foreground text-lg">
-							{getStatusText(matchStatus)}
-						</h2>
-					</div>
-
-					{interests.length > 0 && (
-						<div className="flex flex-wrap justify-center gap-1.5">
-							{interests.map((interest) => (
-								<Badge key={interest} variant="outline" className="text-xs">
-									{interest}
-								</Badge>
-							))}
-						</div>
-					)}
-
-					{!isMatched && (
-						<Button
-							variant="outline"
-							onClick={onCancel}
-							className="w-full transition-transform duration-150 ease-out active:scale-[0.98]"
-						>
-							Cancel
-						</Button>
-					)}
-
-					<p className="font-mono text-muted-foreground text-xs tabular-nums">
-						{isMatched
-							? "Connecting you now…"
-							: `Searching · ${formatTime(elapsedSeconds)}`}
+			<div className="space-y-3 text-center">
+				<p className="font-mono text-[11px] text-muted-foreground uppercase tracking-widest">
+					{eyebrow}
+				</p>
+				<h1 className="text-balance font-semibold text-3xl text-foreground tracking-tight md:text-4xl">
+					{heading}
+				</h1>
+				{!isMatched && (
+					<p className="font-mono text-5xl text-foreground tabular-nums md:text-6xl">
+						{formatTime(elapsedSeconds)}
 					</p>
-				</CardContent>
-			</Card>
+				)}
+			</div>
+
+			{!isMatched && interests.length > 0 && (
+				<div className="flex flex-col items-center gap-2">
+					<p className="font-mono text-[11px] text-muted-foreground uppercase tracking-widest">
+						Matching on
+					</p>
+					<div className="flex flex-wrap justify-center gap-1.5">
+						{interests.map((interest) => (
+							<Badge key={interest} variant="outline" className="text-xs">
+								{interest}
+							</Badge>
+						))}
+					</div>
+				</div>
+			)}
+
+			{isMatched && (
+				<p className="text-pretty text-center text-muted-foreground text-sm">
+					Say hi when you&rsquo;re in.
+				</p>
+			)}
+
+			{!isMatched && (
+				<Button
+					variant="ghost"
+					onClick={onCancel}
+					className="text-muted-foreground transition-[color,transform] duration-150 ease-out hover:text-foreground active:scale-[0.97]"
+				>
+					Cancel
+				</Button>
+			)}
 		</div>
 	);
 }
