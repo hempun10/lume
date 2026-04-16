@@ -1,4 +1,4 @@
-import { Loader2, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Loader2, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TicTacToeBoard } from "../../games/components/tic-tac-toe-board";
 import { useGameRoom } from "../../games/hooks/use-game-room";
@@ -25,7 +25,7 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 	if (roomStatus === "connecting" || roomStatus === "waiting_for_opponent") {
 		return (
 			<div className="flex h-full flex-col">
-				<ActiveGameHeader myMark={null} onClose={onClose} />
+				<ActiveGameHeader myMark={null} onBack={onBack} onClose={onClose} />
 				<div className="flex flex-1 items-center justify-center">
 					<div className="flex flex-col items-center gap-3">
 						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -43,7 +43,7 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 	if (!gameState) {
 		return (
 			<div className="flex h-full flex-col">
-				<ActiveGameHeader myMark={null} onClose={onClose} />
+				<ActiveGameHeader myMark={null} onBack={onBack} onClose={onClose} />
 				<div className="flex flex-1 items-center justify-center">
 					<div className="flex flex-col items-center gap-3">
 						<p className="text-sm text-muted-foreground">
@@ -73,7 +73,7 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 
 	return (
 		<div className="flex h-full flex-col">
-			<ActiveGameHeader myMark={myMark} onClose={onClose} />
+			<ActiveGameHeader myMark={myMark} onBack={onBack} onClose={onClose} />
 
 			{/* Game area */}
 			<div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
@@ -130,14 +130,24 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 
 function ActiveGameHeader({
 	myMark,
+	onBack,
 	onClose,
 }: {
 	myMark: "X" | "O" | null;
+	onBack: () => void;
 	onClose: () => void;
 }) {
 	return (
 		<div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
 			<div className="flex items-center gap-2">
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					onClick={onBack}
+					aria-label="Leave game and pick another"
+				>
+					<ArrowLeft className="h-4 w-4" />
+				</Button>
 				<h3 className="text-sm font-semibold text-foreground">Tic Tac Toe</h3>
 				{myMark && (
 					<span className="text-xs text-muted-foreground">
@@ -150,7 +160,12 @@ function ActiveGameHeader({
 					</span>
 				)}
 			</div>
-			<Button variant="ghost" size="icon-sm" onClick={onClose}>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				onClick={onClose}
+				aria-label="Close game panel"
+			>
 				<X className="h-4 w-4" />
 			</Button>
 		</div>

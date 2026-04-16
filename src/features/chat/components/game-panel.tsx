@@ -11,6 +11,7 @@ interface GamePanelProps {
 	acceptedGameId: string | null;
 	onInvite: (gameId: string, gameName: string) => void;
 	onResetInvite: () => void;
+	onLeaveGame: () => void;
 	onClose: () => void;
 }
 
@@ -20,6 +21,7 @@ export function GamePanel({
 	acceptedGameId,
 	onInvite,
 	onResetInvite,
+	onLeaveGame,
 	onClose,
 }: GamePanelProps) {
 	if (inviteStatus === "accepted" && acceptedGameId) {
@@ -28,7 +30,7 @@ export function GamePanel({
 				roomId={roomId}
 				gameId={acceptedGameId}
 				onClose={onClose}
-				onBack={onResetInvite}
+				onBack={onLeaveGame}
 			/>
 		);
 	}

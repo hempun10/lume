@@ -19,6 +19,10 @@ interface GameRejectPayload {
 	game_id: string;
 }
 
+interface GameLeavePayload {
+	sender_id: string;
+}
+
 // --- Public types ---
 
 export type GameInviteStatus =
@@ -53,6 +57,9 @@ interface UseGameInviteReturn {
 	toggleBan: () => void;
 	/** Reset invite state back to idle */
 	reset: () => void;
+	/** Leave an active game and notify the opponent. Both sides return
+	 * to the game picker (status = idle). */
+	leaveGame: () => void;
 }
 
 /**
@@ -137,6 +144,18 @@ export function useGameInvite(
 		channel.on("broadcast", { event: "game_accept" }, onAccept);
 		channel.on("broadcast", { event: "game_reject" }, onReject);
 
+		// --- Opponent left an active game ---
+		const onLeave = (payload: { payload: GameLeavePayload }) => {
+			const data = payload.payload;
+			if (data.sender_id === userId) return;
+			setStatus("idle");
+			setIncomingInvite(null);
+			setAcceptedGameId(null);
+			pendingGameIdRef.current = null;
+		};
+
+		channel.on("broadcast", { event: "game_leave" }, onLeave);
+
 		return () => {
 			if (rejectTimeoutRef.current) {
 				clearTimeout(rejectTimeoutRef.current);
@@ -213,6 +232,21 @@ export function useGameInvite(
 		pendingGameIdRef.current = null;
 	}, []);
 
+	const leaveGame = useCallback(() => {
+		const channel = channelRef.current;
+		if (channel) {
+			channel.send({
+				type: "broadcast",
+				event: "game_leave",
+				payload: { sender_id: userId } satisfies GameLeavePayload,
+			});
+		}
+		setStatus("idle");
+		setIncomingInvite(null);
+		setAcceptedGameId(null);
+		pendingGameIdRef.current = null;
+	}, [channelRef, userId]);
+
 	return {
 		status,
 		incomingInvite,
@@ -223,5 +257,6 @@ export function useGameInvite(
 		isBanned,
 		toggleBan,
 		reset,
+		leaveGame,
 	};
 }
