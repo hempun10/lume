@@ -23,11 +23,11 @@ Originally scaffolded from a TanStack Start + Supabase Auth starter template, in
 src/
 ├── components/
 │   ├── ui/              # shadcn/ui primitives (button, card, input, badge, toggle-group, avatar, dropdown-menu, tooltip, etc.)
-│   ├── form/            # Reusable form field wrappers (FormInput)
+│   ├── form/            # Reusable form field wrappers (FormInput, DateOfBirthPicker, GenderSelect)
 │   └── errors/          # Error handling components (ErrorBoundary, ErrorPage, NotFound)
 ├── features/            # Domain-based feature modules (each with components/, context/, guards/, types/, schema.ts)
 │   ├── auth/            # Auth feature
-│   │   ├── components/  # AuthInput, AuthLayout (split-screen), form-login, form-signup, form-forgot-password, form-reset-password
+│   │   ├── components/  # AuthInput, AuthLayout, LoginView, form-login, form-signup, form-forgot-password, form-reset-password
 │   │   ├── context/     # AuthContext provider + useAuth hook
 │   │   ├── guards/      # Route guard (guard-authenticated)
 │   │   ├── types/       # TypeScript interfaces (component props)
@@ -43,8 +43,8 @@ src/
 │   │   ├── types/       # MatchMode, LobbyViewProps
 │   │   └── index.ts     # Barrel exports
 │   ├── chat/            # Chat feature (1-on-1 stranger chat)
-│   │   ├── components/  # ChatView, ChatHeader, MessageList, MessageInput, ChatEndedView
-│   │   ├── hooks/       # useRealtimeChat (Supabase Broadcast messages + Presence)
+│   │   ├── components/  # ChatView, ChatHeader, MessageList, MessageInput, ChatEndedView, ActiveGame, GamePanel, GamePickerCard, GameInviteModal
+│   │   ├── hooks/       # useRealtimeChat (Supabase Broadcast messages + Presence), useGameInvite, useStrangerProfile
 │   │   ├── types/       # ChatMessage (senderId-based), ChatSession, ChatStatus
 │   │   └── index.ts     # Barrel exports
 │   ├── games/           # Games catalog + playable games
@@ -56,7 +56,9 @@ src/
 │   │   └── index.ts     # Barrel exports
 │   ├── settings/        # Settings/profile feature
 │   │   ├── components/  # SettingsView (page layout), ProfileSection (name/DOB/gender/region form), PreferencesSection (interests)
+│   │   ├── hooks/       # useSettingsMutations (profile + preferences mutations with success state)
 │   │   ├── types/       # ProfileData, ProfileFormValues, PreferencesFormValues
+│   │   ├── schema.ts    # Zod schemas (profileSchema, preferencesSchema)
 │   │   ├── queries.ts   # profileDetailOptions (fetch full profile from Supabase)
 │   │   ├── mutations.ts # updateProfile, updatePreferences (Supabase updates)
 │   │   └── index.ts     # Barrel exports
@@ -68,11 +70,15 @@ src/
 │       ├── components/  # ThemeToggle button (light ↔ dark, Sun/Moon icons)
 │       └── index.ts     # Barrel exports
 ├── layout/              # App-wide layout components
-│   ├── landing-header.tsx  # Landing page header (logo, nav links with anchor scroll, theme toggle, Sign In)
-│   ├── dashboard-shell.tsx # Dashboard shell (topbar + sidebar + main area)
-│   └── Footer.tsx          # Footer (used by landing layout)
+│   ├── landing-header.tsx    # Landing page header (logo, nav links with anchor scroll, theme toggle, Sign In)
+│   ├── dashboard-shell.tsx   # Dashboard shell composer (imports topbar + sidebar + mobile tab bar)
+│   ├── dashboard-topbar.tsx  # Dashboard top bar (logo, online indicator, avatar dropdown)
+│   ├── dashboard-sidebar.tsx # Desktop icon sidebar (Lobby, Settings) + shared sidebarNav config
+│   ├── mobile-tab-bar.tsx    # Mobile bottom tab bar (reuses sidebarNav)
+│   └── footer.tsx            # Footer (used by landing layout)
 ├── lib/                 # Library configurations
 │   ├── supabase/        # Supabase client singleton + getSessionReady()
+│   ├── constants.ts     # Shared constants (MAX_DOB)
 │   └── utils.ts         # cn() helper (shadcn)
 ├── routes/              # File-based routing (TanStack Router) — thin shells importing from features
 │   ├── __root.tsx       # Root layout (ThemeProvider, AuthProvider, TooltipProvider)
@@ -85,7 +91,7 @@ src/
 │   ├── _authenticated/games.tsx   # Game catalog
 │   ├── _authenticated/settings.tsx # Profile & preferences settings
 │   ├── _authenticated/onboarding.tsx # Post-signup onboarding (set display name)
-│   ├── login.tsx        # Combined login/signup (delegates to LoginForm/SignupForm)
+│   ├── login.tsx        # Combined login/signup (thin shell, delegates to LoginView)
 │   ├── forgot-password.tsx / reset-password.tsx # Password reset flow
 │   └── logout.tsx       # Sign out and redirect
 ├── types/               # TypeScript types (database.types.ts — auto-generated)
@@ -109,7 +115,8 @@ src/
 - `src/features/lobby/components/match-config-card.tsx` — Mode toggle (text/games), interest input, Start Matching button, online counter
 - `src/features/lobby/components/interest-input.tsx` — Tag input with suggestions, add/remove interests for matching
 - `src/features/chat/components/chat-view.tsx` — Main chat layout (header + messages + input, post-chat ended state)
-- `src/features/chat/hooks/use-realtime-chat.ts` — Real-time chat hook (Broadcast messages + Presence typing/connection)
+- `src/features/chat/hooks/use-realtime-chat.ts` — Real-time chat hook (Broadcast messages + Presence typing/connection); channel event handlers extracted as named functions
+- `src/features/chat/components/active-game.tsx` — Active game component (TicTacToe board, status, rematch UI) — extracted from game-panel.tsx
 - `src/features/games/components/games-view.tsx` — Game catalog page with available/coming-soon sections
 - `src/features/games/components/game-view.tsx` — Game room wrapper (connects to game room, renders board, handles rematch)
 - `src/features/games/components/tic-tac-toe-board.tsx` — 3x3 game board with animated marks and win highlighting
@@ -117,17 +124,25 @@ src/
 - `src/features/games/hooks/use-game-room.ts` — Game room hook (Broadcast moves, Presence player detection, rematch protocol)
 - `src/features/games/components/game-card.tsx` — Individual game card (icon, name, description, players, duration, play button with onPlay callback)
 - `src/features/games/data/games.ts` — Game definitions (Tic Tac Toe, Trivia, Word Chain, Chess, Connect Four, Draw & Guess)
-- `src/features/settings/components/settings-view.tsx` — Settings page layout with profile + preferences sections
-- `src/features/settings/components/profile-section.tsx` — Editable profile form (display name, DOB, gender, region)
+- `src/features/settings/components/settings-view.tsx` — Settings page layout with profile + preferences sections (delegates mutations to useSettingsMutations hook)
+- `src/features/settings/components/profile-section.tsx` — Editable profile form (display name, DOB, gender, region) — uses shared DateOfBirthPicker + GenderSelect
 - `src/features/settings/components/preferences-section.tsx` — Editable matching preferences (interests tag selector)
-- `src/features/settings/queries.ts` — profileDetailOptions (fetches full profile, reuses profileKeys from onboarding)
+- `src/features/settings/hooks/use-settings-mutations.ts` — Encapsulates profile + preferences mutations with success state and cache invalidation
+- `src/features/settings/schema.ts` — Zod schemas (profileSchema, preferencesSchema) used by settings form components
+- `src/features/settings/queries.ts` — profileDetailOptions (fetches full profile, reuses profileKeys from onboarding for cache coherence)
 - `src/features/settings/mutations.ts` — updateProfile, updatePreferences (Supabase update calls)
 - `src/lib/supabase/client.ts` — Supabase client singleton + `getSessionReady()` helper
 - `src/components/form/form-input.tsx` — Generic reusable form field component using `useFormContext()`, renders AuthInput by default or accepts children render function for custom controls
+- `src/components/form/date-of-birth-picker.tsx` — Reusable DOB picker (Calendar popover, enforces 18+ via MAX_DOB)
+- `src/components/form/gender-select.tsx` — Reusable gender select (shadcn Select, uses GENDER_OPTIONS from onboarding schema)
+- `src/lib/constants.ts` — Shared constants (MAX_DOB for 18+ age requirement)
 - `src/components/errors/error-boundary.tsx` / `error-page.tsx` / `not-found.tsx` — Error handling components
 - `src/layout/landing-header.tsx` — Landing page header with logo, centered nav (Features, How it works, FAQ with anchor scroll), theme toggle, Sign In button, mobile Sheet
-- `src/layout/dashboard-shell.tsx` — Dashboard shell: DashboardTopBar (logo, online indicator, avatar dropdown with Profile link), DashboardSidebar (icon nav: Lobby, Chat, Games, Settings with tooltips — hidden on mobile), MobileTabBar (bottom tab nav — visible on mobile only), DashboardShell wrapper
-- `src/layout/Footer.tsx` — Footer component
+- `src/layout/dashboard-shell.tsx` — Dashboard shell composer (thin wrapper importing topbar, sidebar, mobile tab bar)
+- `src/layout/dashboard-topbar.tsx` — Top bar (logo, online indicator, avatar dropdown with Profile link)
+- `src/layout/dashboard-sidebar.tsx` — Desktop icon sidebar (Lobby, Settings with tooltips) + shared `sidebarNav` config
+- `src/layout/mobile-tab-bar.tsx` — Mobile bottom tab bar (reuses `sidebarNav` from dashboard-sidebar)
+- `src/layout/footer.tsx` — Footer component
 
 ## Layout Architecture
 
@@ -140,7 +155,7 @@ The app uses TanStack Router layout routes to switch between two distinct layout
 
 ### Dashboard Layout (inside `_authenticated.tsx`)
 - **Top bar** (48px): Lume logo left, online status indicator center, theme toggle + user avatar/dropdown right
-- **Sidebar** (56px, desktop only): Icon-based nav — Lobby (`/dashboard`), Chat (`/chat`), Games (`/games`), Settings (`/settings`). Uses tooltips for labels. All links use `<Link>` for client-side navigation. Hidden on mobile (`hidden md:flex`).
+- **Sidebar** (56px, desktop only): Icon-based nav — Lobby (`/dashboard`), Settings (`/settings`). Uses tooltips for labels. All links use `<Link>` for client-side navigation. Hidden on mobile (`hidden md:flex`).
 - **Mobile tab bar** (56px, mobile only): Bottom navigation bar with icon + label for each nav item. Visible below `md` breakpoint (`flex md:hidden`). Active tab highlighted with `text-primary`.
 - **Main area**: Full-height content area, no footer. Content shrinks to accommodate both topbar and mobile tab bar on small screens.
 - **Responsive padding**: Page components use tighter padding on mobile (`px-4 py-6`) and wider on desktop (`md:px-6 md:py-8`). Centered card layouts (lobby, searching, chat-ended) use `px-4` and are naturally mobile-friendly.
