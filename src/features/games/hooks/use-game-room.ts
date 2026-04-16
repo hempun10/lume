@@ -44,44 +44,30 @@ interface UseGameRoomReturn {
 	opponentWantsRematch: boolean;
 }
 
-/** Start a new game with swapped roles and broadcast game_start. */
-function startNewGame(
-	room: RoomData,
-	roomDataRef: React.MutableRefObject<RoomData | null>,
-	setGameState: React.Dispatch<React.SetStateAction<TicTacToeState | null>>,
-	setRoomStatus: React.Dispatch<React.SetStateAction<GameRoomStatus>>,
-	setRematchRequested: React.Dispatch<React.SetStateAction<boolean>>,
-	setOpponentWantsRematch: React.Dispatch<React.SetStateAction<boolean>>,
-	channel: ReturnType<typeof supabase.channel>,
-) {
-	const swappedA = room.user_b;
-	const swappedB = room.user_a;
-	const state = createInitialState(swappedA, swappedB);
-
-	roomDataRef.current = { user_a: swappedA, user_b: swappedB };
-	setGameState(state);
-	setRoomStatus("playing");
-	setRematchRequested(false);
-	setOpponentWantsRematch(false);
-
-	channel.send({
-		type: "broadcast",
-		event: "game_start",
-		payload: {
-			player_a: swappedA,
-			player_b: swappedB,
-			game_type: "tic-tac-toe",
-		} satisfies BroadcastGameStartPayload,
-	});
+/**
+ * Derive the X/O player assignment for a given round from the immutable
+ * original room. Round 0 keeps the original roles (user_a = X). Each
+ * subsequent round swaps so the previous O becomes X.
+ *
+ * Because both clients share the same `originalRoom` (fetched from the DB)
+ * and independently bump `round` in lockstep, they always compute the
+ * same assignment without needing a rematch broadcast.
+ */
+function stateForRound(originalRoom: RoomData, round: number): TicTacToeState {
+	const xPlayer = round % 2 === 0 ? originalRoom.user_a : originalRoom.user_b;
+	const oPlayer = round % 2 === 0 ? originalRoom.user_b : originalRoom.user_a;
+	return createInitialState(xPlayer, oPlayer);
 }
 
 /**
  * Game room hook using Supabase Broadcast.
  *
  * - Both players join game:{roomId} channel
- * - user_a (room creator) broadcasts game_start with player assignments
+ * - user_a (room creator) broadcasts game_start to kick off round 0
  * - Moves are broadcast and validated client-side
- * - Game state is local (no DB writes for moves)
+ * - Rematch uses a local round counter; both clients derive the new
+ *   state deterministically from the original room + round parity
+ *   (no rematch game_start broadcast needed).
  */
 export function useGameRoom(roomId: string): UseGameRoomReturn {
 	const { user } = useAuth();
@@ -93,7 +79,33 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 	const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
 	const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-	const roomDataRef = useRef<RoomData | null>(null);
+	// Immutable room data — set once from the DB and never mutated.
+	const originalRoomRef = useRef<RoomData | null>(null);
+	// Current round; bumped in lockstep on both clients when both
+	// players have requested a rematch.
+	const roundRef = useRef(0);
+	// Refs mirror the rematch flags so the "both requested?" check is
+	// always fresh, regardless of render timing. State is kept in sync
+	// purely for UI consumers.
+	const rematchRequestedRef = useRef(false);
+	const opponentWantsRematchRef = useRef(false);
+
+	const startNextRound = useCallback(() => {
+		if (!originalRoomRef.current) return;
+		roundRef.current += 1;
+		rematchRequestedRef.current = false;
+		opponentWantsRematchRef.current = false;
+		setGameState(stateForRound(originalRoomRef.current, roundRef.current));
+		setRoomStatus("playing");
+		setRematchRequested(false);
+		setOpponentWantsRematch(false);
+	}, []);
+
+	const maybeStartNextRound = useCallback(() => {
+		if (rematchRequestedRef.current && opponentWantsRematchRef.current) {
+			startNextRound();
+		}
+	}, [startNextRound]);
 
 	useEffect(() => {
 		if (!userId || !roomId) return;
@@ -107,7 +119,8 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 				.single();
 
 			if (cancelled || !data) return;
-			roomDataRef.current = { user_a: data.user_a, user_b: data.user_b };
+			originalRoomRef.current = { user_a: data.user_a, user_b: data.user_b };
+			roundRef.current = 0;
 
 			const channel = supabase.channel(`game:${roomId}`, {
 				config: { broadcast: { self: false }, presence: { key: userId } },
@@ -116,7 +129,16 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 
 			channel.on("broadcast", { event: "game_start" }, (payload) => {
 				const d = payload.payload as BroadcastGameStartPayload;
-				roomDataRef.current = { user_a: d.player_a, user_b: d.player_b };
+				// Only used for the initial round handshake. Both clients
+				// already know the original room from the DB fetch, but we
+				// trust the sender's payload in case of any DB lag.
+				originalRoomRef.current = {
+					user_a: d.player_a,
+					user_b: d.player_b,
+				};
+				roundRef.current = 0;
+				rematchRequestedRef.current = false;
+				opponentWantsRematchRef.current = false;
 				setGameState(createInitialState(d.player_a, d.player_b));
 				setRoomStatus("playing");
 				setRematchRequested(false);
@@ -138,23 +160,9 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 			channel.on("broadcast", { event: "rematch" }, (payload) => {
 				const d = payload.payload as BroadcastRematchPayload;
 				if (d.sender_id === userId) return;
+				opponentWantsRematchRef.current = true;
 				setOpponentWantsRematch(true);
-
-				setRematchRequested((myRequest) => {
-					if (myRequest && roomDataRef.current) {
-						startNewGame(
-							roomDataRef.current,
-							roomDataRef,
-							setGameState,
-							setRoomStatus,
-							setRematchRequested,
-							setOpponentWantsRematch,
-							channel,
-						);
-						return false;
-					}
-					return myRequest;
-				});
+				maybeStartNextRound();
 			});
 
 			channel.on("presence", { event: "sync" }, () => {
@@ -164,9 +172,10 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 				setRoomStatus((prev) => {
 					if (
 						prev === "waiting_for_opponent" &&
-						roomDataRef.current?.user_a === userId
+						originalRoomRef.current?.user_a === userId
 					) {
-						const room = roomDataRef.current;
+						const room = originalRoomRef.current;
+						roundRef.current = 0;
 						setGameState(createInitialState(room.user_a, room.user_b));
 						channel.send({
 							type: "broadcast",
@@ -200,7 +209,7 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 				channelRef.current = null;
 			}
 		};
-	}, [userId, roomId]);
+	}, [userId, roomId, maybeStartNextRound]);
 
 	const makeMove = useCallback(
 		(position: number) => {
@@ -226,6 +235,7 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 
 	const requestRematch = useCallback(() => {
 		if (!channelRef.current) return;
+		rematchRequestedRef.current = true;
 		setRematchRequested(true);
 
 		channelRef.current.send({
@@ -234,18 +244,10 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 			payload: { sender_id: userId } satisfies BroadcastRematchPayload,
 		});
 
-		if (opponentWantsRematch && roomDataRef.current && channelRef.current) {
-			startNewGame(
-				roomDataRef.current,
-				roomDataRef,
-				setGameState,
-				setRoomStatus,
-				setRematchRequested,
-				setOpponentWantsRematch,
-				channelRef.current,
-			);
-		}
-	}, [userId, opponentWantsRematch]);
+		// If the opponent already asked, both sides have agreed —
+		// bump the round deterministically on this client.
+		maybeStartNextRound();
+	}, [userId, maybeStartNextRound]);
 
 	const myTurn = gameState ? isMyTurn(gameState, userId) : false;
 	const myMark = gameState ? getMyMark(gameState, userId) : null;
