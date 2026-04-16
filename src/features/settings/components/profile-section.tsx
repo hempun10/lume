@@ -1,28 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { CalendarIcon, Check, Globe, User } from "lucide-react";
+import { Check, Globe, User } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { DateOfBirthPicker } from "@/components/form/date-of-birth-picker";
 import { FormInput } from "@/components/form/form-input";
+import { GenderSelect } from "@/components/form/gender-select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { GENDER_OPTIONS } from "@/features/onboarding/schema";
-import { MAX_DOB } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import { profileSchema } from "../schema";
 import type { ProfileData, ProfileFormValues } from "../types";
 
@@ -86,64 +71,8 @@ export function ProfileSection({
 
 					{/* Date of birth and Gender — side by side */}
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						{/* Date of birth — Calendar popover */}
-						<FormInput name="dateOfBirth" label="Date of birth">
-							{(field) => (
-								<Popover>
-									<PopoverTrigger asChild>
-										<Button
-											variant="outline"
-											className={cn(
-												"w-full justify-start text-left font-normal",
-												!field.value && "text-muted-foreground",
-											)}
-										>
-											<CalendarIcon className="mr-2 h-4 w-4" />
-											{field.value
-												? format(new Date(field.value), "MMM d, yyyy")
-												: "Pick a date"}
-										</Button>
-									</PopoverTrigger>
-									<PopoverContent className="w-auto p-0" align="start">
-										<Calendar
-											mode="single"
-											selected={field.value ? new Date(field.value) : undefined}
-											onSelect={(date) => {
-												if (date) {
-													field.onChange(format(date, "yyyy-MM-dd"));
-												}
-											}}
-											defaultMonth={MAX_DOB}
-											disabled={{ after: MAX_DOB }}
-											captionLayout="dropdown"
-											fromYear={1920}
-											toYear={MAX_DOB.getFullYear()}
-										/>
-									</PopoverContent>
-								</Popover>
-							)}
-						</FormInput>
-
-						{/* Gender — shadcn Select */}
-						<FormInput name="gender" label="Gender">
-							{(field) => (
-								<Select
-									value={field.value ?? ""}
-									onValueChange={field.onChange}
-								>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Select gender" />
-									</SelectTrigger>
-									<SelectContent>
-										{GENDER_OPTIONS.map((opt) => (
-											<SelectItem key={opt.value} value={opt.value}>
-												{opt.label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							)}
-						</FormInput>
+						<DateOfBirthPicker />
+						<GenderSelect />
 					</div>
 
 					{/* Region */}

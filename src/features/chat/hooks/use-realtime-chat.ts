@@ -29,6 +29,107 @@ interface BroadcastEndPayload {
 	sender_id: string;
 }
 
+type SessionUpdater = React.Dispatch<React.SetStateAction<ChatSession>>;
+
+// ---------------------------------------------------------------------------
+// Channel event handlers (extracted from the setup useEffect for clarity)
+// ---------------------------------------------------------------------------
+
+function handleIncomingMessage(
+	payload: { payload: unknown },
+	userId: string,
+	setSession: SessionUpdater,
+	setIsStrangerTyping: (v: boolean) => void,
+) {
+	const data = payload.payload as BroadcastMessagePayload;
+	if (data.sender_id === userId) return;
+
+	const msg: ChatMessage = {
+		id: data.id,
+		senderId: data.sender_id,
+		text: data.text,
+		timestamp: new Date(data.timestamp),
+	};
+	setSession((prev) => ({
+		...prev,
+		messages: [...prev.messages, msg],
+	}));
+	setIsStrangerTyping(false);
+}
+
+function handleIncomingTyping(
+	payload: { payload: unknown },
+	userId: string,
+	setIsStrangerTyping: (v: boolean) => void,
+	typingTimeoutRef: React.MutableRefObject<ReturnType<
+		typeof setTimeout
+	> | null>,
+) {
+	const data = payload.payload as BroadcastTypingPayload;
+	if (data.sender_id === userId) return;
+	setIsStrangerTyping(data.is_typing);
+
+	if (typingTimeoutRef.current) {
+		clearTimeout(typingTimeoutRef.current);
+	}
+	if (data.is_typing) {
+		typingTimeoutRef.current = setTimeout(() => {
+			setIsStrangerTyping(false);
+		}, 3000);
+	}
+}
+
+function handleIncomingEnd(
+	payload: { payload: unknown },
+	userId: string,
+	setSession: SessionUpdater,
+	setIsStrangerTyping: (v: boolean) => void,
+) {
+	const data = payload.payload as BroadcastEndPayload;
+	if (data.sender_id === userId) return;
+
+	setIsStrangerTyping(false);
+	setSession((prev) => ({
+		...prev,
+		status: "ended",
+		endedAt: new Date(),
+	}));
+}
+
+function handlePresenceSync(
+	channel: ReturnType<typeof supabase.channel>,
+	userId: string,
+	setIsStrangerConnected: (v: boolean) => void,
+) {
+	const state = channel.presenceState();
+	const otherPresent = Object.keys(state).some((key) => key !== userId);
+	setIsStrangerConnected(otherPresent);
+}
+
+function handlePresenceLeave(
+	leftPresences: Array<Record<string, unknown>>,
+	userId: string,
+	setIsStrangerConnected: (v: boolean) => void,
+	setSession: SessionUpdater,
+) {
+	const strangerLeft = leftPresences.some(
+		(p) => (p as { user_id?: string }).user_id !== userId,
+	);
+	if (strangerLeft) {
+		setIsStrangerConnected(false);
+		setSession((prev) => {
+			if (prev.status === "active") {
+				return { ...prev, status: "disconnected", endedAt: new Date() };
+			}
+			return prev;
+		});
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+
 /**
  * Real-time chat hook using Supabase Broadcast + Presence.
  *
@@ -36,8 +137,6 @@ interface BroadcastEndPayload {
  * - Typing indicators via Broadcast
  * - Presence tracking for stranger connected/disconnected
  * - Room status updated to 'ended' on chat end
- *
- * Replaces the mock useChat hook.
  */
 export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 	const { user } = useAuth();
@@ -72,7 +171,6 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 			endedAt: new Date(),
 		}));
 
-		// Update room status in DB
 		supabase
 			.from("rooms")
 			.update({ status: "ended", ended_at: new Date().toISOString() })
@@ -90,83 +188,27 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 
 		channelRef.current = channel;
 
-		// --- Broadcast: message ---
-		channel.on("broadcast", { event: "message" }, (payload) => {
-			const data = payload.payload as BroadcastMessagePayload;
-			if (data.sender_id === userId) return;
+		channel.on("broadcast", { event: "message" }, (p: { payload: unknown }) =>
+			handleIncomingMessage(p, userId, setSession, setIsStrangerTyping),
+		);
+		channel.on("broadcast", { event: "typing" }, (p: { payload: unknown }) =>
+			handleIncomingTyping(p, userId, setIsStrangerTyping, typingTimeoutRef),
+		);
+		channel.on("broadcast", { event: "end_chat" }, (p: { payload: unknown }) =>
+			handleIncomingEnd(p, userId, setSession, setIsStrangerTyping),
+		);
+		channel.on("presence", { event: "sync" }, () =>
+			handlePresenceSync(channel, userId, setIsStrangerConnected),
+		);
+		channel.on("presence", { event: "leave" }, ({ leftPresences }) =>
+			handlePresenceLeave(
+				leftPresences as Array<Record<string, unknown>>,
+				userId,
+				setIsStrangerConnected,
+				setSession,
+			),
+		);
 
-			const msg: ChatMessage = {
-				id: data.id,
-				senderId: data.sender_id,
-				text: data.text,
-				timestamp: new Date(data.timestamp),
-			};
-			setSession((prev) => ({
-				...prev,
-				messages: [...prev.messages, msg],
-			}));
-			// Clear typing when message arrives
-			setIsStrangerTyping(false);
-		});
-
-		// --- Broadcast: typing ---
-		channel.on("broadcast", { event: "typing" }, (payload) => {
-			const data = payload.payload as BroadcastTypingPayload;
-			if (data.sender_id === userId) return;
-			setIsStrangerTyping(data.is_typing);
-
-			// Auto-clear typing after 3s if no update
-			if (typingTimeoutRef.current) {
-				clearTimeout(typingTimeoutRef.current);
-			}
-			if (data.is_typing) {
-				typingTimeoutRef.current = setTimeout(() => {
-					setIsStrangerTyping(false);
-				}, 3000);
-			}
-		});
-
-		// --- Broadcast: end_chat ---
-		channel.on("broadcast", { event: "end_chat" }, (payload) => {
-			const data = payload.payload as BroadcastEndPayload;
-			if (data.sender_id === userId) return;
-
-			setIsStrangerTyping(false);
-			setSession((prev) => ({
-				...prev,
-				status: "ended",
-				endedAt: new Date(),
-			}));
-		});
-
-		// --- Presence ---
-		channel.on("presence", { event: "sync" }, () => {
-			const state = channel.presenceState();
-			// Check if anyone besides us is present
-			const otherPresent = Object.keys(state).some((key) => key !== userId);
-			setIsStrangerConnected(otherPresent);
-		});
-
-		channel.on("presence", { event: "leave" }, ({ leftPresences }) => {
-			const strangerLeft = leftPresences.some(
-				(p) => (p as { user_id?: string }).user_id !== userId,
-			);
-			if (strangerLeft) {
-				setIsStrangerConnected(false);
-				setSession((prev) => {
-					if (prev.status === "active") {
-						return {
-							...prev,
-							status: "disconnected",
-							endedAt: new Date(),
-						};
-					}
-					return prev;
-				});
-			}
-		});
-
-		// Subscribe and track presence
 		channel.subscribe(async (status) => {
 			if (status === "SUBSCRIBED") {
 				await channel.track({ user_id: userId, joined_at: Date.now() });
@@ -200,7 +242,6 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 				timestamp: new Date().toISOString(),
 			};
 
-			// Add to own messages immediately
 			const msg: ChatMessage = {
 				id: msgPayload.id,
 				senderId: userId,
@@ -212,21 +253,17 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 				messages: [...prev.messages, msg],
 			}));
 
-			// Broadcast to stranger
 			channelRef.current.send({
 				type: "broadcast",
 				event: "message",
 				payload: msgPayload,
 			});
 
-			// Clear own typing indicator
 			lastTypingBroadcastRef.current = 0;
 		},
 		[userId, session.status],
 	);
 
-	// Expose a way to broadcast typing — called from MessageInput via onTyping
-	// We debounce: only send typing=true at most once per second
 	const broadcastTyping = useCallback(() => {
 		const now = Date.now();
 		if (
