@@ -34,6 +34,45 @@ export type Database = {
 	};
 	public: {
 		Tables: {
+			match_queue: {
+				Row: {
+					created_at: string | null;
+					id: string;
+					interests: string[] | null;
+					matched_with: string | null;
+					mode: string;
+					notified: boolean;
+					room_id: string | null;
+					status: string;
+					updated_at: string | null;
+					user_id: string;
+				};
+				Insert: {
+					created_at?: string | null;
+					id?: string;
+					interests?: string[] | null;
+					matched_with?: string | null;
+					mode: string;
+					notified?: boolean;
+					room_id?: string | null;
+					status?: string;
+					updated_at?: string | null;
+					user_id: string;
+				};
+				Update: {
+					created_at?: string | null;
+					id?: string;
+					interests?: string[] | null;
+					matched_with?: string | null;
+					mode?: string;
+					notified?: boolean;
+					room_id?: string | null;
+					status?: string;
+					updated_at?: string | null;
+					user_id?: string;
+				};
+				Relationships: [];
+			};
 			profiles: {
 				Row: {
 					created_at: string;
@@ -41,7 +80,7 @@ export type Database = {
 					display_name: string | null;
 					gender: string | null;
 					id: string;
-					interests: string[];
+					interests: string[] | null;
 					onboarding_completed: boolean;
 					region: string | null;
 					updated_at: string;
@@ -52,7 +91,7 @@ export type Database = {
 					display_name?: string | null;
 					gender?: string | null;
 					id: string;
-					interests?: string[];
+					interests?: string[] | null;
 					onboarding_completed?: boolean;
 					region?: string | null;
 					updated_at?: string;
@@ -63,10 +102,49 @@ export type Database = {
 					display_name?: string | null;
 					gender?: string | null;
 					id?: string;
-					interests?: string[];
+					interests?: string[] | null;
 					onboarding_completed?: boolean;
 					region?: string | null;
 					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			rooms: {
+				Row: {
+					current_turn: string | null;
+					ended_at: string | null;
+					game_state: Json | null;
+					game_type: string | null;
+					id: string;
+					started_at: string | null;
+					status: string;
+					type: string;
+					user_a: string;
+					user_b: string;
+				};
+				Insert: {
+					current_turn?: string | null;
+					ended_at?: string | null;
+					game_state?: Json | null;
+					game_type?: string | null;
+					id?: string;
+					started_at?: string | null;
+					status?: string;
+					type: string;
+					user_a: string;
+					user_b: string;
+				};
+				Update: {
+					current_turn?: string | null;
+					ended_at?: string | null;
+					game_state?: Json | null;
+					game_type?: string | null;
+					id?: string;
+					started_at?: string | null;
+					status?: string;
+					type?: string;
+					user_a?: string;
+					user_b?: string;
 				};
 				Relationships: [];
 			};
