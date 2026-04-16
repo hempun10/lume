@@ -191,6 +191,16 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 - **Mutation functions** — Extract all Supabase calls into dedicated mutation/query files per feature.
 - **Homepage** is the Lume landing page (hero, features, comparison, FAQ, CTA), always accessible (no auth redirect)
 
+## Automated Matchmaking (pg_cron + pg_net)
+
+The `match-users` Edge Function is automatically invoked every 2 seconds via a pg_cron job that uses pg_net for HTTP requests. See migration `20260416070000_add_matchmaker_cron.sql`.
+
+**Local dev quirks:**
+- pg_net's libcurl **cannot resolve Docker container hostnames** (e.g., `supabase_kong_lume`). Use `host.docker.internal:54321` instead.
+- `current_setting('app.settings.service_role_key')` is **empty** in local dev (only set in hosted Supabase). The migration falls back to the hardcoded local secret key.
+- Both `apikey` and `Authorization` headers are required to call Edge Functions.
+- Verify cron responses: `docker exec -i $(docker ps --filter "name=supabase_db_lume" -q) psql -U postgres -d postgres -c "SELECT id, status_code, created FROM net._http_response ORDER BY created DESC LIMIT 5;"`
+
 ## Environment Variables
 
 - `VITE_SUPABASE_URL` — Supabase API URL
