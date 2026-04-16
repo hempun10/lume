@@ -1,35 +1,104 @@
-import { Loader2, RotateCcw, X } from "lucide-react";
-import { useState } from "react";
+import { Loader2, RotateCcw, X, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TicTacToeBoard } from "../../games/components/tic-tac-toe-board";
 import { GAMES } from "../../games/data/games";
 import { useGameRoom } from "../../games/hooks/use-game-room";
+import type { GameInviteStatus } from "../hooks/use-game-invite";
 import { GamePickerCard } from "./game-picker-card";
 
 interface GamePanelProps {
 	roomId: string;
+	inviteStatus: GameInviteStatus;
+	acceptedGameId: string | null;
+	onInvite: (gameId: string, gameName: string) => void;
+	onResetInvite: () => void;
 	onClose: () => void;
 }
 
-export function GamePanel({ roomId, onClose }: GamePanelProps) {
-	const [selectedGame, setSelectedGame] = useState<string | null>(null);
-
-	if (!selectedGame) {
-		return <GamePicker onSelect={setSelectedGame} onClose={onClose} />;
+export function GamePanel({
+	roomId,
+	inviteStatus,
+	acceptedGameId,
+	onInvite,
+	onResetInvite,
+	onClose,
+}: GamePanelProps) {
+	// Game accepted — show the active game
+	if (inviteStatus === "accepted" && acceptedGameId) {
+		return (
+			<ActiveGame
+				roomId={roomId}
+				gameId={acceptedGameId}
+				onClose={onClose}
+				onBack={onResetInvite}
+			/>
+		);
 	}
 
+	// Waiting for response or rejected
+	if (inviteStatus === "inviting") {
+		return (
+			<div className="flex h-full flex-col">
+				<PanelHeader title="Play a Game" onClose={onClose} />
+				<div className="flex flex-1 items-center justify-center">
+					<div className="flex flex-col items-center gap-3">
+						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+						<p className="text-sm text-muted-foreground">
+							Waiting for stranger to accept...
+						</p>
+						<Button variant="ghost" size="sm" onClick={onResetInvite}>
+							Cancel
+						</Button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	if (inviteStatus === "rejected") {
+		return (
+			<div className="flex h-full flex-col">
+				<PanelHeader title="Play a Game" onClose={onClose} />
+				<div className="flex flex-1 items-center justify-center">
+					<div className="flex flex-col items-center gap-3">
+						<XCircle className="h-6 w-6 text-destructive" />
+						<p className="text-sm text-muted-foreground">
+							Stranger declined the invite
+						</p>
+						<Button variant="outline" size="sm" onClick={onResetInvite}>
+							Try again
+						</Button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	// Default: show game picker
+	return <GamePicker onSelect={onInvite} onClose={onClose} />;
+}
+
+// --- Sub-components ---
+
+function PanelHeader({
+	title,
+	onClose,
+}: {
+	title: string;
+	onClose: () => void;
+}) {
 	return (
-		<ActiveGame
-			roomId={roomId}
-			gameId={selectedGame}
-			onClose={onClose}
-			onBack={() => setSelectedGame(null)}
-		/>
+		<div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+			<h3 className="text-sm font-semibold text-foreground">{title}</h3>
+			<Button variant="ghost" size="icon-sm" onClick={onClose}>
+				<X className="h-4 w-4" />
+			</Button>
+		</div>
 	);
 }
 
 interface GamePickerProps {
-	onSelect: (gameId: string) => void;
+	onSelect: (gameId: string, gameName: string) => void;
 	onClose: () => void;
 }
 
@@ -39,18 +108,13 @@ function GamePicker({ onSelect, onClose }: GamePickerProps) {
 
 	return (
 		<div className="flex h-full flex-col">
-			<div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
-				<h3 className="text-sm font-semibold text-foreground">Play a Game</h3>
-				<Button variant="ghost" size="icon-sm" onClick={onClose}>
-					<X className="h-4 w-4" />
-				</Button>
-			</div>
+			<PanelHeader title="Play a Game" onClose={onClose} />
 			<div className="flex-1 overflow-y-auto p-4 space-y-3">
 				{availableGames.map((game) => (
 					<GamePickerCard
 						key={game.id}
 						game={game}
-						onPlay={() => onSelect(game.id)}
+						onPlay={() => onSelect(game.id, game.name)}
 					/>
 				))}
 				{comingSoonGames.map((game) => (
@@ -83,19 +147,14 @@ function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 	if (roomStatus === "connecting" || roomStatus === "waiting_for_opponent") {
 		return (
 			<div className="flex h-full flex-col">
-				<div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
-					<h3 className="text-sm font-semibold text-foreground">Tic Tac Toe</h3>
-					<Button variant="ghost" size="icon-sm" onClick={onClose}>
-						<X className="h-4 w-4" />
-					</Button>
-				</div>
+				<PanelHeader title="Tic Tac Toe" onClose={onClose} />
 				<div className="flex flex-1 items-center justify-center">
 					<div className="flex flex-col items-center gap-3">
 						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
 						<p className="text-sm text-muted-foreground">
 							{roomStatus === "connecting"
 								? "Connecting..."
-								: "Waiting for opponent..."}
+								: "Setting up game..."}
 						</p>
 					</div>
 				</div>
@@ -106,12 +165,7 @@ function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 	if (!gameState) {
 		return (
 			<div className="flex h-full flex-col">
-				<div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
-					<h3 className="text-sm font-semibold text-foreground">Tic Tac Toe</h3>
-					<Button variant="ghost" size="icon-sm" onClick={onClose}>
-						<X className="h-4 w-4" />
-					</Button>
-				</div>
+				<PanelHeader title="Tic Tac Toe" onClose={onClose} />
 				<div className="flex flex-1 items-center justify-center">
 					<div className="flex flex-col items-center gap-3">
 						<p className="text-sm text-muted-foreground">

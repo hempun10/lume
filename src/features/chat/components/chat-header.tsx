@@ -1,4 +1,4 @@
-import { Clock, Gamepad2, LogOut } from "lucide-react";
+import { Ban, Clock, Gamepad2, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,8 @@ interface ChatHeaderProps {
 	isStrangerConnected: boolean;
 	showGame: boolean;
 	onToggleGame: () => void;
+	isGameBanned: boolean;
+	onToggleBan: () => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -27,6 +29,8 @@ export function ChatHeader({
 	isStrangerConnected,
 	showGame,
 	onToggleGame,
+	isGameBanned,
+	onToggleBan,
 }: ChatHeaderProps) {
 	const [elapsed, setElapsed] = useState(0);
 
@@ -62,6 +66,26 @@ export function ChatHeader({
 			</div>
 
 			<div className="flex items-center gap-1">
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							variant={isGameBanned ? "destructive" : "ghost"}
+							size="icon-sm"
+							onClick={onToggleBan}
+							className={
+								isGameBanned
+									? ""
+									: "text-muted-foreground hover:text-foreground"
+							}
+						>
+							<Ban className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						{isGameBanned ? "Unblock game requests" : "Block game requests"}
+					</TooltipContent>
+				</Tooltip>
+
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button

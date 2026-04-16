@@ -10,6 +10,7 @@ interface UseRealtimeChatReturn {
 	broadcastTyping: () => void;
 	isStrangerTyping: boolean;
 	isStrangerConnected: boolean;
+	channelRef: React.RefObject<ReturnType<typeof supabase.channel> | null>;
 }
 
 interface BroadcastMessagePayload {
@@ -253,5 +254,6 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 		broadcastTyping,
 		isStrangerTyping,
 		isStrangerConnected,
+		channelRef,
 	};
 }
