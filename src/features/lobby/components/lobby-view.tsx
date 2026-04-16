@@ -1,9 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
+import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { supabase } from "@/lib/supabase/client";
 import { useMatchmaking } from "../hooks/use-matchmaking";
-import { MatchConfigCard } from "./match-config-card";
+import { GamesRail } from "./games-rail";
+import { LobbyGreeting } from "./lobby-greeting";
+import { LobbyHeroCard } from "./lobby-hero-card";
+import { PromptPreviewCard } from "./prompt-preview-card";
 import { SearchingView } from "./searching-view";
+import { YourVibeCard } from "./your-vibe-card";
 
 interface LobbyViewProps {
 	displayName: string;
@@ -15,13 +20,12 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 
 	const userId = user?.id ?? "";
 
-	// Fetch profile interests to pre-fill the match config
 	const { data: profile } = useQuery({
-		queryKey: ["profiles", userId, "interests"],
+		queryKey: ["profiles", userId, "lobby"],
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from("profiles")
-				.select("interests")
+				.select("interests, region")
 				.eq("id", userId)
 				.single();
 			if (error) throw error;
@@ -30,6 +34,8 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 		enabled: !!userId,
 		staleTime: 1000 * 60 * 5,
 	});
+
+	const interests = profile?.interests ?? [];
 
 	if (
 		state.status === "searching" ||
@@ -48,26 +54,30 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 	}
 
 	return (
-		<div className="flex h-full flex-col items-center justify-center gap-8 px-4">
-			<div className="text-center">
-				<h1 className="text-2xl font-semibold text-foreground">
-					Welcome back, {displayName}
-				</h1>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Ready to meet someone new?
-				</p>
-			</div>
+		<div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-6 md:px-6 md:py-10">
+			<LobbyGreeting displayName={displayName} />
 
-			<MatchConfigCard
-				defaultInterests={profile?.interests ?? []}
+			{state.error && (
+				<div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-destructive text-sm">
+					<AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+					<p>{state.error}</p>
+				</div>
+			)}
+
+			<LobbyHeroCard
+				defaultInterests={interests}
 				onStartMatching={startMatching}
 			/>
 
-			{state.error && <p className="text-sm text-destructive">{state.error}</p>}
+			<GamesRail />
 
-			<div className="text-center text-sm text-muted-foreground">
-				<p>Start a conversation with a stranger who shares your interests.</p>
-			</div>
+			<PromptPreviewCard interests={interests} />
+
+			<YourVibeCard
+				displayName={displayName}
+				interests={interests}
+				region={profile?.region}
+			/>
 		</div>
 	);
 }

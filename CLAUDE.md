@@ -38,8 +38,8 @@ src/
 │   │   ├── schema.ts    # Zod schema + constants (GENDER_OPTIONS, INTEREST_OPTIONS)
 │   │   └── index.ts     # Barrel exports
 │   ├── lobby/           # Lobby/matching feature (main dashboard view)
-│   │   ├── components/  # LobbyView, MatchConfigCard, InterestInput, SearchingView
-│   │   ├── hooks/       # useMatchmaking (real Supabase queue + Broadcast matching)
+│   │   ├── components/  # LobbyView, LobbyGreeting, LobbyHeroCard, GamesRail, PromptPreviewCard, YourVibeCard, SearchingView
+│   │   ├── hooks/       # useMatchmaking (Supabase queue + Broadcast matching), useOnlineCount (Supabase Presence)
 │   │   ├── types/       # MatchMode, LobbyViewProps
 │   │   └── index.ts     # Barrel exports
 │   ├── chat/            # Chat feature (1-on-1 stranger chat)
@@ -111,9 +111,13 @@ src/
 - `src/features/onboarding/components/onboarding-form.tsx` — Post-signup onboarding form (display name, DOB, gender, region, interests)
 - `src/features/onboarding/components/interest-tag-selector.tsx` — Toggleable tag chip grid for selecting interests
 - `src/features/onboarding/schema.ts` — Zod schema for onboarding form + GENDER_OPTIONS + INTEREST_OPTIONS constants (reused by lobby for matching interests)
-- `src/features/lobby/components/lobby-view.tsx` — Main lobby interface (greeting + match config card)
-- `src/features/lobby/components/match-config-card.tsx` — Mode toggle (text/games), interest input, Start Matching button, online counter
-- `src/features/lobby/components/interest-input.tsx` — Tag input with suggestions, add/remove interests for matching
+- `src/features/lobby/components/lobby-view.tsx` — Main lobby as a scrollable editorial feed (greeting → hero card → games rail → conversation starters → your vibe)
+- `src/features/lobby/components/lobby-hero-card.tsx` — Primary match card (mode toggle chat/games, one-tap interest chips, live online counter, Start matching CTA)
+- `src/features/lobby/components/games-rail.tsx` — Horizontal games preview (mobile scroll / desktop grid)
+- `src/features/lobby/components/prompt-preview-card.tsx` — 3 interest-seeded conversation starters with copy + shuffle
+- `src/features/lobby/components/your-vibe-card.tsx` — Profile mini-preview with edit link
+- `src/features/lobby/components/lobby-greeting.tsx` — Time-aware greeting (morning/afternoon/evening/late-night)
+- `src/features/lobby/hooks/use-online-count.ts` — Supabase Presence count on `lume:lobby-presence` channel
 - `src/features/chat/components/chat-view.tsx` — Main chat layout (header + messages + input, post-chat ended state)
 - `src/features/chat/hooks/use-realtime-chat.ts` — Real-time chat hook (Broadcast messages + Presence typing/connection); channel event handlers extracted as named functions
 - `src/features/chat/components/active-game.tsx` — Active game component (TicTacToe board, status, rematch UI) — extracted from game-panel.tsx
@@ -186,7 +190,7 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 - **Protected routes** use `_authenticated.tsx` layout with a `beforeLoad` hook that checks auth state and redirects. It also checks if the user's profile is complete (has `onboarding_completed`); if not, it redirects to `/onboarding`.
 - **Auth flow** — Email/password only, no OAuth. Email confirmation is disabled (`enable_confirmations = false` in `supabase/config.toml`). Signup auto-signs in the user and redirects to `/onboarding`. Login redirects to `/dashboard`. Auth UI uses a UserJot-inspired split-screen layout (form card left, branding panel with dot-grid right).
 - **Onboarding** — New users are redirected to `/onboarding` after signup to complete their profile (display name, date of birth, gender, region, interests). The `_authenticated` layout guard redirects to onboarding if `onboarding_completed` is false, catching users who somehow skip it. Users must be 18+ (DOB validated client-side). Region is optional. Interests use a tag chip selector (1–8 selections from a predefined list).
-- **Lobby/Dashboard** — The main authenticated view at `/dashboard`. No "overview" page — the lobby IS the matching interface. Users configure match preferences (mode: text/games, interests) and click Start Matching. The lobby reuses `INTEREST_OPTIONS` from `src/features/onboarding/schema.ts` for matching interests.
+- **Lobby/Dashboard** — The main authenticated view at `/dashboard`, rendered as a vertical editorial feed (`max-w-5xl`, stacked sections, subtle staggered entrance). The hero card is the primary CTA (mode toggle + interest chips + live online counter + Start matching button). Below it: a Games rail, interest-seeded conversation starters (copy + shuffle), and a profile vibe preview linking to `/settings`. The lobby reuses `INTEREST_OPTIONS` from `src/features/onboarding/schema.ts` for matching interests. Visual style is monochrome editorial — no gradients or glow, one accent (primary) for the CTA, `tabular-nums` + `font-mono` for numeric data (online count, interest counter).
 - **Games** — Game catalog at `/games` showing available and coming-soon games in a responsive card grid. Game definitions live in `src/features/games/data/games.ts`. Only Tic Tac Toe is playable; others are marked "coming soon". Clicking "Play" navigates to `/dashboard?mode=games` to start matchmaking with game mode. After matching, users are routed to `/game?roomId={roomId}`. Game state is managed client-side via Broadcast (no DB writes for moves). The `useGameRoom` hook handles the full game lifecycle: connecting, waiting for opponent, playing, finished, and rematch.
 - **Settings** — Profile and preferences editor at `/settings`. Two card sections: Profile (display name, DOB, gender, region) and Matching Preferences (interests). Fetches profile from Supabase via `profileDetailOptions` query (reuses `profileKeys` from onboarding for cache coherence). Saves via `updateProfile` and `updatePreferences` mutations. Shows success/error feedback inline.
 - **Profiles table** has columns: `id`, `display_name`, `date_of_birth`, `gender`, `region`, `interests` (text[]), `onboarding_completed` (boolean), `created_at`, `updated_at`
