@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useMatchmaking } from "../hooks/use-matchmaking";
 import type { MatchMode } from "../types";
 import { MatchConfigCard } from "./match-config-card";
@@ -5,10 +6,20 @@ import { SearchingView } from "./searching-view";
 
 interface LobbyViewProps {
 	displayName: string;
+	initialMode?: MatchMode;
 }
 
-export function LobbyView({ displayName }: LobbyViewProps) {
+export function LobbyView({ displayName, initialMode }: LobbyViewProps) {
 	const { state, startMatching, cancelMatching } = useMatchmaking();
+	const autoStartedRef = useRef(false);
+
+	// Auto-start matchmaking when navigated with initialMode (e.g. from Games page)
+	useEffect(() => {
+		if (initialMode && state.status === "idle" && !autoStartedRef.current) {
+			autoStartedRef.current = true;
+			startMatching(initialMode, []);
+		}
+	}, [initialMode, state.status, startMatching]);
 
 	function handleStartMatching(mode: MatchMode, interests: string[]) {
 		startMatching(mode, interests);

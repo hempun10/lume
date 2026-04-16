@@ -1,10 +1,16 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Gamepad2 } from "lucide-react";
 import { GAMES } from "../data/games";
 import { GameCard } from "./game-card";
 
 export function GamesView() {
+	const navigate = useNavigate();
 	const availableGames = GAMES.filter((g) => g.status === "available");
 	const comingSoonGames = GAMES.filter((g) => g.status === "coming_soon");
+
+	function handlePlay() {
+		navigate({ to: "/dashboard", search: { mode: "games" } });
+	}
 
 	return (
 		<div className="mx-auto max-w-4xl px-4 py-6 md:px-6 md:py-8">
@@ -28,7 +34,7 @@ export function GamesView() {
 				</h2>
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					{availableGames.map((game) => (
-						<GameCard key={game.id} game={game} />
+						<GameCard key={game.id} game={game} onPlay={handlePlay} />
 					))}
 				</div>
 			</section>

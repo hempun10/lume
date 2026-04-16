@@ -19,6 +19,7 @@ import { Route as LandingIndexRouteImport } from './routes/_landing/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/games'
+import { Route as AuthenticatedGameRouteImport } from './routes/_authenticated/game'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 
@@ -70,6 +71,11 @@ const AuthenticatedGamesRoute = AuthenticatedGamesRouteImport.update({
   path: '/games',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedGameRoute = AuthenticatedGameRouteImport.update({
+  id: '/game',
+  path: '/game',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/game': typeof AuthenticatedGameRoute
   '/games': typeof AuthenticatedGamesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/chat': typeof AuthenticatedChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/game': typeof AuthenticatedGameRoute
   '/games': typeof AuthenticatedGamesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/game': typeof AuthenticatedGameRoute
   '/_authenticated/games': typeof AuthenticatedGamesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/chat'
     | '/dashboard'
+    | '/game'
     | '/games'
     | '/onboarding'
     | '/settings'
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/chat'
     | '/dashboard'
+    | '/game'
     | '/games'
     | '/onboarding'
     | '/settings'
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/chat'
     | '/_authenticated/dashboard'
+    | '/_authenticated/game'
     | '/_authenticated/games'
     | '/_authenticated/onboarding'
     | '/_authenticated/settings'
@@ -242,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGamesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/game': {
+      id: '/_authenticated/game'
+      path: '/game'
+      fullPath: '/game'
+      preLoaderRoute: typeof AuthenticatedGameRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -262,6 +281,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedGameRoute: typeof AuthenticatedGameRoute
   AuthenticatedGamesRoute: typeof AuthenticatedGamesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -270,6 +290,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedGameRoute: AuthenticatedGameRoute,
   AuthenticatedGamesRoute: AuthenticatedGamesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

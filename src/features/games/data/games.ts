@@ -19,7 +19,7 @@ export const GAMES: Game[] = [
 		icon: "brain",
 		players: "2 players",
 		duration: "~5 min",
-		status: "available",
+		status: "coming_soon",
 	},
 	{
 		id: "word-game",
@@ -29,7 +29,7 @@ export const GAMES: Game[] = [
 		icon: "type",
 		players: "2 players",
 		duration: "~3 min",
-		status: "available",
+		status: "coming_soon",
 	},
 	{
 		id: "chess",

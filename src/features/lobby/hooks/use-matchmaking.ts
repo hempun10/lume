@@ -138,10 +138,13 @@ export function useMatchmaking(): UseMatchmakingReturn {
 
 					// Brief delay to show "matched" state, then navigate
 					setTimeout(() => {
-						setState((prev) => ({ ...prev, status: "navigating" }));
-						navigate({
-							to: "/chat",
-							search: { roomId: room_id },
+						setState((prev) => {
+							const destination = prev.mode === "games" ? "/game" : "/chat";
+							navigate({
+								to: destination,
+								search: { roomId: room_id },
+							});
+							return { ...prev, status: "navigating" };
 						});
 					}, 1500);
 				})
