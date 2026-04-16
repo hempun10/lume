@@ -50,7 +50,7 @@ export function MessageList({
 				>
 					<div
 						className={cn(
-							"max-w-[75%] rounded-2xl px-4 py-2 text-sm",
+							"max-w-[75%] break-words rounded-2xl px-4 py-2 text-sm",
 							msg.senderId === userId
 								? "rounded-br-md bg-primary text-primary-foreground"
 								: "rounded-bl-md bg-muted text-foreground",

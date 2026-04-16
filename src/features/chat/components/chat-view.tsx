@@ -8,6 +8,7 @@ import { ChatHeader } from "./chat-header";
 import { GamePanel } from "./game-panel";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
+import { PromptSuggestions } from "./prompt-suggestions";
 
 interface ChatViewProps {
 	roomId: string;
@@ -78,6 +79,14 @@ export function ChatView({ roomId }: ChatViewProps) {
 					strangerInterests={strangerProfile?.interests}
 					onPromptSelect={sendMessage}
 				/>
+				{session.messages.length > 0 &&
+					strangerProfile?.interests &&
+					strangerProfile.interests.length > 0 && (
+						<PromptSuggestions
+							interests={strangerProfile.interests}
+							onSelect={sendMessage}
+						/>
+					)}
 				<MessageInput onSend={sendMessage} onTyping={broadcastTyping} />
 			</div>
 
