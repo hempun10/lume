@@ -5,42 +5,42 @@ const faqs = [
 	{
 		question: "Is Lume really free?",
 		answer:
-			"Yes. Core features — text chat, matching, and games — are completely free and always will be. We may offer optional cosmetic upgrades in the future, but the core experience stays free.",
+			"Yes. Text chat, matching, and every game are free and stay that way. No ads in the chat, no paywalled features on the core experience.",
 	},
 	{
-		question: "Do I need to create an account?",
+		question: "Do I need an account?",
 		answer:
-			"No. You can start chatting as a guest immediately. Creating an account is optional and only needed if you want to save friends, track game stats, or get a verified badge.",
+			"Yes — email and password, takes about 30 seconds. Accounts let us age-gate the platform, moderate effectively, and keep your match preferences between sessions.",
 	},
 	{
-		question: "How is Lume different from Omegle?",
+		question: "How is Lume different from Omegle or Rumi?",
 		answer:
-			"Lume is text-first (no forced video), has built-in multiplayer games, uses AI moderation to keep things safe, and offers smart interest-based matching instead of purely random pairing.",
+			"Text-first (no forced video), interest-based matching instead of purely random, real-time AI moderation, and built-in multiplayer games that live beside the chat. Safer, quicker to match, more to do.",
+	},
+	{
+		question: "What games are there?",
+		answer:
+			"Five playable today: tic-tac-toe, trivia, connect four, would-you-rather, and rock-paper-scissors. A round takes 2–5 minutes and runs right alongside your conversation. More on the way.",
 	},
 	{
 		question: "Is it safe?",
 		answer:
-			"Safety is our top priority. We use AI-powered content moderation, one-tap blocking and reporting, and anonymous-by-default identities. We actively filter bots and inappropriate content in real-time.",
+			"AI moderation runs on every message before it's delivered. Block and report are one tap. You're anonymous by default — no photo, no real name, no phone number — and the platform is 18+ only.",
 	},
 	{
-		question: "What kind of games are available?",
+		question: "Do my chats get stored?",
 		answer:
-			"We have trivia, word games, drawing challenges, quick strategy games, and more. All games are designed to be played in 2-5 minutes alongside a conversation, making them perfect icebreakers.",
+			"Messages are delivered over an ephemeral real-time channel and aren't saved to a database by default. When a chat ends, the transcript goes with it.",
 	},
 	{
-		question: "Can I use Lume on my phone?",
+		question: "Does it work on my phone?",
 		answer:
-			"Absolutely. Lume is built as a progressive web app (PWA) that works beautifully on any device — phone, tablet, or desktop. No app store download needed.",
+			"Yes. Lume is a progressive web app — open it in any mobile browser, add to home screen if you like, and you're set. No App Store, no Play Store.",
 	},
 	{
-		question: "What happens to my chat history?",
+		question: "Can I pick who I talk to?",
 		answer:
-			"Nothing — because we don't store it. Chats are ephemeral by default. Once a conversation ends, it's gone. Your privacy is non-negotiable.",
-	},
-	{
-		question: "Can I choose who I talk to?",
-		answer:
-			"You can add interest tags to improve your matches. We pair you with people who share similar interests and language preferences. You can always skip to the next person instantly.",
+			"You pick the vibe, not the person. Add interests (music, gaming, movies, etc.) and we pair you with someone who picked the same. Skip to the next match any time.",
 	},
 ];
 

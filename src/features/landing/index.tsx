@@ -8,7 +8,7 @@ import { StatsSection } from "./components/stats-section";
 
 export function LandingPage() {
 	return (
-		<div className="mx-auto max-w-4xl px-6 pb-20 sm:px-8 lg:px-10">
+		<div className="mx-auto max-w-5xl px-6 pb-20 sm:px-8 lg:px-10">
 			<HeroSection />
 
 			<hr className="my-20 border-t border-border" />

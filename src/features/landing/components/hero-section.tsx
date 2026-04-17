@@ -1,52 +1,50 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Gamepad2, MessageCircle, Shield } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { MockLobbyPreview } from "./mocks/product-mocks";
 
 export function HeroSection() {
 	return (
 		<section className="w-full pt-10 md:pt-20">
-			<div className="mx-auto max-w-4xl">
-				<h1 className="max-w-2xl text-balance text-xl font-semibold tracking-tight leading-[1.2] text-foreground sm:text-3xl md:text-4xl">
-					Meet new people through{" "}
-					<span className="mx-0.5 inline-flex items-center gap-1 rounded p-1 ring-1 bg-brand-500/10 text-brand-600 ring-brand-400/20">
-						<MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-					</span>{" "}
-					conversations and{" "}
-					<span className="mx-0.5 inline-flex items-center gap-1 rounded p-1 ring-1 bg-purple-500/10 text-purple-600 ring-purple-400/20">
-						<Gamepad2 className="h-4 w-4 sm:h-5 sm:w-5" />
-					</span>{" "}
-					games — safely and instantly
-				</h1>
+			<div className="grid gap-12 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-10">
+				<div>
+					<h1 className="max-w-2xl text-balance font-semibold text-3xl leading-[1.1] tracking-tight text-foreground sm:text-4xl md:text-5xl">
+						Meet a stranger. Chat. Play a quick game. Move on.
+					</h1>
 
-				<p className="mt-4 max-w-[630px] text-pretty text-base font-medium leading-relaxed text-muted-foreground sm:mt-6">
-					Lume connects you with real people around the world for spontaneous
-					text chats and fun multiplayer games. No profiles, no followers — just
-					genuine human connection in the moment.
-				</p>
+					<p className="mt-5 max-w-[560px] text-pretty text-base font-medium leading-relaxed text-muted-foreground sm:mt-6">
+						Lume is a text-first way to meet new people. Match on a shared
+						interest, play a round of tic-tac-toe while you talk, skip to the
+						next one whenever you want. No profiles, no followers, no video.
+					</p>
 
-				<div className="mt-12 flex flex-col items-start">
-					<Link
-						to="/login"
-						className="relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border bg-clip-padding font-medium transition-shadow min-h-10 px-5 py-2.5 text-base border-primary bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 rounded-2xl"
-					>
-						Start Chatting Now
-						<ArrowRight className="h-4 w-4" />
-					</Link>
+					<div className="mt-8 flex flex-wrap items-center gap-3">
+						<Link
+							to="/login"
+							className="group inline-flex items-center gap-2 rounded-2xl border border-primary bg-primary px-5 py-2.5 text-base font-medium text-primary-foreground shadow-xs transition-shadow hover:bg-primary/90"
+						>
+							Start Chatting
+							<ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+						</Link>
+						<Link
+							to="/login"
+							className="inline-flex items-center gap-2 rounded-2xl border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-muted"
+						>
+							Create account
+						</Link>
+					</div>
+
+					<p className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+						<span>Free forever</span>
+						<span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+						<span>30-second setup</span>
+						<span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+						<span>5 built-in games</span>
+					</p>
 				</div>
 
-				<p className="mt-8 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-					<span className="inline-flex items-center gap-1.5">
-						<Shield className="h-4 w-4 text-muted-foreground" />
-						Free forever
-					</span>
-					<span className="inline-flex items-center gap-1.5">
-						<MessageCircle className="h-4 w-4 text-muted-foreground" />
-						No signup required to chat
-					</span>
-					<span className="hidden sm:inline-flex items-center gap-1.5">
-						<Gamepad2 className="h-4 w-4 text-muted-foreground" />
-						5+ built-in games
-					</span>
-				</p>
+				<div className="md:pl-2">
+					<MockLobbyPreview />
+				</div>
 			</div>
 		</section>
 	);
