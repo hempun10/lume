@@ -42,16 +42,6 @@ export const GAMES: Game[] = [
 		status: "coming_soon",
 	},
 	{
-		id: "connect-four",
-		name: "Connect Four",
-		description:
-			"Drop discs into a 7-column grid. First to connect four in a row wins.",
-		icon: "circle-dot",
-		players: "2 players",
-		duration: "~5 min",
-		status: "available",
-	},
-	{
 		id: "would-you-rather",
 		name: "Would You Rather",
 		description:

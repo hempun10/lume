@@ -220,7 +220,7 @@ export function FeaturesSection() {
 				label="Games"
 				chipClass="bg-purple-500"
 				heading="Break the ice with a game, not a prompt"
-				description="Every chat can turn into a quick round of tic-tac-toe, connect four, trivia, would-you-rather, or rock-paper-scissors. The game lives beside the conversation — play, talk, rematch."
+				description="Every chat can turn into a quick round of tic-tac-toe, trivia, would-you-rather, or rock-paper-scissors. The game lives beside the conversation — play, talk, rematch."
 				features={gameFeatures}
 				withPreview
 				previewLabel="games preview"

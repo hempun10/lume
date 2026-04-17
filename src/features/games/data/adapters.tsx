@@ -1,13 +1,8 @@
 import type { ReactNode } from "react";
-import { ConnectFourBoard } from "../components/connect-four-board";
 import { RockPaperScissorsBoard } from "../components/rock-paper-scissors-board";
 import { TicTacToeBoard } from "../components/tic-tac-toe-board";
 import { TriviaBoard } from "../components/trivia-board";
 import { WouldYouRatherBoard } from "../components/would-you-rather-board";
-import {
-	CONNECT_FOUR_ENGINE,
-	type ConnectFourState,
-} from "../engines/connect-four";
 import {
 	ROCK_PAPER_SCISSORS_ENGINE,
 	type RockPaperScissorsState,
@@ -81,38 +76,17 @@ const ticTacToeAdapter: GameAdapter<TicTacToeState> = {
 	},
 };
 
-const connectFourAdapter: GameAdapter<ConnectFourState> = {
-	id: "connect-four",
-	title: "Connect Four",
-	engine: CONNECT_FOUR_ENGINE,
-	renderBoard: ({ state, myTurn, disabled, onMove }) => (
-		<ConnectFourBoard
-			state={state}
-			myTurn={myTurn}
-			disabled={disabled}
-			onColumnClick={onMove}
-		/>
-	),
-	renderSeatBadge: (seat) => {
-		if (!seat) return null;
-		const label = seat === "A" ? "Red" : "Yellow";
-		return (
-			<span className="text-xs text-muted-foreground">
-				You:{" "}
-				<span className={seat === "A" ? "text-brand-500" : "text-yellow-500"}>
-					{label}
-				</span>
-			</span>
-		);
-	},
-};
-
 const wouldYouRatherAdapter: GameAdapter<WouldYouRatherState> = {
 	id: "would-you-rather",
 	title: "Would You Rather",
 	engine: WOULD_YOU_RATHER_ENGINE,
-	renderBoard: ({ state, myTurn, onMove }) => (
-		<WouldYouRatherBoard state={state} myTurn={myTurn} onMove={onMove} />
+	renderBoard: ({ state, myTurn, onMove, mySeat }) => (
+		<WouldYouRatherBoard
+			state={state}
+			mySeat={mySeat}
+			myTurn={myTurn}
+			onMove={onMove}
+		/>
 	),
 	renderSeatBadge: () => null,
 	// Board owns the status UI (phase-dependent: pick / waiting / reveal / summary).
@@ -155,7 +129,6 @@ const triviaAdapter: GameAdapter<TriviaState> = {
 // biome-ignore lint/suspicious/noExplicitAny: Adapter state types differ per game.
 const REGISTRY: Record<string, GameAdapter<any>> = {
 	"tic-tac-toe": ticTacToeAdapter,
-	"connect-four": connectFourAdapter,
 	"would-you-rather": wouldYouRatherAdapter,
 	"rock-paper-scissors": rockPaperScissorsAdapter,
 	trivia: triviaAdapter,
