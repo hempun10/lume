@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { EmojiCharadesBoard } from "../components/emoji-charades-board";
 import { RockPaperScissorsBoard } from "../components/rock-paper-scissors-board";
 import { TicTacToeBoard } from "../components/tic-tac-toe-board";
@@ -18,12 +18,19 @@ import {
 	type TicTacToeState,
 } from "../engines/tic-tac-toe";
 import { TRIVIA_ENGINE, type TriviaState } from "../engines/trivia";
-import { TWO_TRUTHS_ENGINE, type TwoTruthsState } from "../engines/two-truths";
+import {
+	applyReveal,
+	applyStatements,
+	TWO_TRUTHS_ENGINE,
+	type TwoTruthsPick,
+	type TwoTruthsState,
+} from "../engines/two-truths";
 import type { GameEngine, GameResult, Seat } from "../engines/types";
 import {
 	WOULD_YOU_RATHER_ENGINE,
 	type WouldYouRatherState,
 } from "../engines/would-you-rather";
+import type { CustomEventHandler } from "../hooks/use-game-room";
 
 /**
  * Per-game presentation adapter. Anything game-specific that the
@@ -41,8 +48,30 @@ export interface GameAdapter<State> {
 		disabled: boolean;
 		onMove: (move: number) => void;
 		mySeat: Seat;
+		/**
+		 * Broadcast a game-specific side-channel event to the other
+		 * seat. Only some games need this (user-authored text, drawing
+		 * strokes, etc.). Unused by most boards.
+		 */
+		sendCustomEvent: (event: string, payload: unknown) => void;
+		/**
+		 * Direct setter for shared game state. Boards pair this with
+		 * `customEvents` handlers to apply transitions driven by
+		 * broadcast events. Unused by most boards.
+		 */
+		setGameState: Dispatch<SetStateAction<State | null>>;
 	}) => ReactNode;
 	renderSeatBadge: (seat: Seat) => ReactNode;
+	/**
+	 * Optional: custom-event handlers this game wants registered on
+	 * the broadcast channel. Called once per game instance with the
+	 * hook's `setGameState` so handlers can apply transitions driven
+	 * by side-channel events (e.g. user-authored text, reveals).
+	 * Handlers fire only for events from the other seat.
+	 */
+	getCustomEvents?: (
+		setGameState: Dispatch<SetStateAction<State | null>>,
+	) => Record<string, CustomEventHandler>;
 	/**
 	 * Optional: override the status line shown above the board
 	 * (e.g. "Your turn" / "You won!"). Return null to render nothing.
@@ -154,15 +183,52 @@ const twoTruthsAdapter: GameAdapter<TwoTruthsState> = {
 	id: "two-truths",
 	title: "Two Truths & a Lie",
 	engine: TWO_TRUTHS_ENGINE,
-	renderBoard: ({ state, myTurn, onMove, mySeat }) => (
+	renderBoard: ({
+		state,
+		myTurn,
+		onMove,
+		mySeat,
+		sendCustomEvent,
+		setGameState,
+	}) => (
 		<TwoTruthsBoard
 			state={state}
 			mySeat={mySeat}
 			myTurn={myTurn}
 			onMove={onMove}
+			sendCustomEvent={sendCustomEvent}
+			setGameState={setGameState}
 		/>
 	),
 	renderSeatBadge: () => null,
+	// Custom-event handlers: `statements` delivers the reader's three
+	// written statements (transitioning composing → guessing), and
+	// `reveal` delivers the lie index (transitioning guessing →
+	// revealed with score applied). Both are only received by the
+	// non-sender (hook filters self-sent events).
+	getCustomEvents: (setGameState) => ({
+		statements: (payload) => {
+			const data = payload as { statements?: unknown } | null;
+			const s = data?.statements;
+			if (
+				!Array.isArray(s) ||
+				s.length !== 3 ||
+				!s.every((v): v is string => typeof v === "string")
+			) {
+				return;
+			}
+			const statements = [s[0], s[1], s[2]] as [string, string, string];
+			setGameState((prev) => (prev ? applyStatements(prev, statements) : prev));
+		},
+		reveal: (payload) => {
+			const data = payload as { lieIdx?: unknown } | null;
+			const idx = data?.lieIdx;
+			if (idx !== 0 && idx !== 1 && idx !== 2) return;
+			setGameState((prev) =>
+				prev ? applyReveal(prev, idx as TwoTruthsPick) : prev,
+			);
+		},
+	}),
 	// Board handles phase-aware status (reader/guesser/reveal/summary).
 	renderStatus: () => null,
 };
