@@ -125,6 +125,15 @@ function GameRoom({
 
 	const isFinished = roomStatus === "finished";
 
+	const customStatus = adapter.renderStatus
+		? adapter.renderStatus({
+				state: gameState,
+				myTurn,
+				outcome,
+				isFinished,
+			})
+		: undefined;
+
 	let statusText: string;
 	if (isFinished) {
 		if (outcome === "won") statusText = "You won!";
@@ -144,21 +153,25 @@ function GameRoom({
 			/>
 
 			<div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
-				<p
-					className={
-						isFinished
-							? outcome === "won"
-								? "text-sm font-semibold text-brand-500"
-								: outcome === "lost"
-									? "text-sm font-semibold text-destructive"
-									: "text-sm font-semibold text-muted-foreground"
-							: myTurn
-								? "text-sm font-medium text-foreground"
-								: "text-sm text-muted-foreground"
-					}
-				>
-					{statusText}
-				</p>
+				{customStatus !== undefined ? (
+					customStatus
+				) : (
+					<p
+						className={
+							isFinished
+								? outcome === "won"
+									? "text-sm font-semibold text-brand-500"
+									: outcome === "lost"
+										? "text-sm font-semibold text-destructive"
+										: "text-sm font-semibold text-muted-foreground"
+								: myTurn
+									? "text-sm font-medium text-foreground"
+									: "text-sm text-muted-foreground"
+						}
+					>
+						{statusText}
+					</p>
+				)}
 
 				{adapter.renderBoard({
 					state: gameState,

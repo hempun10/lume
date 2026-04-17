@@ -52,6 +52,16 @@ export const GAMES: Game[] = [
 		status: "available",
 	},
 	{
+		id: "would-you-rather",
+		name: "Would You Rather",
+		description:
+			"Eight quick either/or prompts. Pick your side, then see where your vibes match.",
+		icon: "scale",
+		players: "2 players",
+		duration: "~3 min",
+		status: "available",
+	},
+	{
 		id: "drawing",
 		name: "Draw & Guess",
 		description:

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ConnectFourBoard } from "../components/connect-four-board";
 import { TicTacToeBoard } from "../components/tic-tac-toe-board";
+import { WouldYouRatherBoard } from "../components/would-you-rather-board";
 import {
 	CONNECT_FOUR_ENGINE,
 	type ConnectFourState,
@@ -9,7 +10,11 @@ import {
 	TIC_TAC_TOE_ENGINE,
 	type TicTacToeState,
 } from "../engines/tic-tac-toe";
-import type { GameEngine, Seat } from "../engines/types";
+import type { GameEngine, GameResult, Seat } from "../engines/types";
+import {
+	WOULD_YOU_RATHER_ENGINE,
+	type WouldYouRatherState,
+} from "../engines/would-you-rather";
 
 /**
  * Per-game presentation adapter. Anything game-specific that the
@@ -28,6 +33,17 @@ export interface GameAdapter<State> {
 		onMove: (move: number) => void;
 	}) => ReactNode;
 	renderSeatBadge: (seat: Seat) => ReactNode;
+	/**
+	 * Optional: override the status line shown above the board
+	 * (e.g. "Your turn" / "You won!"). Return null to render nothing.
+	 * If omitted, the default turn/outcome label is used.
+	 */
+	renderStatus?: (props: {
+		state: State;
+		myTurn: boolean;
+		outcome: GameResult;
+		isFinished: boolean;
+	}) => ReactNode;
 }
 
 const ticTacToeAdapter: GameAdapter<TicTacToeState> = {
@@ -83,10 +99,23 @@ const connectFourAdapter: GameAdapter<ConnectFourState> = {
 	},
 };
 
+const wouldYouRatherAdapter: GameAdapter<WouldYouRatherState> = {
+	id: "would-you-rather",
+	title: "Would You Rather",
+	engine: WOULD_YOU_RATHER_ENGINE,
+	renderBoard: ({ state, myTurn, onMove }) => (
+		<WouldYouRatherBoard state={state} myTurn={myTurn} onMove={onMove} />
+	),
+	renderSeatBadge: () => null,
+	// Board owns the status UI (phase-dependent: pick / waiting / reveal / summary).
+	renderStatus: () => null,
+};
+
 // biome-ignore lint/suspicious/noExplicitAny: Adapter state types differ per game.
 const REGISTRY: Record<string, GameAdapter<any>> = {
 	"tic-tac-toe": ticTacToeAdapter,
 	"connect-four": connectFourAdapter,
+	"would-you-rather": wouldYouRatherAdapter,
 };
 
 export function getGameAdapter(

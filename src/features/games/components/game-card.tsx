@@ -6,6 +6,7 @@ import {
 	Grid3X3,
 	type LucideIcon,
 	Pencil,
+	Scale,
 	Type,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ const iconMap: Record<string, LucideIcon> = {
 	crown: Crown,
 	"circle-dot": CircleDot,
 	pencil: Pencil,
+	scale: Scale,
 };
 
 interface GameCardProps {
