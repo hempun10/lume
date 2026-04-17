@@ -281,7 +281,6 @@ const drawAndGuessAdapter: GameAdapter<DrawAndGuessState> = {
 		const forward =
 			(event: string): CustomEventHandler =>
 			(payload) => {
-				console.log("[D&G][forward]", event);
 				dispatchBoardEvent(sendCustomEvent, event, payload);
 			};
 		return {

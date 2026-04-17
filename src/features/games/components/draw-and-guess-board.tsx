@@ -1055,26 +1055,31 @@ function FinishedView({
 					const iDrew = h.drawerSeat === mySeat;
 					const correctWord = h.options[h.correctIdx];
 					const got = h.guess === h.correctIdx;
+					// "got" means the guesser got it right — scores +1 to
+					// both players regardless of who drew. We show the
+					// outcome on every row so totals add up visibly.
+					const scored = got;
 					return (
 						<li
 							// biome-ignore lint/suspicious/noArrayIndexKey: round index is stable.
 							key={i}
 							className={cn(
 								"flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs",
-								got && "border-brand-500/40 bg-brand-500/5",
-								!got && "border-destructive/30 bg-destructive/5",
+								scored && "border-brand-500/40 bg-brand-500/5",
+								!scored && "border-destructive/30 bg-destructive/5",
 							)}
 						>
 							<span className="min-w-0 flex-1 truncate text-muted-foreground">
-								Word: <span className="text-foreground">{correctWord}</span>
+								<span className="text-[10px] uppercase tracking-wide">
+									{iDrew ? "You drew" : "Stranger drew"}
+								</span>{" "}
+								<span className="text-foreground">{correctWord}</span>
 							</span>
 							<span className="flex shrink-0 items-center gap-1 text-[10px] font-semibold uppercase tracking-wide">
-								{iDrew ? (
-									<span className="text-muted-foreground">You drew</span>
-								) : got ? (
+								{scored ? (
 									<span className="flex items-center gap-1 text-brand-500">
 										<Check className="size-3" aria-hidden />
-										Got it
+										+1 each
 									</span>
 								) : (
 									<span className="flex items-center gap-1 text-destructive">
@@ -1119,12 +1124,6 @@ export function dispatchBoardEvent(
 	data: unknown,
 ) {
 	const map = boardHandlerRegistry.get(sendCustomEvent);
-	console.log("[D&G][dispatch]", {
-		event,
-		hasMap: !!map,
-		hasHandler: !!map?.[event],
-		registrySize: boardHandlerRegistry.size,
-	});
 	map?.[event]?.(data);
 }
 
@@ -1144,13 +1143,8 @@ function useCustomEventsBridge(
 			proxy[key] = (data) => ref.current[key]?.(data);
 		}
 		boardHandlerRegistry.set(sendCustomEvent, proxy);
-		console.log("[D&G][bridge] registered", {
-			keys: Object.keys(proxy),
-			registrySize: boardHandlerRegistry.size,
-		});
 		return () => {
 			boardHandlerRegistry.delete(sendCustomEvent);
-			console.log("[D&G][bridge] UNregistered");
 		};
 	}, [sendCustomEvent]);
 }
