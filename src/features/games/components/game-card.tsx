@@ -6,6 +6,7 @@ import {
 	Grid3X3,
 	Hand,
 	type LucideIcon,
+	MessageSquare,
 	Pencil,
 	Scale,
 	Type,
@@ -25,6 +26,7 @@ const iconMap: Record<string, LucideIcon> = {
 	pencil: Pencil,
 	scale: Scale,
 	hand: Hand,
+	"message-square": MessageSquare,
 };
 
 interface GameCardProps {
