@@ -16,6 +16,9 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LandingRouteImport } from './routes/_landing'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LandingIndexRouteImport } from './routes/_landing/index'
+import { Route as LandingTermsRouteImport } from './routes/_landing/terms'
+import { Route as LandingPrivacyRouteImport } from './routes/_landing/privacy'
+import { Route as LandingCommunityGuidelinesRouteImport } from './routes/_landing/community-guidelines'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated/games'
@@ -55,6 +58,22 @@ const LandingIndexRoute = LandingIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LandingRoute,
 } as any)
+const LandingTermsRoute = LandingTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => LandingRoute,
+} as any)
+const LandingPrivacyRoute = LandingPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => LandingRoute,
+} as any)
+const LandingCommunityGuidelinesRoute =
+  LandingCommunityGuidelinesRouteImport.update({
+    id: '/community-guidelines',
+    path: '/community-guidelines',
+    getParentRoute: () => LandingRoute,
+  } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -92,6 +111,9 @@ export interface FileRoutesByFullPath {
   '/games': typeof AuthenticatedGamesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/community-guidelines': typeof LandingCommunityGuidelinesRoute
+  '/privacy': typeof LandingPrivacyRoute
+  '/terms': typeof LandingTermsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof LandingIndexRoute
@@ -104,6 +126,9 @@ export interface FileRoutesByTo {
   '/games': typeof AuthenticatedGamesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/community-guidelines': typeof LandingCommunityGuidelinesRoute
+  '/privacy': typeof LandingPrivacyRoute
+  '/terms': typeof LandingTermsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,6 +143,9 @@ export interface FileRoutesById {
   '/_authenticated/games': typeof AuthenticatedGamesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_landing/community-guidelines': typeof LandingCommunityGuidelinesRoute
+  '/_landing/privacy': typeof LandingPrivacyRoute
+  '/_landing/terms': typeof LandingTermsRoute
   '/_landing/': typeof LandingIndexRoute
 }
 export interface FileRouteTypes {
@@ -133,6 +161,9 @@ export interface FileRouteTypes {
     | '/games'
     | '/onboarding'
     | '/settings'
+    | '/community-guidelines'
+    | '/privacy'
+    | '/terms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -145,6 +176,9 @@ export interface FileRouteTypes {
     | '/games'
     | '/onboarding'
     | '/settings'
+    | '/community-guidelines'
+    | '/privacy'
+    | '/terms'
   id:
     | '__root__'
     | '/_authenticated'
@@ -158,6 +192,9 @@ export interface FileRouteTypes {
     | '/_authenticated/games'
     | '/_authenticated/onboarding'
     | '/_authenticated/settings'
+    | '/_landing/community-guidelines'
+    | '/_landing/privacy'
+    | '/_landing/terms'
     | '/_landing/'
   fileRoutesById: FileRoutesById
 }
@@ -221,6 +258,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LandingIndexRouteImport
       parentRoute: typeof LandingRoute
     }
+    '/_landing/terms': {
+      id: '/_landing/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof LandingTermsRouteImport
+      parentRoute: typeof LandingRoute
+    }
+    '/_landing/privacy': {
+      id: '/_landing/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof LandingPrivacyRouteImport
+      parentRoute: typeof LandingRoute
+    }
+    '/_landing/community-guidelines': {
+      id: '/_landing/community-guidelines'
+      path: '/community-guidelines'
+      fullPath: '/community-guidelines'
+      preLoaderRoute: typeof LandingCommunityGuidelinesRouteImport
+      parentRoute: typeof LandingRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -280,10 +338,16 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 interface LandingRouteChildren {
+  LandingCommunityGuidelinesRoute: typeof LandingCommunityGuidelinesRoute
+  LandingPrivacyRoute: typeof LandingPrivacyRoute
+  LandingTermsRoute: typeof LandingTermsRoute
   LandingIndexRoute: typeof LandingIndexRoute
 }
 
 const LandingRouteChildren: LandingRouteChildren = {
+  LandingCommunityGuidelinesRoute: LandingCommunityGuidelinesRoute,
+  LandingPrivacyRoute: LandingPrivacyRoute,
+  LandingTermsRoute: LandingTermsRoute,
   LandingIndexRoute: LandingIndexRoute,
 }
 

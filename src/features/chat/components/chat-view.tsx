@@ -16,6 +16,7 @@ import { GamePanel } from "./game-panel";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
 import { PromptSuggestions } from "./prompt-suggestions";
+import { ReportDialog } from "./report-dialog";
 
 interface ChatViewProps {
 	roomId: string;
@@ -38,6 +39,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 	const { data: strangerProfile } = useStrangerProfile(roomId, userId);
 
 	const gameInvite = useGameInvite(channelRef, userId);
+	const [reportOpen, setReportOpen] = useState(false);
 
 	// Auto-open game panel when invite is accepted (by either side)
 	useEffect(() => {
@@ -118,6 +120,8 @@ export function ChatView({ roomId }: ChatViewProps) {
 				messageCount={session.messages.length}
 				onNewMatch={handleNewMatch}
 				onBackToLobby={handleBackToLobby}
+				partnerId={strangerProfile?.userId ?? null}
+				roomId={roomId}
 			/>
 		);
 	}
@@ -134,6 +138,9 @@ export function ChatView({ roomId }: ChatViewProps) {
 					onToggleGame={handleToggleGame}
 					isGameBanned={gameInvite.isBanned}
 					onToggleBan={gameInvite.toggleBan}
+					onReport={
+						strangerProfile?.userId ? () => setReportOpen(true) : undefined
+					}
 				/>
 				<MessageList
 					messages={session.messages}
@@ -177,6 +184,18 @@ export function ChatView({ roomId }: ChatViewProps) {
 					onAccept={gameInvite.acceptInvite}
 					onReject={gameInvite.rejectInvite}
 					onBan={gameInvite.toggleBan}
+				/>
+			)}
+
+			{/* Report dialog (in-chat). End the chat on submit so matchmaking
+			    can't immediately pair them again. */}
+			{strangerProfile?.userId && (
+				<ReportDialog
+					open={reportOpen}
+					onOpenChange={setReportOpen}
+					reportedUserId={strangerProfile.userId}
+					roomId={roomId}
+					onSubmitted={endChat}
 				/>
 			)}
 		</div>

@@ -3,8 +3,16 @@ import { broadcastMatch } from "./broadcast.ts";
 import {
   BROADCAST_RETRY_WINDOW_MS,
   QUEUE_EXPIRY_MS,
+  RECENT_PAIR_WINDOW_MS,
 } from "./constants.ts";
-import type { EnrichedEntry, MatchPair, ProfileData, QueueEntry } from "./types.ts";
+import type {
+  EnrichedEntry,
+  ExclusionSet,
+  MatchPair,
+  ProfileData,
+  QueueEntry,
+} from "./types.ts";
+import { pairKey } from "./types.ts";
 
 /**
  * Mark long-waiting entries as expired. Returns the number of rows affected.
@@ -105,6 +113,57 @@ export async function fetchEnrichedWaiting(
     ...entry,
     profile: profileMap.get(entry.user_id) ?? null,
   }));
+}
+
+/**
+ * Build the exclusion set for a batch of waiting users.
+ *
+ * Combines two sources:
+ *   1. `blocks` — any pair where either user blocked the other.
+ *   2. `match_history` — any pair that matched in the last 30 minutes.
+ *
+ * We pre-filter here (rather than relying solely on the match_pair RPC's
+ * guardrails) so the greedy pairing loop doesn't waste its best candidates
+ * on doomed pairs and skip more viable ones.
+ */
+export async function fetchExclusions(
+  supabase: SupabaseClient,
+  userIds: string[],
+): Promise<ExclusionSet> {
+  const exclusions: ExclusionSet = new Set();
+  if (!userIds.length) return exclusions;
+
+  // Blocks: either direction counts.
+  const { data: blocks, error: blocksErr } = await supabase
+    .from("blocks")
+    .select("blocker_id, blocked_id")
+    .or(
+      `blocker_id.in.(${userIds.join(",")}),blocked_id.in.(${userIds.join(",")})`,
+    );
+  if (blocksErr) {
+    console.error("fetchExclusions blocks failed:", blocksErr);
+  } else {
+    for (const b of blocks ?? []) {
+      exclusions.add(pairKey(b.blocker_id, b.blocked_id));
+    }
+  }
+
+  // Recent pairs: match_history within the cooldown window.
+  const since = new Date(Date.now() - RECENT_PAIR_WINDOW_MS).toISOString();
+  const { data: history, error: historyErr } = await supabase
+    .from("match_history")
+    .select("user_a, user_b")
+    .gt("matched_at", since)
+    .or(`user_a.in.(${userIds.join(",")}),user_b.in.(${userIds.join(",")})`);
+  if (historyErr) {
+    console.error("fetchExclusions match_history failed:", historyErr);
+  } else {
+    for (const h of history ?? []) {
+      exclusions.add(pairKey(h.user_a, h.user_b));
+    }
+  }
+
+  return exclusions;
 }
 
 /**

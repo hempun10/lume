@@ -34,6 +34,59 @@ export type Database = {
 	};
 	public: {
 		Tables: {
+			blocks: {
+				Row: {
+					blocked_id: string;
+					blocker_id: string;
+					created_at: string;
+					id: string;
+				};
+				Insert: {
+					blocked_id: string;
+					blocker_id: string;
+					created_at?: string;
+					id?: string;
+				};
+				Update: {
+					blocked_id?: string;
+					blocker_id?: string;
+					created_at?: string;
+					id?: string;
+				};
+				Relationships: [];
+			};
+			match_history: {
+				Row: {
+					id: string;
+					matched_at: string;
+					room_id: string | null;
+					user_a: string;
+					user_b: string;
+				};
+				Insert: {
+					id?: string;
+					matched_at?: string;
+					room_id?: string | null;
+					user_a: string;
+					user_b: string;
+				};
+				Update: {
+					id?: string;
+					matched_at?: string;
+					room_id?: string | null;
+					user_a?: string;
+					user_b?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "match_history_room_id_fkey";
+						columns: ["room_id"];
+						isOneToOne: false;
+						referencedRelation: "rooms";
+						referencedColumns: ["id"];
+					},
+				];
+			};
 			match_queue: {
 				Row: {
 					created_at: string | null;
@@ -109,6 +162,50 @@ export type Database = {
 				};
 				Relationships: [];
 			};
+			reports: {
+				Row: {
+					created_at: string;
+					id: string;
+					notes: string | null;
+					reason: string;
+					reported_id: string;
+					reporter_id: string;
+					reviewed_at: string | null;
+					room_id: string | null;
+					status: string;
+				};
+				Insert: {
+					created_at?: string;
+					id?: string;
+					notes?: string | null;
+					reason: string;
+					reported_id: string;
+					reporter_id: string;
+					reviewed_at?: string | null;
+					room_id?: string | null;
+					status?: string;
+				};
+				Update: {
+					created_at?: string;
+					id?: string;
+					notes?: string | null;
+					reason?: string;
+					reported_id?: string;
+					reporter_id?: string;
+					reviewed_at?: string | null;
+					room_id?: string | null;
+					status?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "reports_room_id_fkey";
+						columns: ["room_id"];
+						isOneToOne: false;
+						referencedRelation: "rooms";
+						referencedColumns: ["id"];
+					},
+				];
+			};
 			rooms: {
 				Row: {
 					current_turn: string | null;
@@ -153,6 +250,15 @@ export type Database = {
 			[_ in never]: never;
 		};
 		Functions: {
+			canonical_pair: {
+				Args: { _a: string; _b: string };
+				Returns: {
+					user_a: string;
+					user_b: string;
+				}[];
+			};
+			is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean };
+			is_recent_pair: { Args: { _a: string; _b: string }; Returns: boolean };
 			match_pair: {
 				Args: { _user_a: string; _user_b: string };
 				Returns: string;
