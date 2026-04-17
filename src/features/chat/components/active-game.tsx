@@ -1,6 +1,7 @@
 import { ArrowLeft, Loader2, RotateCcw, X } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { TicTacToeBoard } from "../../games/components/tic-tac-toe-board";
+import { getGameAdapter } from "../../games/data/adapters";
 import { useGameRoom } from "../../games/hooks/use-game-room";
 
 interface ActiveGameProps {
@@ -10,25 +11,84 @@ interface ActiveGameProps {
 	onBack: () => void;
 }
 
-export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
+export function ActiveGame({
+	roomId,
+	gameId,
+	onClose,
+	onBack,
+}: ActiveGameProps) {
+	const adapter = getGameAdapter(gameId);
+
+	if (!adapter) {
+		return (
+			<div className="flex h-full flex-col">
+				<ActiveGameHeader
+					title="Game"
+					seatBadge={null}
+					onBack={onBack}
+					onClose={onClose}
+				/>
+				<div className="flex flex-1 items-center justify-center px-6">
+					<div className="flex flex-col items-center gap-3 text-center">
+						<p className="text-pretty text-sm text-muted-foreground">
+							This game isn't available yet.
+						</p>
+						<Button variant="outline" size="sm" onClick={onBack}>
+							Back to games
+						</Button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<GameRoom
+			adapter={adapter}
+			roomId={roomId}
+			onBack={onBack}
+			onClose={onClose}
+		/>
+	);
+}
+
+function GameRoom({
+	adapter,
+	roomId,
+	onBack,
+	onClose,
+}: {
+	adapter: NonNullable<ReturnType<typeof getGameAdapter>>;
+	roomId: string;
+	onBack: () => void;
+	onClose: () => void;
+}) {
 	const {
 		gameState,
 		roomStatus,
 		myTurn,
-		myMark,
+		mySeat,
+		outcome,
 		makeMove,
 		requestRematch,
 		rematchRequested,
 		opponentWantsRematch,
-	} = useGameRoom(roomId);
+	} = useGameRoom(roomId, adapter.engine, adapter.id);
+
+	const seatBadge = adapter.renderSeatBadge(mySeat);
 
 	if (roomStatus === "connecting" || roomStatus === "waiting_for_opponent") {
 		return (
 			<div className="flex h-full flex-col">
-				<ActiveGameHeader myMark={null} onBack={onBack} onClose={onClose} />
+				<ActiveGameHeader
+					title={adapter.title}
+					seatBadge={null}
+					onBack={onBack}
+					onClose={onClose}
+				/>
 				<div className="flex flex-1 items-center justify-center">
 					<div className="flex flex-col items-center gap-3">
-						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+						<Loader2 className="size-6 animate-spin text-muted-foreground" />
 						<p className="text-sm text-muted-foreground">
 							{roomStatus === "connecting"
 								? "Connecting..."
@@ -43,7 +103,12 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 	if (!gameState) {
 		return (
 			<div className="flex h-full flex-col">
-				<ActiveGameHeader myMark={null} onBack={onBack} onClose={onClose} />
+				<ActiveGameHeader
+					title={adapter.title}
+					seatBadge={null}
+					onBack={onBack}
+					onClose={onClose}
+				/>
 				<div className="flex flex-1 items-center justify-center">
 					<div className="flex flex-col items-center gap-3">
 						<p className="text-sm text-muted-foreground">
@@ -59,13 +124,11 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 	}
 
 	const isFinished = roomStatus === "finished";
-	const iWon = gameState.winner !== null && gameState.winner === myMark;
-	const iLost = gameState.winner !== null && gameState.winner !== myMark;
 
 	let statusText: string;
 	if (isFinished) {
-		if (iWon) statusText = "You won!";
-		else if (iLost) statusText = "You lost";
+		if (outcome === "won") statusText = "You won!";
+		else if (outcome === "lost") statusText = "You lost";
 		else statusText = "It's a draw";
 	} else {
 		statusText = myTurn ? "Your turn" : "Opponent's turn";
@@ -73,16 +136,20 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 
 	return (
 		<div className="flex h-full flex-col">
-			<ActiveGameHeader myMark={myMark} onBack={onBack} onClose={onClose} />
+			<ActiveGameHeader
+				title={adapter.title}
+				seatBadge={seatBadge}
+				onBack={onBack}
+				onClose={onClose}
+			/>
 
-			{/* Game area */}
 			<div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
 				<p
 					className={
 						isFinished
-							? iWon
+							? outcome === "won"
 								? "text-sm font-semibold text-brand-500"
-								: iLost
+								: outcome === "lost"
 									? "text-sm font-semibold text-destructive"
 									: "text-sm font-semibold text-muted-foreground"
 							: myTurn
@@ -93,15 +160,12 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 					{statusText}
 				</p>
 
-				<div className="w-full max-w-[240px]">
-					<TicTacToeBoard
-						board={gameState.board}
-						winLine={gameState.winLine}
-						myTurn={myTurn}
-						disabled={isFinished}
-						onCellClick={makeMove}
-					/>
-				</div>
+				{adapter.renderBoard({
+					state: gameState,
+					myTurn,
+					disabled: isFinished,
+					onMove: makeMove,
+				})}
 
 				{isFinished && (
 					<div className="flex flex-col items-center gap-2">
@@ -112,7 +176,7 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 							onClick={requestRematch}
 							className="gap-2"
 						>
-							<RotateCcw className="h-3.5 w-3.5" />
+							<RotateCcw className="size-3.5" />
 							{rematchRequested ? "Waiting..." : "Rematch"}
 						</Button>
 
@@ -128,12 +192,18 @@ export function ActiveGame({ roomId, onClose, onBack }: ActiveGameProps) {
 	);
 }
 
+/**
+ * Adapter state is opaque to this component — the adapter's
+ * `renderBoard` and `renderSeatBadge` own the game-specific rendering.
+ */
 function ActiveGameHeader({
-	myMark,
+	title,
+	seatBadge,
 	onBack,
 	onClose,
 }: {
-	myMark: "X" | "O" | null;
+	title: string;
+	seatBadge: ReactNode;
 	onBack: () => void;
 	onClose: () => void;
 }) {
@@ -146,19 +216,10 @@ function ActiveGameHeader({
 					onClick={onBack}
 					aria-label="Leave game and pick another"
 				>
-					<ArrowLeft className="h-4 w-4" />
+					<ArrowLeft className="size-4" />
 				</Button>
-				<h3 className="text-sm font-semibold text-foreground">Tic Tac Toe</h3>
-				{myMark && (
-					<span className="text-xs text-muted-foreground">
-						You:{" "}
-						<span
-							className={myMark === "X" ? "text-brand-500" : "text-destructive"}
-						>
-							{myMark}
-						</span>
-					</span>
-				)}
+				<h3 className="text-sm font-semibold text-foreground">{title}</h3>
+				{seatBadge}
 			</div>
 			<Button
 				variant="ghost"
@@ -166,7 +227,7 @@ function ActiveGameHeader({
 				onClick={onClose}
 				aria-label="Close game panel"
 			>
-				<X className="h-4 w-4" />
+				<X className="size-4" />
 			</Button>
 		</div>
 	);

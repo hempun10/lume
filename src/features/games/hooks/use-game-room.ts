@@ -1,17 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth";
 import { supabase } from "@/lib/supabase/client";
-import {
-	applyMove,
-	createInitialState,
-	getMyMark,
-	isMyTurn,
-	type TicTacToeState,
-} from "../engines/tic-tac-toe";
+import type { GameEngine, GameResult, Seat } from "../engines/types";
 
 interface BroadcastMovePayload {
 	sender_id: string;
-	position: number;
+	move: number;
 	timestamp: string;
 }
 
@@ -33,60 +27,63 @@ export type GameRoomStatus =
 	| "playing"
 	| "finished";
 
-interface UseGameRoomReturn {
-	gameState: TicTacToeState | null;
+export interface UseGameRoomReturn<State> {
+	gameState: State | null;
 	roomStatus: GameRoomStatus;
 	myTurn: boolean;
-	myMark: "X" | "O" | null;
-	makeMove: (position: number) => void;
+	mySeat: Seat;
+	outcome: GameResult;
+	makeMove: (move: number) => void;
 	requestRematch: () => void;
 	rematchRequested: boolean;
 	opponentWantsRematch: boolean;
 }
 
 /**
- * Derive the X/O player assignment for a given round from the immutable
- * original room. Round 0 keeps the original roles (user_a = X). Each
- * subsequent round swaps so the previous O becomes X.
+ * Derive which seat starts a given round from the immutable original
+ * room. Round 0 uses the original roles (user_a starts). Each
+ * subsequent round swaps starting player.
  *
- * Because both clients share the same `originalRoom` (fetched from the DB)
- * and independently bump `round` in lockstep, they always compute the
- * same assignment without needing a rematch broadcast.
+ * Because both clients share the same `originalRoom` and independently
+ * bump `round` in lockstep, they always agree on the assignment.
  */
-function stateForRound(originalRoom: RoomData, round: number): TicTacToeState {
-	const xPlayer = round % 2 === 0 ? originalRoom.user_a : originalRoom.user_b;
-	const oPlayer = round % 2 === 0 ? originalRoom.user_b : originalRoom.user_a;
-	return createInitialState(xPlayer, oPlayer);
+function stateForRound<State>(
+	engine: GameEngine<State>,
+	originalRoom: RoomData,
+	round: number,
+): State {
+	const first = round % 2 === 0 ? originalRoom.user_a : originalRoom.user_b;
+	const second = round % 2 === 0 ? originalRoom.user_b : originalRoom.user_a;
+	return engine.createInitialState(first, second);
 }
 
 /**
- * Game room hook using Supabase Broadcast.
- *
- * - Both players join game:{roomId} channel
- * - user_a (room creator) broadcasts game_start to kick off round 0
- * - Moves are broadcast and validated client-side
- * - Rematch uses a local round counter; both clients derive the new
- *   state deterministically from the original room + round parity
- *   (no rematch game_start broadcast needed).
+ * Generic game room hook — works for any turn-based game whose engine
+ * conforms to `GameEngine<State>`. Handles:
+ *  - Room fetch + Broadcast channel setup
+ *  - Presence-based game_start handshake (user_a broadcasts first)
+ *  - Move broadcast + engine-based validation
+ *  - Deterministic round counter for rematches
  */
-export function useGameRoom(roomId: string): UseGameRoomReturn {
+export function useGameRoom<State>(
+	roomId: string,
+	engine: GameEngine<State>,
+	gameType: string,
+): UseGameRoomReturn<State> {
 	const { user } = useAuth();
 	const userId = user?.id ?? "";
 
-	const [gameState, setGameState] = useState<TicTacToeState | null>(null);
+	const [gameState, setGameState] = useState<State | null>(null);
 	const [roomStatus, setRoomStatus] = useState<GameRoomStatus>("connecting");
 	const [rematchRequested, setRematchRequested] = useState(false);
 	const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
 	const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-	// Immutable room data — set once from the DB and never mutated.
+	const engineRef = useRef(engine);
+	engineRef.current = engine;
+
 	const originalRoomRef = useRef<RoomData | null>(null);
-	// Current round; bumped in lockstep on both clients when both
-	// players have requested a rematch.
 	const roundRef = useRef(0);
-	// Refs mirror the rematch flags so the "both requested?" check is
-	// always fresh, regardless of render timing. State is kept in sync
-	// purely for UI consumers.
 	const rematchRequestedRef = useRef(false);
 	const opponentWantsRematchRef = useRef(false);
 
@@ -95,7 +92,13 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 		roundRef.current += 1;
 		rematchRequestedRef.current = false;
 		opponentWantsRematchRef.current = false;
-		setGameState(stateForRound(originalRoomRef.current, roundRef.current));
+		setGameState(
+			stateForRound(
+				engineRef.current,
+				originalRoomRef.current,
+				roundRef.current,
+			),
+		);
 		setRoomStatus("playing");
 		setRematchRequested(false);
 		setOpponentWantsRematch(false);
@@ -129,9 +132,6 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 
 			channel.on("broadcast", { event: "game_start" }, (payload) => {
 				const d = payload.payload as BroadcastGameStartPayload;
-				// Only used for the initial round handshake. Both clients
-				// already know the original room from the DB fetch, but we
-				// trust the sender's payload in case of any DB lag.
 				originalRoomRef.current = {
 					user_a: d.player_a,
 					user_b: d.player_b,
@@ -139,7 +139,9 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 				roundRef.current = 0;
 				rematchRequestedRef.current = false;
 				opponentWantsRematchRef.current = false;
-				setGameState(createInitialState(d.player_a, d.player_b));
+				setGameState(
+					engineRef.current.createInitialState(d.player_a, d.player_b),
+				);
 				setRoomStatus("playing");
 				setRematchRequested(false);
 				setOpponentWantsRematch(false);
@@ -150,9 +152,11 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 				if (d.sender_id === userId) return;
 				setGameState((prev) => {
 					if (!prev) return prev;
-					const result = applyMove(prev, d.position, d.sender_id);
+					const result = engineRef.current.applyMove(prev, d.move, d.sender_id);
 					if (!result.ok) return prev;
-					if (result.state.result !== "playing") setRoomStatus("finished");
+					if (engineRef.current.isFinished(result.state)) {
+						setRoomStatus("finished");
+					}
 					return result.state;
 				});
 			});
@@ -176,14 +180,16 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 					) {
 						const room = originalRoomRef.current;
 						roundRef.current = 0;
-						setGameState(createInitialState(room.user_a, room.user_b));
+						setGameState(
+							engineRef.current.createInitialState(room.user_a, room.user_b),
+						);
 						channel.send({
 							type: "broadcast",
 							event: "game_start",
 							payload: {
 								player_a: room.user_a,
 								player_b: room.user_b,
-								game_type: "tic-tac-toe",
+								game_type: gameType,
 							} satisfies BroadcastGameStartPayload,
 						});
 						return "playing";
@@ -209,23 +215,25 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 				channelRef.current = null;
 			}
 		};
-	}, [userId, roomId, maybeStartNextRound]);
+	}, [userId, roomId, gameType, maybeStartNextRound]);
 
 	const makeMove = useCallback(
-		(position: number) => {
+		(move: number) => {
 			if (!gameState || !channelRef.current) return;
-			const result = applyMove(gameState, position, userId);
+			const result = engineRef.current.applyMove(gameState, move, userId);
 			if (!result.ok) return;
 
 			setGameState(result.state);
-			if (result.state.result !== "playing") setRoomStatus("finished");
+			if (engineRef.current.isFinished(result.state)) {
+				setRoomStatus("finished");
+			}
 
 			channelRef.current.send({
 				type: "broadcast",
 				event: "move",
 				payload: {
 					sender_id: userId,
-					position,
+					move,
 					timestamp: new Date().toISOString(),
 				} satisfies BroadcastMovePayload,
 			});
@@ -244,19 +252,21 @@ export function useGameRoom(roomId: string): UseGameRoomReturn {
 			payload: { sender_id: userId } satisfies BroadcastRematchPayload,
 		});
 
-		// If the opponent already asked, both sides have agreed —
-		// bump the round deterministically on this client.
 		maybeStartNextRound();
 	}, [userId, maybeStartNextRound]);
 
-	const myTurn = gameState ? isMyTurn(gameState, userId) : false;
-	const myMark = gameState ? getMyMark(gameState, userId) : null;
+	const myTurn = gameState ? engine.isMyTurn(gameState, userId) : false;
+	const mySeat: Seat = gameState ? engine.seatOf(gameState, userId) : null;
+	const outcome: GameResult = gameState
+		? engine.resultFor(gameState, userId)
+		: "playing";
 
 	return {
 		gameState,
 		roomStatus,
 		myTurn,
-		myMark,
+		mySeat,
+		outcome,
 		makeMove,
 		requestRematch,
 		rematchRequested,
