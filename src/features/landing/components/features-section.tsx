@@ -15,35 +15,46 @@ import {
 import { MockChatPreview, MockTicTacToePreview } from "./mocks/product-mocks";
 import { SectionEyebrow } from "./section-eyebrow";
 
-const CHIP_BRAND =
-	"bg-brand-50 text-brand-600 ring-1 ring-brand-500/10 dark:bg-brand-500/10 dark:text-brand-400 dark:ring-brand-400/20";
+// UserJot-style rotating icon palette. Each chat/games feature gets its own
+// accent color to add visual rhythm to the grid. Safety intentionally stays
+// single-color (green) so it reads as one unified "trust" block.
+const CHIP_AMBER =
+	"bg-amber-50 text-amber-600 ring-1 ring-amber-500/10 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-400/20";
+const CHIP_INDIGO =
+	"bg-indigo-50 text-indigo-600 ring-1 ring-indigo-500/10 dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-400/20";
 const CHIP_PURPLE =
 	"bg-purple-50 text-purple-600 ring-1 ring-purple-500/10 dark:bg-purple-500/10 dark:text-purple-400 dark:ring-purple-400/20";
+const CHIP_ROSE =
+	"bg-rose-50 text-rose-600 ring-1 ring-rose-500/10 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-400/20";
+const CHIP_BLUE =
+	"bg-blue-50 text-blue-600 ring-1 ring-blue-500/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-400/20";
+const CHIP_TEAL =
+	"bg-teal-50 text-teal-600 ring-1 ring-teal-500/10 dark:bg-teal-500/10 dark:text-teal-400 dark:ring-teal-400/20";
 const CHIP_GREEN =
 	"bg-green-50 text-green-600 ring-1 ring-green-500/10 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-400/20";
 
 const chatFeatures = [
 	{
 		icon: MessageCircle,
-		chipClass: CHIP_BRAND,
+		chipClass: CHIP_INDIGO,
 		title: "Text-first",
 		description: "No webcam pressure. Just type.",
 	},
 	{
 		icon: Users,
-		chipClass: CHIP_BRAND,
+		chipClass: CHIP_AMBER,
 		title: "Interest matching",
 		description: "Paired on what you actually like talking about.",
 	},
 	{
 		icon: Globe,
-		chipClass: CHIP_BRAND,
+		chipClass: CHIP_TEAL,
 		title: "Global pool",
 		description: "Real people from 190+ countries, online right now.",
 	},
 	{
 		icon: Sparkles,
-		chipClass: CHIP_BRAND,
+		chipClass: CHIP_ROSE,
 		title: "Conversation starters",
 		description: "Stuck for words? Tap a prompt, send it, keep going.",
 	},
@@ -58,24 +69,26 @@ const gameFeatures = [
 	},
 	{
 		icon: Dice5,
-		chipClass: CHIP_PURPLE,
+		chipClass: CHIP_AMBER,
 		title: "2–5 minute rounds",
 		description: "Quick enough to play, not long enough to get awkward.",
 	},
 	{
 		icon: Trophy,
-		chipClass: CHIP_PURPLE,
+		chipClass: CHIP_ROSE,
 		title: "Best-of / rematch",
 		description: "Tap rematch and keep playing until someone has to go.",
 	},
 	{
 		icon: Swords,
-		chipClass: CHIP_PURPLE,
+		chipClass: CHIP_BLUE,
 		title: "Synced in real time",
 		description: "Moves, reveals, and scores stay in lock-step across devices.",
 	},
 ];
 
+// Safety stays single-color on purpose: a unified green block signals "trust"
+// and contrasts with the rotating palettes in Chat and Games above.
 const safetyFeatures = [
 	{
 		icon: Shield,

@@ -7,7 +7,7 @@ const steps = [
 	{
 		number: 1,
 		chipClass:
-			"bg-brand-50 text-brand-600 ring-1 ring-brand-500/15 dark:bg-brand-500/10 dark:text-brand-400 dark:ring-brand-400/20",
+			"bg-amber-50 text-amber-600 ring-1 ring-amber-500/15 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-400/20",
 		title: "Sign up",
 		description:
 			"Email, password, done. 30 seconds, no credit card, no phone number.",
@@ -15,7 +15,7 @@ const steps = [
 	{
 		number: 2,
 		chipClass:
-			"bg-purple-50 text-purple-600 ring-1 ring-purple-500/15 dark:bg-purple-500/10 dark:text-purple-400 dark:ring-purple-400/20",
+			"bg-indigo-50 text-indigo-600 ring-1 ring-indigo-500/15 dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-400/20",
 		title: "Pick a vibe",
 		description:
 			"Tap a few interests &mdash; music, gaming, movies, whatever you'd actually want to talk about.",
@@ -23,7 +23,7 @@ const steps = [
 	{
 		number: 3,
 		chipClass:
-			"bg-green-50 text-green-600 ring-1 ring-green-500/15 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-400/20",
+			"bg-purple-50 text-purple-600 ring-1 ring-purple-500/15 dark:bg-purple-500/10 dark:text-purple-400 dark:ring-purple-400/20",
 		title: "Chat and play",
 		description:
 			"We match you with someone online. Say hi. Start a game. Skip anytime.",
