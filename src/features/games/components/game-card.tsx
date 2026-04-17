@@ -4,6 +4,7 @@ import {
 	CircleDot,
 	Crown,
 	Grid3X3,
+	Hand,
 	type LucideIcon,
 	Pencil,
 	Scale,
@@ -23,6 +24,7 @@ const iconMap: Record<string, LucideIcon> = {
 	"circle-dot": CircleDot,
 	pencil: Pencil,
 	scale: Scale,
+	hand: Hand,
 };
 
 interface GameCardProps {

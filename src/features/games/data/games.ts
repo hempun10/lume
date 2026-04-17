@@ -62,6 +62,16 @@ export const GAMES: Game[] = [
 		status: "available",
 	},
 	{
+		id: "rock-paper-scissors",
+		name: "Rock Paper Scissors",
+		description:
+			"Best of five. Commit blind, reveal together — simple mind games with a stranger.",
+		icon: "hand",
+		players: "2 players",
+		duration: "~2 min",
+		status: "available",
+	},
+	{
 		id: "drawing",
 		name: "Draw & Guess",
 		description:
