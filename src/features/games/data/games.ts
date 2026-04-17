@@ -72,6 +72,16 @@ export const GAMES: Game[] = [
 		status: "available",
 	},
 	{
+		id: "emoji-charades",
+		name: "Emoji Charades",
+		description:
+			"Decode emoji clues into movies, songs, places, and more. Six rounds, roles swap each turn.",
+		icon: "smile",
+		players: "2 players",
+		duration: "~3 min",
+		status: "available",
+	},
+	{
 		id: "drawing",
 		name: "Draw & Guess",
 		description:

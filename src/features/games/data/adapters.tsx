@@ -1,9 +1,14 @@
 import type { ReactNode } from "react";
+import { EmojiCharadesBoard } from "../components/emoji-charades-board";
 import { RockPaperScissorsBoard } from "../components/rock-paper-scissors-board";
 import { TicTacToeBoard } from "../components/tic-tac-toe-board";
 import { TriviaBoard } from "../components/trivia-board";
 import { TwoTruthsBoard } from "../components/two-truths-board";
 import { WouldYouRatherBoard } from "../components/would-you-rather-board";
+import {
+	EMOJI_CHARADES_ENGINE,
+	type EmojiCharadesState,
+} from "../engines/emoji-charades";
 import {
 	ROCK_PAPER_SCISSORS_ENGINE,
 	type RockPaperScissorsState,
@@ -128,6 +133,23 @@ const triviaAdapter: GameAdapter<TriviaState> = {
 	renderStatus: () => null,
 };
 
+const emojiCharadesAdapter: GameAdapter<EmojiCharadesState> = {
+	id: "emoji-charades",
+	title: "Emoji Charades",
+	engine: EMOJI_CHARADES_ENGINE,
+	renderBoard: ({ state, myTurn, onMove, mySeat }) => (
+		<EmojiCharadesBoard
+			state={state}
+			mySeat={mySeat}
+			myTurn={myTurn}
+			onMove={onMove}
+		/>
+	),
+	renderSeatBadge: () => null,
+	// Board handles phase-aware status (revealer/guesser/reveal/summary).
+	renderStatus: () => null,
+};
+
 const twoTruthsAdapter: GameAdapter<TwoTruthsState> = {
 	id: "two-truths",
 	title: "Two Truths & a Lie",
@@ -152,6 +174,7 @@ const REGISTRY: Record<string, GameAdapter<any>> = {
 	"rock-paper-scissors": rockPaperScissorsAdapter,
 	trivia: triviaAdapter,
 	"two-truths": twoTruthsAdapter,
+	"emoji-charades": emojiCharadesAdapter,
 };
 
 export function getGameAdapter(
