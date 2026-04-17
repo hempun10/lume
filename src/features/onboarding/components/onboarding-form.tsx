@@ -1,12 +1,22 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "@tanstack/react-router";
 import { Globe, Sparkles, User } from "lucide-react";
+import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { DateOfBirthPicker } from "@/components/form/date-of-birth-picker";
 import { FormInput } from "@/components/form/form-input";
 import { GenderSelect } from "@/components/form/gender-select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import {
 	INTEREST_OPTIONS,
@@ -21,6 +31,7 @@ interface OnboardingFormProps {
 }
 
 export function OnboardingForm({ onSubmit, error }: OnboardingFormProps) {
+	const consentId = useId();
 	const form = useForm<OnboardingFormValues>({
 		resolver: zodResolver(onboardingSchema),
 		defaultValues: {
@@ -29,6 +40,7 @@ export function OnboardingForm({ onSubmit, error }: OnboardingFormProps) {
 			gender: undefined,
 			region: "",
 			interests: [],
+			consent: false as unknown as true,
 		},
 	});
 
@@ -105,6 +117,48 @@ export function OnboardingForm({ onSubmit, error }: OnboardingFormProps) {
 								/>
 							)}
 						</FormInput>
+
+						{/* Consent */}
+						<FormField
+							control={form.control}
+							name="consent"
+							render={({ field }) => (
+								<FormItem className="flex flex-row items-start gap-3 space-y-0 rounded-lg border border-border p-3">
+									<FormControl>
+										<Checkbox
+											id={consentId}
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+									</FormControl>
+									<div className="space-y-1 leading-tight">
+										<FormLabel
+											htmlFor={consentId}
+											className="text-sm font-normal text-muted-foreground"
+										>
+											I'm 18 or older and agree to Lume's{" "}
+											<Link
+												to="/terms"
+												target="_blank"
+												className="text-foreground underline underline-offset-4"
+											>
+												Terms
+											</Link>{" "}
+											and{" "}
+											<Link
+												to="/privacy"
+												target="_blank"
+												className="text-foreground underline underline-offset-4"
+											>
+												Privacy Policy
+											</Link>
+											.
+										</FormLabel>
+										<FormMessage />
+									</div>
+								</FormItem>
+							)}
+						/>
 
 						<Button
 							type="submit"

@@ -1,27 +1,32 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { MockMatchFoundPreview } from "./mocks/product-mocks";
+import { SectionEyebrow } from "./section-eyebrow";
 
 const steps = [
 	{
 		number: 1,
-		color: "bg-brand-500",
-		title: "Jump in",
+		chipClass:
+			"bg-amber-50 text-amber-600 ring-1 ring-amber-500/15 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-400/20",
+		title: "Sign up",
 		description:
-			"Hit the button — no signup, no profile, no friction. You're ready to go in seconds.",
+			"Email, password, done. 30 seconds, no credit card, no phone number.",
 	},
 	{
 		number: 2,
-		color: "bg-purple-500",
-		title: "Get matched",
+		chipClass:
+			"bg-indigo-50 text-indigo-600 ring-1 ring-indigo-500/15 dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-400/20",
+		title: "Pick a vibe",
 		description:
-			"Our algorithm pairs you with someone interesting. Add interests to improve your matches.",
+			"Tap a few interests &mdash; music, gaming, movies, whatever you'd actually want to talk about.",
 	},
 	{
 		number: 3,
-		color: "bg-green-500",
-		title: "Chat & play",
+		chipClass:
+			"bg-purple-50 text-purple-600 ring-1 ring-purple-500/15 dark:bg-purple-500/10 dark:text-purple-400 dark:ring-purple-400/20",
+		title: "Chat and play",
 		description:
-			"Start talking, challenge them to a game, or both. When you're done, skip to the next person.",
+			"We match you with someone online. Say hi. Start a game. Skip anytime.",
 	},
 ];
 
@@ -30,53 +35,57 @@ export function HowItWorksSection() {
 		// biome-ignore lint/correctness/useUniqueElementIds: anchor ID for in-page navigation
 		<section id="how-it-works">
 			<div className="mb-14">
-				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
-					Start talking in
+				<div className="mb-5">
+					<SectionEyebrow label="How it works" dotClass="bg-foreground" />
+				</div>
+				<h2 className="max-w-xl font-semibold text-xl leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
+					From signup to first hi in
 					<br />
-					under 10 seconds
+					under a minute
 				</h2>
 				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-muted-foreground">
-					No app to download, no account to create, no phone number to verify.
-					Just click and connect.
+					Most of our users are in a conversation before the tab beside this one
+					finishes loading.
 				</p>
 			</div>
 
-			<div className="grid gap-8 divide-border md:grid-cols-3 md:gap-0 md:divide-x">
-				{steps.map((step, i) => (
-					<div
-						key={step.number}
-						className={
-							i === 0
-								? "md:pr-8"
-								: i === steps.length - 1
-									? "md:pl-8"
-									: "md:px-8"
-						}
-					>
+			<div className="grid gap-10 md:grid-cols-[1fr_1.05fr] md:items-start">
+				<div className="grid gap-8">
+					{steps.map((step) => (
 						<div
-							className={`mb-4 flex h-6 w-6 items-center justify-center rounded-full ${step.color}`}
+							key={step.number}
+							className="flex gap-4 border-l border-border pl-5"
 						>
-							<span className="text-xs font-semibold text-white">
-								{step.number}
-							</span>
+							<div>
+								<div
+									className={`mb-3 inline-flex size-7 items-center justify-center rounded-lg ${step.chipClass}`}
+								>
+									<span className="font-mono text-[11px] font-semibold tabular-nums">
+										0{step.number}
+									</span>
+								</div>
+								<h3 className="mb-1.5 text-base font-semibold text-foreground">
+									{step.title}
+								</h3>
+								<p
+									className="text-sm text-muted-foreground"
+									// biome-ignore lint/security/noDangerouslySetInnerHtml: static, authored copy with &mdash;
+									dangerouslySetInnerHTML={{ __html: step.description }}
+								/>
+							</div>
 						</div>
-						<h3 className="mb-3 text-lg font-semibold text-foreground">
-							{step.title}
-						</h3>
-						<p className="text-sm text-muted-foreground">{step.description}</p>
-					</div>
-				))}
-			</div>
+					))}
+				</div>
 
-			<p className="mt-10 text-pretty text-sm font-medium text-muted-foreground">
-				Seriously, that's it. Our average user is chatting within 8 seconds of
-				landing on Lume.
-			</p>
+				<div className="md:pl-2">
+					<MockMatchFoundPreview />
+				</div>
+			</div>
 
 			<div className="mt-10">
 				<Link
 					to="/login"
-					className="group inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+					className="group inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-all duration-200 hover:bg-secondary/80"
 				>
 					<span>Try it now</span>
 					<ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />

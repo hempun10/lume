@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase/client";
 
 interface StrangerProfile {
+	userId: string;
 	displayName: string | null;
 	interests: string[];
 }
@@ -31,6 +32,7 @@ async function fetchStrangerProfile(
 	if (profileError || !profile) return null;
 
 	return {
+		userId: strangerId,
 		displayName: profile.display_name,
 		interests: profile.interests ?? [],
 	};

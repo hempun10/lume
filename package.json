@@ -19,6 +19,9 @@
     "db:seed": "tsx --env-file=.env supabase/seed.ts",
     "db:types": "supabase gen types typescript --local > src/types/database.types.ts && biome check --write src/types/database.types.ts",
     "db:migrate": "supabase migration up --local && npm run db:types",
+    "functions:serve": "supabase functions serve --env-file .env.local",
+    "functions:deploy": "supabase functions deploy",
+    "functions:invoke": "supabase functions invoke",
     "prepare": "husky"
   },
   "dependencies": {

@@ -36,3 +36,16 @@ export interface RunMetrics {
   retryCount: number;
   durationMs: number;
 }
+
+/**
+ * Pairs of user ids that must never be matched this run, either because
+ * one blocked the other or because they paired in the last 30 min.
+ *
+ * Keys are canonical `"${min(a,b)}|${max(a,b)}"` strings so membership
+ * checks are O(1) and order-independent.
+ */
+export type ExclusionSet = Set<string>;
+
+export function pairKey(a: string, b: string): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}

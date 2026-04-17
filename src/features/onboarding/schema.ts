@@ -72,6 +72,9 @@ export const onboardingSchema = z.object({
 		.array(z.string())
 		.min(1, "Select at least one interest")
 		.max(8, "Select up to 8 interests"),
+	consent: z.literal(true, {
+		message: "You must agree to the Terms and Privacy Policy",
+	}),
 });
 
 export type OnboardingFormValues = z.infer<typeof onboardingSchema>;

@@ -1,30 +1,28 @@
-import { Gamepad2, MessageCircle, Shield, Zap } from "lucide-react";
+import { SectionEyebrow } from "./section-eyebrow";
 
 const stats = [
 	{
-		icon: MessageCircle,
-		iconColor: "text-brand-600",
-		title: "10K+ chats daily",
-		description: "Real conversations happening every minute across the globe",
-	},
-	{
-		icon: Gamepad2,
-		iconColor: "text-purple-600",
-		title: "5+ multiplayer games",
-		description: "Break the ice with fun games while you get to know someone",
-	},
-	{
-		icon: Shield,
-		iconColor: "text-green-600",
-		title: "Moderated & safe",
+		value: "< 3s",
+		title: "to match",
 		description:
-			"AI-powered moderation keeps the community welcoming for everyone",
+			"Tap the button. A real person is on the other side before you blink.",
 	},
 	{
-		icon: Zap,
-		iconColor: "text-amber-600",
-		title: "Instant matching",
-		description: "Get connected with someone new in under 3 seconds",
+		value: "5",
+		title: "built-in games",
+		description:
+			"Tic-tac-toe, trivia, connect four, would-you-rather, rock-paper-scissors.",
+	},
+	{
+		value: "0",
+		title: "profiles to curate",
+		description:
+			"No photos, no bio, no followers. You're just a person saying hi.",
+	},
+	{
+		value: "24/7",
+		title: "moderated",
+		description: "AI filtering plus one-tap block and report on every chat.",
 	},
 ];
 
@@ -32,34 +30,33 @@ export function StatsSection() {
 	return (
 		<section>
 			<div className="mb-14">
-				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
-					A better way to meet
+				<div className="mb-5">
+					<SectionEyebrow label="Why Lume" dotClass="bg-foreground" />
+				</div>
+				<h2 className="max-w-xl font-semibold text-xl leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
+					Random chat, without the
 					<br />
-					people online
+					parts everyone hates
 				</h2>
 				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-muted-foreground">
-					<span className="font-medium text-foreground">
-						Random doesn't mean reckless.
-					</span>{" "}
-					Lume is built from the ground up with safety, fun, and real connection
-					at its core. No awkward video calls — just text, games, and good
-					vibes.
+					The old internet&rsquo;s best idea &mdash; meet a stranger, talk for a
+					minute, move on &mdash; minus the video, the bots, and the dread.
 				</p>
 			</div>
-			<div className="mt-8">
-				<div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-10">
-					{stats.map((stat) => (
-						<div key={stat.title}>
-							<stat.icon className={`mb-3 h-10 w-10 ${stat.iconColor}`} />
-							<h4 className="text-sm font-semibold text-foreground">
-								{stat.title}
-							</h4>
-							<p className="mt-1 text-pretty text-xs text-muted-foreground">
-								{stat.description}
-							</p>
-						</div>
-					))}
-				</div>
+			<div className="mt-8 grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-10">
+				{stats.map((stat) => (
+					<div key={stat.title}>
+						<p className="font-semibold text-3xl text-foreground tracking-tight tabular-nums md:text-4xl">
+							{stat.value}
+						</p>
+						<h4 className="mt-2 text-sm font-semibold text-foreground">
+							{stat.title}
+						</h4>
+						<p className="mt-1 text-pretty text-xs text-muted-foreground">
+							{stat.description}
+						</p>
+					</div>
+				))}
 			</div>
 		</section>
 	);

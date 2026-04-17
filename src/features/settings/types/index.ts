@@ -5,7 +5,7 @@ export interface ProfileData {
 	date_of_birth: string | null;
 	gender: string | null;
 	region: string | null;
-	interests: string[];
+	interests: string[] | null;
 }
 
 export interface ProfileFormValues {

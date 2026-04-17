@@ -7,6 +7,7 @@ import {
   commitPair,
   expireStaleEntries,
   fetchEnrichedWaiting,
+  fetchExclusions,
   markNotified,
   retryUnnotifiedBroadcasts,
 } from "./queue.ts";
@@ -48,8 +49,13 @@ Deno.serve(async (req) => {
       console.warn(`High queue depth: ${queueDepth}`);
     }
 
-    // 4. Greedy FIFO pairing (pure function, no DB access).
-    const pairs = pairUsers(enriched);
+    // 4. Build exclusion set (blocked users + recent pairs), then greedy
+    //    FIFO pairing (pure function, no DB access).
+    const exclusions = await fetchExclusions(
+      supabase,
+      enriched.map((e) => e.user_id),
+    );
+    const pairs = pairUsers(enriched, exclusions);
 
     // 5. For each proposed pair, atomically commit via match_pair RPC, then
     //    broadcast. commitPair returns null if either user was already claimed
