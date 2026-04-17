@@ -13,14 +13,13 @@ import {
 	UserCheck,
 	Users,
 } from "lucide-react";
-import { MockChatPreview, MockTicTacToePreview } from "./mocks/product-mocks";
-import { SectionEyebrow } from "./section-eyebrow";
+import { SectionBadge } from "./section-badge";
+import { ThemedImage } from "./themed-image";
 
 // UserJot-style icon palette. Only the icon itself is colored — no background
-// chip, no ring. Colors are taken directly from the UserJot reference:
-// rose, purple, blue, green, orange, violet, emerald, pink. Each Chat/Games
-// feature rotates through this palette. Safety intentionally stays
-// single-color (green) so it reads as one unified "trust" block.
+// chip, no ring. Each Chat/Games feature rotates through this palette.
+// Safety intentionally stays single-color (green) so it reads as one unified
+// "trust" block.
 const ICON_ROSE = "text-rose-500 dark:text-rose-400";
 const ICON_PURPLE = "text-purple-500 dark:text-purple-400";
 const ICON_BLUE = "text-blue-500 dark:text-blue-400";
@@ -30,7 +29,14 @@ const ICON_VIOLET = "text-violet-500 dark:text-violet-400";
 const ICON_EMERALD = "text-emerald-500 dark:text-emerald-400";
 const ICON_PINK = "text-pink-500 dark:text-pink-400";
 
-const chatFeatures = [
+interface Feature {
+	icon: LucideIcon;
+	iconColor: string;
+	title: string;
+	description: string;
+}
+
+const chatFeatures: Feature[] = [
 	{
 		icon: MessageCircle,
 		iconColor: ICON_ROSE,
@@ -57,7 +63,7 @@ const chatFeatures = [
 	},
 ];
 
-const gameFeatures = [
+const gameFeatures: Feature[] = [
 	{
 		icon: Gamepad2,
 		iconColor: ICON_PURPLE,
@@ -84,9 +90,7 @@ const gameFeatures = [
 	},
 ];
 
-// Safety stays single-color on purpose: a unified green block signals "trust"
-// and contrasts with the rotating palettes in Chat and Games above.
-const safetyFeatures = [
+const safetyFeatures: Feature[] = [
 	{
 		icon: Shield,
 		iconColor: ICON_GREEN,
@@ -113,49 +117,8 @@ const safetyFeatures = [
 	},
 ];
 
-interface FeatureBlockProps {
-	label: string;
-	labelColor: string;
-	heading: string;
-	description: string;
-	features: {
-		icon: LucideIcon;
-		iconColor: string;
-		title: string;
-		description: string;
-	}[];
-	callout?: string;
-	preview?: React.ReactNode;
-	previewPosition?: "left" | "right";
-}
-
-function FeatureBlock({
-	label,
-	labelColor,
-	heading,
-	description,
-	features,
-	callout,
-	preview,
-	previewPosition = "right",
-}: FeatureBlockProps) {
-	const header = (
-		<>
-			<div className="pb-5">
-				<SectionEyebrow label={label} dotClass={labelColor} />
-			</div>
-			<div className="mb-10">
-				<h2 className="max-w-xl font-semibold text-xl leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
-					{heading}
-				</h2>
-				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-muted-foreground">
-					{description}
-				</p>
-			</div>
-		</>
-	);
-
-	const featureGrid = (
+function FeatureIconGrid({ features }: { features: Feature[] }) {
+	return (
 		<div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-10">
 			{features.map((feature) => (
 				<div key={feature.title}>
@@ -173,37 +136,59 @@ function FeatureBlock({
 			))}
 		</div>
 	);
+}
 
+interface FeatureBlockProps {
+	label: string;
+	chipClass: string;
+	heading: string;
+	description: string;
+	features: Feature[];
+	callout?: string;
+	/** When true, renders the big dashboard image below the icon grid. */
+	withPreview?: boolean;
+	previewLabel?: string;
+}
+
+function FeatureBlock({
+	label,
+	chipClass,
+	heading,
+	description,
+	features,
+	callout,
+	withPreview = false,
+	previewLabel,
+}: FeatureBlockProps) {
 	return (
 		<section>
-			{header}
+			<div className="mb-5">
+				<SectionBadge label={label} chipClass={chipClass} />
+			</div>
 
-			{preview ? (
-				<div
-					className={
-						previewPosition === "left"
-							? "mb-10 grid gap-10 md:grid-cols-[1fr_1.05fr] md:items-center"
-							: "mb-10 grid gap-10 md:grid-cols-[1.05fr_1fr] md:items-center"
-					}
-				>
-					{previewPosition === "left" ? (
-						<>
-							<div>{preview}</div>
-							<div className="md:pl-2">{featureGrid}</div>
-						</>
-					) : (
-						<>
-							<div>{featureGrid}</div>
-							<div className="md:pl-2">{preview}</div>
-						</>
-					)}
+			<div className="mb-10">
+				<h2 className="max-w-xl font-semibold text-xl leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
+					{heading}
+				</h2>
+				<p className="mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-muted-foreground">
+					{description}
+				</p>
+			</div>
+
+			<FeatureIconGrid features={features} />
+
+			{withPreview && (
+				<div className="mt-12">
+					<ThemedImage
+						alt={`${label} dashboard preview`}
+						aspect="aspect-[16/9]"
+						placeholderLabel={previewLabel ?? `${label.toLowerCase()} preview`}
+					/>
 				</div>
-			) : (
-				<div className="mt-8">{featureGrid}</div>
 			)}
 
 			{callout && (
-				<div className="mt-4 flex max-w-2xl gap-4">
+				<div className="mt-8 flex max-w-2xl gap-4">
 					<div className="w-1 shrink-0 rounded-full bg-brand-500" />
 					<p className="text-pretty text-sm font-medium text-muted-foreground">
 						{callout}
@@ -216,16 +201,16 @@ function FeatureBlock({
 
 export function FeaturesSection() {
 	return (
-		// biome-ignore lint/correctness/useUniqueElementIds: anchor ID for in-page navigation
+		// biome-ignore lint/correctness/useUniqueElementIds: anchor target for in-page navigation
 		<div id="features">
 			<FeatureBlock
 				label="Text Chat"
-				labelColor="bg-brand-500"
+				chipClass="bg-brand-500"
 				heading="Real conversations, with a stranger, right now"
 				description="You hit match, we pair you with a real person who's also looking to talk. Interests show up when they help, and skipping to the next match is always one tap away."
 				features={chatFeatures}
-				preview={<MockChatPreview />}
-				previewPosition="right"
+				withPreview
+				previewLabel="chat preview"
 				callout="No swipes. No likes. Just the oldest good idea on the internet: two strangers, a blank window, say something."
 			/>
 
@@ -233,21 +218,21 @@ export function FeaturesSection() {
 
 			<FeatureBlock
 				label="Games"
-				labelColor="bg-purple-500"
+				chipClass="bg-purple-500"
 				heading="Break the ice with a game, not a prompt"
-				description="Every chat can turn into a quick round of tic-tac-toe, connect four, trivia, would-you-rather, or rock-paper-scissors. The game lives beside the conversation &mdash; play, talk, rematch."
+				description="Every chat can turn into a quick round of tic-tac-toe, connect four, trivia, would-you-rather, or rock-paper-scissors. The game lives beside the conversation — play, talk, rematch."
 				features={gameFeatures}
-				preview={<MockTicTacToePreview />}
-				previewPosition="left"
-				callout="You'll be surprised how fast &lsquo;good game&rsquo; turns into a real conversation."
+				withPreview
+				previewLabel="games preview"
+				callout="You'll be surprised how fast ‘good game’ turns into a real conversation."
 			/>
 
 			<hr className="my-20 border-t border-border" />
 
 			<FeatureBlock
 				label="Safety"
-				labelColor="bg-green-500"
-				heading="Safe isn&rsquo;t a feature. It&rsquo;s the default."
+				chipClass="bg-green-500"
+				heading="Safe isn’t a feature. It’s the default."
 				description="Every older stranger-chat app treats moderation as an afterthought. We don't. AI filtering runs on every message, blocking is instant, and you're anonymous unless you choose not to be."
 				features={safetyFeatures}
 			/>

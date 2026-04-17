@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { SectionEyebrow } from "./section-eyebrow";
+import { SectionBadge } from "./section-badge";
 
 const faqs = [
 	{
@@ -53,7 +53,7 @@ export function FaqSection() {
 		<section id="faq">
 			<div className="mb-14">
 				<div className="mb-5">
-					<SectionEyebrow label="FAQ" dotClass="bg-foreground" />
+					<SectionBadge label="FAQ" chipClass="bg-foreground" />
 				</div>
 				<h2 className="max-w-xl text-xl font-semibold leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					Frequently asked questions

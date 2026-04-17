@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { LumeLogo } from "@/components/brand/lume-logo";
 
 const footerLinks = {
 	product: [
@@ -30,10 +30,8 @@ export function Footer() {
 				<div className="grid grid-cols-2 gap-8 md:grid-cols-5">
 					{/* Logo */}
 					<div className="col-span-2 md:col-span-1">
-						<Link to="/" className="flex items-center gap-2.5">
-							<div className="relative flex h-7 w-7 items-center justify-center rounded-xl bg-foreground">
-								<Sparkles className="h-4 w-4 text-background" />
-							</div>
+						<Link to="/" className="flex items-center gap-2">
+							<LumeLogo className="h-6 w-6 text-foreground" />
 							<span className="font-semibold text-foreground">Lume</span>
 						</Link>
 					</div>

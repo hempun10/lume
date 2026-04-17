@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import { LumeLogo } from "@/components/brand/lume-logo";
 import { ThemeToggle } from "@/features/theme";
 import { cn } from "@/lib/utils";
 
@@ -77,9 +78,7 @@ export function AuthLayout({
 
 					{/* Branding content */}
 					<div className="relative z-10 flex max-w-sm flex-col items-center gap-6 px-8 text-center">
-						<div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground">
-							<Sparkles className="h-8 w-8 text-background" />
-						</div>
+						<LumeLogo className="h-14 w-14 text-foreground" />
 						<blockquote className="space-y-3">
 							<p className="text-lg font-medium leading-relaxed text-foreground">
 								&ldquo;{quote}&rdquo;

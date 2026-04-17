@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Menu, Sparkles } from "lucide-react";
+import { ArrowRight, Menu } from "lucide-react";
+import { LumeLogo } from "@/components/brand/lume-logo";
 import { Button } from "@/components/ui/button";
 import {
 	Sheet,
@@ -9,6 +10,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAuth } from "@/features/auth";
 import { ThemeToggle } from "@/features/theme";
 
 const navLinks = [
@@ -18,14 +20,51 @@ const navLinks = [
 ] as const;
 
 export function LandingHeader() {
+	const { session, isLoading } = useAuth();
+	const isAuthenticated = !!session;
+	const ctaSlot = isLoading ? (
+		<div className="h-8 w-24 animate-pulse rounded-xl bg-muted" />
+	) : isAuthenticated ? (
+		<Button asChild size="sm" className="rounded-full">
+			<Link to="/dashboard">Open App</Link>
+		</Button>
+	) : (
+		<Button asChild size="sm" className="rounded-xl">
+			<Link to="/login">
+				Sign In
+				<ArrowRight className="ml-1 h-3.5 w-3.5" />
+			</Link>
+		</Button>
+	);
+
+	const mobileCtaSlot = isLoading ? (
+		<div className="h-10 w-full animate-pulse rounded-xl bg-muted" />
+	) : isAuthenticated ? (
+		<SheetClose asChild>
+			<Button asChild className="rounded-xl">
+				<Link to="/dashboard">
+					Dashboard
+					<ArrowRight className="ml-1 h-3.5 w-3.5" />
+				</Link>
+			</Button>
+		</SheetClose>
+	) : (
+		<SheetClose asChild>
+			<Button asChild className="rounded-xl">
+				<Link to="/login">
+					Sign In
+					<ArrowRight className="ml-1 h-3.5 w-3.5" />
+				</Link>
+			</Button>
+		</SheetClose>
+	);
+
 	return (
 		<header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-lg">
 			<nav className="mx-auto flex h-14 max-w-4xl items-center justify-between px-6 sm:px-8 lg:px-10">
 				{/* Logo */}
-				<Link to="/" className="flex items-center gap-2.5">
-					<div className="flex h-7 w-7 items-center justify-center rounded-xl bg-foreground">
-						<Sparkles className="h-4 w-4 text-background" />
-					</div>
+				<Link to="/" className="flex items-center gap-2">
+					<LumeLogo className="h-6 w-6 text-foreground" />
 					<span className="font-semibold text-foreground">Lume</span>
 				</Link>
 
@@ -45,12 +84,7 @@ export function LandingHeader() {
 				{/* Right side — desktop */}
 				<div className="hidden items-center gap-2 md:flex">
 					<ThemeToggle />
-					<Button asChild size="sm" className="rounded-xl">
-						<Link to="/login">
-							Sign In
-							<ArrowRight className="ml-1 h-3.5 w-3.5" />
-						</Link>
-					</Button>
+					{ctaSlot}
 				</div>
 
 				{/* Mobile: theme toggle + hamburger */}
@@ -70,10 +104,8 @@ export function LandingHeader() {
 						<SheetContent side="right" showCloseButton>
 							<SheetHeader>
 								<SheetTitle>
-									<Link to="/" className="flex items-center gap-2.5">
-										<div className="flex h-7 w-7 items-center justify-center rounded-xl bg-foreground">
-											<Sparkles className="h-4 w-4 text-background" />
-										</div>
+									<Link to="/" className="flex items-center gap-2">
+										<LumeLogo className="h-6 w-6 text-foreground" />
 										<span className="font-semibold text-foreground">Lume</span>
 									</Link>
 								</SheetTitle>
@@ -93,14 +125,7 @@ export function LandingHeader() {
 
 								<hr className="my-2 border-border" />
 
-								<SheetClose asChild>
-									<Button asChild className="rounded-xl">
-										<Link to="/login">
-											Sign In
-											<ArrowRight className="ml-1 h-3.5 w-3.5" />
-										</Link>
-									</Button>
-								</SheetClose>
+								{mobileCtaSlot}
 							</nav>
 						</SheetContent>
 					</Sheet>

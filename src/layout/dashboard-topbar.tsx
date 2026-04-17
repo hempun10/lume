@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { LogOut, Sparkles, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
+import { LumeLogo } from "@/components/brand/lume-logo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,9 +28,7 @@ export function DashboardTopbar() {
 		<header className="flex h-12 shrink-0 items-center justify-between border-b border-border/50 bg-background px-4">
 			{/* Logo */}
 			<Link to="/dashboard" className="flex items-center gap-2">
-				<div className="flex h-6 w-6 items-center justify-center rounded-lg bg-foreground">
-					<Sparkles className="h-3.5 w-3.5 text-background" />
-				</div>
+				<LumeLogo className="h-5 w-5 text-foreground" />
 				<span className="text-sm font-semibold text-foreground">Lume</span>
 			</Link>
 

@@ -1,4 +1,3 @@
-import { ComparisonSection } from "./components/comparison-section";
 import { CtaSection } from "./components/cta-section";
 import { FaqSection } from "./components/faq-section";
 import { FeaturesSection } from "./components/features-section";
@@ -8,7 +7,7 @@ import { StatsSection } from "./components/stats-section";
 
 export function LandingPage() {
 	return (
-		<div className="mx-auto max-w-5xl px-6 pb-20 sm:px-8 lg:px-10">
+		<div className="mx-auto max-w-4xl px-6 pb-20 sm:px-8 lg:px-10">
 			<HeroSection />
 
 			<hr className="my-20 border-t border-border" />
@@ -18,10 +17,6 @@ export function LandingPage() {
 			<hr className="my-20 border-t border-border" />
 
 			<FeaturesSection />
-
-			<hr className="my-20 border-t border-border" />
-
-			<ComparisonSection />
 
 			<hr className="my-20 border-t border-border" />
 
