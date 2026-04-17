@@ -65,7 +65,7 @@ export const GAMES: Game[] = [
 		id: "two-truths",
 		name: "Two Truths & a Lie",
 		description:
-			"Six rounds, roles swap each turn. Read three facts, guess which one is a lie.",
+			"Write two truths and one lie about yourself. Four rounds, two per person.",
 		icon: "message-square",
 		players: "2 players",
 		duration: "~3 min",

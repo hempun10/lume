@@ -1,8 +1,11 @@
 import { ArrowLeft, Loader2, RotateCcw, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getGameAdapter } from "../../games/data/adapters";
-import { useGameRoom } from "../../games/hooks/use-game-room";
+import {
+	type CustomEventHandler,
+	useGameRoom,
+} from "../../games/hooks/use-game-room";
 
 interface ActiveGameProps {
 	roomId: string;
@@ -63,6 +66,9 @@ function GameRoom({
 	onBack: () => void;
 	onClose: () => void;
 }) {
+	const [customEvents, setCustomEvents] = useState<
+		Record<string, CustomEventHandler>
+	>({});
 	const {
 		gameState,
 		roomStatus,
@@ -73,7 +79,18 @@ function GameRoom({
 		requestRematch,
 		rematchRequested,
 		opponentWantsRematch,
-	} = useGameRoom(roomId, adapter.engine, adapter.id);
+		sendCustomEvent,
+		setGameState,
+	} = useGameRoom(roomId, adapter.engine, adapter.id, { customEvents });
+
+	// Register adapter-defined custom-event handlers once. `setGameState`
+	// is stable across renders, so this effect runs at most once per
+	// adapter; the hook reads `customEvents` off a ref each render so
+	// the updated map is picked up on the next dispatch.
+	useEffect(() => {
+		if (!adapter.getCustomEvents) return;
+		setCustomEvents(adapter.getCustomEvents(setGameState));
+	}, [adapter, setGameState]);
 
 	const seatBadge = adapter.renderSeatBadge(mySeat);
 
@@ -179,6 +196,8 @@ function GameRoom({
 					disabled: isFinished,
 					onMove: makeMove,
 					mySeat,
+					sendCustomEvent,
+					setGameState,
 				})}
 
 				{isFinished && (

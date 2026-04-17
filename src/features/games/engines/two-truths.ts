@@ -1,34 +1,32 @@
 /**
- * Two Truths and a Lie engine — pure functions, no React.
+ * Two Truths and a Lie engine — user-authored variant.
+ *
+ * Pure state + move contract. Non-numeric data (the reader's three
+ * written statements, the revealed lie index) arrives via
+ * `useGameRoom`'s `customEvents` side-channel and is applied by the
+ * board via `setGameState` using the helpers exported here.
  *
  * Flow per round:
- *   1. One seat is the *reader* (shows all three statements).
- *      The other seat is the *guesser*.
- *   2. Guesser picks 0, 1, or 2 — which one is the lie.
- *   3. Engine reveals the real lie index and scores +1 if correct.
- *   4. Either player advances to the next round.
- *   5. Roles alternate every round so both players guess and read.
+ *   1. `composing` — the reader types three statements and picks
+ *      which one is the lie. The lie index stays in the reader's
+ *      local React state; it is never in shared game state during
+ *      composition. The other seat just waits.
+ *   2. Reader submits: board broadcasts a `statements` custom event
+ *      `{statements: [s, s, s]}` and calls `setGameState` on itself
+ *      with `applyStatements`. Both sides now see phase `guessing`.
+ *   3. `guessing` — guesser picks 0 / 1 / 2 as a numeric `move`.
+ *      Engine records `guess` but does not score (lieIdx unknown).
+ *   4. Reader observes `guess !== null`, broadcasts a `reveal` custom
+ *      event `{lieIdx}` and applies `applyReveal` locally. Both sides
+ *      transition to `revealed`; the guess is scored on that
+ *      transition.
+ *   5. `revealed` — either player sends advance (move = 4) to go to
+ *      the next round or finish.
  *
- * Triples come from a curated bank. The correct lie index lives in
- * shared state (both clients know it); the board UI hides it from the
- * guesser until they commit — same trick the trivia board uses to hide
- * the "correct answer" until reveal.
- *
- * Moves encoded as a single integer:
- *
- *   0–2 = guesser picks that index as the lie
- *   3   = advance (valid only in `revealed`; second arrival silently
- *         rejected)
- *
- * Triple order is seeded deterministically from the ordered player pair
- * plus a game-specific suffix, matching the trivia/WYR pattern. Swapping
- * the pair (rematch) yields a fresh shuffle.
+ * Roles alternate: seat A reads even rounds (0, 2), seat B reads odd
+ * rounds (1, 3). Four rounds total means two per person.
  */
 
-import {
-	TWO_TRUTHS_TRIPLES,
-	type TwoTruthsTriple,
-} from "../data/two-truths-triples";
 import type {
 	GameResult as EngineGameResult,
 	GameEngine,
@@ -36,15 +34,16 @@ import type {
 	Seat,
 } from "./types";
 
-export const TWO_TRUTHS_TOTAL_ROUNDS = 6;
-export const TWO_TRUTHS_MOVE_ADVANCE = 3;
+export const TWO_TRUTHS_TOTAL_ROUNDS = 4;
+export const TWO_TRUTHS_MOVE_ADVANCE = 4;
+export const TWO_TRUTHS_STATEMENT_MAX = 140;
 
 export type TwoTruthsPick = 0 | 1 | 2;
-export type TwoTruthsPhase = "guessing" | "revealed" | "finished";
+export type TwoTruthsPhase = "composing" | "guessing" | "revealed" | "finished";
 
 export interface TwoTruthsHistoryEntry {
-	tripleIdx: number;
 	readerSeat: "A" | "B";
+	statements: readonly [string, string, string];
 	guess: TwoTruthsPick;
 	correct: TwoTruthsPick;
 }
@@ -52,54 +51,22 @@ export interface TwoTruthsHistoryEntry {
 export interface TwoTruthsState {
 	playerA: string;
 	playerB: string;
-	tripleOrder: number[];
 	round: number;
 	totalRounds: number;
-	/** Guesser's current-round pick. Null until they commit. */
+	/** The reader's three statements for the current round. */
+	statements: readonly [string, string, string] | null;
+	/** Guesser's pick for the current round. */
 	guess: TwoTruthsPick | null;
+	/**
+	 * The true lie index for the current round, only populated once
+	 * the reveal event is applied. Before that, only the reader knows
+	 * it (they keep it in board-local state).
+	 */
+	lieIdx: TwoTruthsPick | null;
 	aScore: number;
 	bScore: number;
 	history: TwoTruthsHistoryEntry[];
 	phase: TwoTruthsPhase;
-}
-
-/** Deterministic 32-bit hash (FNV-1a). */
-function hashString(input: string): number {
-	let h = 0x811c9dc5;
-	for (let i = 0; i < input.length; i++) {
-		h ^= input.charCodeAt(i);
-		h = Math.imul(h, 0x01000193);
-	}
-	return h >>> 0;
-}
-
-function mulberry32(seed: number) {
-	let s = seed >>> 0;
-	return () => {
-		s = (s + 0x6d2b79f5) >>> 0;
-		let t = s;
-		t = Math.imul(t ^ (t >>> 15), t | 1);
-		t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-	};
-}
-
-function shuffledTripleOrder(playerA: string, playerB: string): number[] {
-	const indices = Array.from(
-		{ length: TWO_TRUTHS_TRIPLES.length },
-		(_, i) => i,
-	);
-	const rng = mulberry32(hashString(`${playerA}|${playerB}|two-truths`));
-	for (let i = indices.length - 1; i > 0; i--) {
-		const j = Math.floor(rng() * (i + 1));
-		const ai = indices[i];
-		const aj = indices[j];
-		if (ai !== undefined && aj !== undefined) {
-			indices[i] = aj;
-			indices[j] = ai;
-		}
-	}
-	return indices.slice(0, TWO_TRUTHS_TOTAL_ROUNDS);
 }
 
 export function createInitialState(
@@ -109,24 +76,19 @@ export function createInitialState(
 	return {
 		playerA,
 		playerB,
-		tripleOrder: shuffledTripleOrder(playerA, playerB),
 		round: 0,
 		totalRounds: TWO_TRUTHS_TOTAL_ROUNDS,
+		statements: null,
 		guess: null,
+		lieIdx: null,
 		aScore: 0,
 		bScore: 0,
 		history: [],
-		phase: "guessing",
+		phase: "composing",
 	};
 }
 
-export function currentTriple(state: TwoTruthsState): TwoTruthsTriple | null {
-	const idx = state.tripleOrder[state.round];
-	if (idx === undefined) return null;
-	return TWO_TRUTHS_TRIPLES[idx] ?? null;
-}
-
-/** Which seat is the reader this round. Seat A on even rounds, B on odd. */
+/** Which seat is the reader this round. A on even, B on odd. */
 export function readerSeatFor(state: TwoTruthsState): "A" | "B" {
 	return state.round % 2 === 0 ? "A" : "B";
 }
@@ -146,6 +108,50 @@ function isPick(move: number): move is TwoTruthsPick {
 	return move === 0 || move === 1 || move === 2;
 }
 
+/**
+ * Called on BOTH seats — reader after it submits its compose form,
+ * guesser inside the `statements` custom-event handler. Transitions
+ * `composing → guessing` with the reader's three statements in shared
+ * state.
+ */
+export function applyStatements(
+	state: TwoTruthsState,
+	statements: readonly [string, string, string],
+): TwoTruthsState {
+	if (state.phase !== "composing") return state;
+	return {
+		...state,
+		statements,
+		phase: "guessing",
+	};
+}
+
+/**
+ * Called on BOTH seats — reader after it broadcasts reveal, guesser
+ * inside the `reveal` custom-event handler. Transitions
+ * `guessing → revealed` and applies scoring based on the guess.
+ */
+export function applyReveal(
+	state: TwoTruthsState,
+	lieIdx: TwoTruthsPick,
+): TwoTruthsState {
+	if (state.phase !== "guessing") return state;
+	if (state.guess === null || state.statements === null) return state;
+
+	const guesserSeat = guesserSeatFor(state);
+	const correct = state.guess === lieIdx;
+	const nextAScore = state.aScore + (correct && guesserSeat === "A" ? 1 : 0);
+	const nextBScore = state.bScore + (correct && guesserSeat === "B" ? 1 : 0);
+
+	return {
+		...state,
+		lieIdx,
+		aScore: nextAScore,
+		bScore: nextBScore,
+		phase: "revealed",
+	};
+}
+
 export function applyMove(
 	state: TwoTruthsState,
 	move: number,
@@ -160,22 +166,23 @@ export function applyMove(
 
 	if (move === TWO_TRUTHS_MOVE_ADVANCE) {
 		if (state.phase !== "revealed") {
-			return { ok: false, error: "Can't advance while guessing" };
+			return { ok: false, error: "Can't advance yet" };
 		}
-		const tripleIdx = state.tripleOrder[state.round];
-		if (tripleIdx === undefined || state.guess === null) {
-			return { ok: false, error: "Guess missing" };
+		if (
+			state.statements === null ||
+			state.guess === null ||
+			state.lieIdx === null
+		) {
+			return { ok: false, error: "Round not fully resolved" };
 		}
-		const triple = TWO_TRUTHS_TRIPLES[tripleIdx];
-		if (!triple) return { ok: false, error: "Triple missing" };
 
 		const nextHistory: TwoTruthsHistoryEntry[] = [
 			...state.history,
 			{
-				tripleIdx,
 				readerSeat: readerSeatFor(state),
+				statements: state.statements,
 				guess: state.guess,
-				correct: triple.lieIdx,
+				correct: state.lieIdx,
 			},
 		];
 		const isLast = state.round + 1 >= state.totalRounds;
@@ -184,9 +191,11 @@ export function applyMove(
 			state: {
 				...state,
 				round: isLast ? state.round : state.round + 1,
+				statements: null,
 				guess: null,
+				lieIdx: null,
 				history: nextHistory,
-				phase: isLast ? "finished" : "guessing",
+				phase: isLast ? "finished" : "composing",
 			},
 		};
 	}
@@ -204,21 +213,11 @@ export function applyMove(
 		return { ok: false, error: "Already guessed" };
 	}
 
-	const triple = currentTriple(state);
-	if (!triple) return { ok: false, error: "No current triple" };
-
-	const correct = move === triple.lieIdx;
-	const nextAScore = state.aScore + (correct && seat === "A" ? 1 : 0);
-	const nextBScore = state.bScore + (correct && seat === "B" ? 1 : 0);
-
 	return {
 		ok: true,
 		state: {
 			...state,
 			guess: move,
-			aScore: nextAScore,
-			bScore: nextBScore,
-			phase: "revealed",
 		},
 	};
 }
@@ -230,9 +229,20 @@ export const TWO_TRUTHS_ENGINE: GameEngine<TwoTruthsState> = {
 		if (state.phase === "finished") return false;
 		const seat = seatOfPlayer(state, userId);
 		if (!seat) return false;
-		if (state.phase === "revealed") return true;
-		// guessing phase: only the guesser has a turn.
-		return seat === guesserSeatFor(state);
+
+		if (state.phase === "composing") {
+			return seat === readerSeatFor(state);
+		}
+		if (state.phase === "guessing") {
+			// Guesser picks until they lock in. After their pick, it's
+			// on the reader to reveal — but reveal goes via custom
+			// event, not a numeric move, so we still report the reader
+			// as "on turn" to drive UI affordance.
+			if (state.guess === null) return seat === guesserSeatFor(state);
+			return seat === readerSeatFor(state);
+		}
+		// revealed: either player can advance.
+		return true;
 	},
 	isFinished(state) {
 		return state.phase === "finished";
