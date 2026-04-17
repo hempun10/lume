@@ -1,58 +1,129 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
-import { MockLobbyPreview } from "./mocks/product-mocks";
-import { SectionEyebrow } from "./section-eyebrow";
+import {
+	ArrowRight,
+	Gamepad2,
+	Gift,
+	Infinity as InfinityIcon,
+	type LucideIcon,
+	MessageCircleMore,
+	Sparkles,
+	Zap,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ThemedImage } from "./themed-image";
+
+/**
+ * Inline Lucide-icon chip used inside the hero heading. Fixed-size soft tinted
+ * tile (matches UserJot styling): `p-1 rounded ring-1` with `bg-{c}-50`,
+ * `text-{c}-600`, and a translucent colored ring.
+ */
+function HeroChip({
+	icon: Icon,
+	tintClass,
+}: {
+	icon: LucideIcon;
+	/** Combined bg + text + ring classes, e.g. "bg-indigo-50 text-indigo-600 ring-indigo-200/30". */
+	tintClass: string;
+}) {
+	return (
+		<span
+			className={cn(
+				"inline-flex items-center justify-center rounded p-1 ",
+				tintClass,
+			)}
+			aria-hidden="true"
+		>
+			<Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.25} />
+		</span>
+	);
+}
+
+/**
+ * A chip + phrase paired in an inline-flex container so the chip is a flex
+ * sibling of the text (perfectly centered on the cross-axis) rather than an
+ * inline element trying to align to the text baseline. The outer h1 wraps
+ * these pairs onto multiple lines naturally when space runs out.
+ */
+function HeroPhrase({
+	icon,
+	tintClass,
+	children,
+}: {
+	icon: LucideIcon;
+	tintClass: string;
+	children: React.ReactNode;
+}) {
+	return (
+		<span className="inline-flex items-center gap-2 align-middle">
+			<HeroChip icon={icon} tintClass={tintClass} />
+			<span>{children}</span>
+		</span>
+	);
+}
 
 export function HeroSection() {
 	return (
-		<section className="w-full pt-10 md:pt-20">
-			<div className="grid gap-12 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-10">
-				<div>
-					<div className="mb-5">
-						<SectionEyebrow
-							label="Text-first stranger chat"
-							dotClass="bg-brand-500"
-						/>
-					</div>
+		<section className="w-full pt-10 md:pt-28">
+			<h1 className="flex max-w-xl flex-wrap items-center gap-x-2 gap-y-3 text-balance font-semibold text-xl tracking-tight text-foreground sm:text-3xl">
+				<HeroPhrase
+					icon={MessageCircleMore}
+					tintClass="bg-indigo-50 text-indigo-600 ring-indigo-200/30 dark:bg-indigo-500/15 dark:text-indigo-300 dark:ring-indigo-400/20"
+				>
+					Meet a stranger,
+				</HeroPhrase>
+				<HeroPhrase
+					icon={Gamepad2}
+					tintClass="bg-purple-50 text-purple-600 ring-purple-200/30 dark:bg-purple-500/15 dark:text-purple-300 dark:ring-purple-400/20"
+				>
+					play a quick game,
+				</HeroPhrase>
+				<HeroPhrase
+					icon={Sparkles}
+					tintClass="bg-amber-50 text-amber-600 ring-amber-200/30 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20"
+				>
+					keep talking, or move on whenever
+				</HeroPhrase>
+			</h1>
 
-					<h1 className="max-w-2xl text-balance font-semibold text-3xl leading-[1.1] tracking-tight text-foreground sm:text-4xl md:text-5xl">
-						Meet a stranger. Chat. Play a quick game. Move on.
-					</h1>
+			<p className="mt-4 max-w-130 text-pretty text-sm font-medium leading-relaxed text-muted-foreground sm:mt-6">
+				Lume is the text-first way to meet new people. Match on a shared
+				interest, play a round of tic-tac-toe while you talk, skip to the next
+				one whenever you want. No profiles, no followers, no video.
+			</p>
 
-					<p className="mt-5 max-w-[560px] text-pretty text-base font-medium leading-relaxed text-muted-foreground sm:mt-6">
-						Lume is a text-first way to meet new people. Match on a shared
-						interest, play a round of tic-tac-toe while you talk, skip to the
-						next one whenever you want. No profiles, no followers, no video.
-					</p>
+			<div className="mt-8">
+				<Link
+					to="/login"
+					className="group inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-xs transition-transform hover:bg-primary/90 active:scale-[0.98]"
+				>
+					Start Chatting Free
+					<span className="inline-flex size-5 items-center justify-center rounded-full bg-primary-foreground/15">
+						<ArrowRight className="size-3.5" strokeWidth={2.5} />
+					</span>
+				</Link>
+			</div>
 
-					<div className="mt-8 flex flex-wrap items-center gap-3">
-						<Link
-							to="/login"
-							className="group inline-flex items-center gap-2 rounded-2xl border border-primary bg-primary px-5 py-2.5 text-base font-medium text-primary-foreground shadow-xs transition-shadow hover:bg-primary/90"
-						>
-							Start Chatting
-							<ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-						</Link>
-						<Link
-							to="/login"
-							className="inline-flex items-center gap-2 rounded-2xl border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-muted"
-						>
-							Create account
-						</Link>
-					</div>
+			<div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground sm:text-sm">
+				<span className="inline-flex items-center gap-1.5">
+					<Gift className="size-3.5" strokeWidth={2} />
+					Free forever
+				</span>
+				<span className="inline-flex items-center gap-1.5">
+					<Zap className="size-3.5" strokeWidth={2} />
+					30-second setup
+				</span>
+				<span className="inline-flex items-center gap-1.5">
+					<InfinityIcon className="size-3.5" strokeWidth={2} />
+					Unlimited chats
+				</span>
+			</div>
 
-					<p className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-						<span>Free forever</span>
-						<span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-						<span>30-second setup</span>
-						<span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-						<span>5 built-in games</span>
-					</p>
-				</div>
-
-				<div className="md:pl-2">
-					<MockLobbyPreview />
-				</div>
+			<div className="mt-16 md:mt-20">
+				<ThemedImage
+					alt="Lume dashboard preview"
+					aspect="aspect-[16/10]"
+					placeholderLabel="hero dashboard"
+				/>
 			</div>
 		</section>
 	);

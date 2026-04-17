@@ -1,5 +1,3 @@
-import { SectionEyebrow } from "./section-eyebrow";
-
 const stats = [
 	{
 		value: "< 3s",
@@ -30,9 +28,6 @@ export function StatsSection() {
 	return (
 		<section>
 			<div className="mb-14">
-				<div className="mb-5">
-					<SectionEyebrow label="Why Lume" dotClass="bg-foreground" />
-				</div>
 				<h2 className="max-w-xl font-semibold text-xl leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					Random chat, without the
 					<br />
