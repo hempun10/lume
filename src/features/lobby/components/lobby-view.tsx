@@ -7,6 +7,7 @@ import {
 	clearPendingGame,
 	getPendingGame,
 } from "@/features/games/data/pending-game";
+import { profileKeys } from "@/features/onboarding/queries";
 import { supabase } from "@/lib/supabase/client";
 import { useMatchmaking } from "../hooks/use-matchmaking";
 import { GamesRail } from "./games-rail";
@@ -27,7 +28,7 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 	const userId = user?.id ?? "";
 
 	const { data: profile, isSuccess: profileLoaded } = useQuery({
-		queryKey: ["profiles", userId, "lobby"],
+		queryKey: [...profileKeys.detail(userId), "lobby"],
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from("profiles")
@@ -107,7 +108,7 @@ export function LobbyView({ displayName }: LobbyViewProps) {
 			)}
 
 			<LobbyHeroCard
-				key={profileLoaded ? "ready" : "pending"}
+				key={profileLoaded ? `ready:${interests.join(",")}` : "pending"}
 				defaultInterests={interests}
 				onStartMatching={startMatching}
 			/>

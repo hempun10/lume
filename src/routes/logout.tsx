@@ -2,11 +2,14 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { signOut } from "@/features/auth/mutations";
 
 export const Route = createFileRoute("/logout")({
-	async beforeLoad() {
+	async beforeLoad({ context: { queryClient } }) {
 		// Skip on server — signOut requires the browser Supabase client
 		if (typeof window === "undefined") return;
 
 		await signOut();
+		// Drop all cached user data so a subsequent login doesn't flash the
+		// previous user's profile / interests / onboarding state.
+		queryClient.clear();
 		throw redirect({ to: "/" });
 	},
 	pendingMs: 0,

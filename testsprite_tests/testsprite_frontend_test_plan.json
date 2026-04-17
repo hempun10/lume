@@ -1,0 +1,1976 @@
+[
+  {
+    "id": "TC001",
+    "title": "Create a new account and complete onboarding to reach the lobby",
+    "description": "Verifies a new user can sign up, complete required onboarding fields and consents, and land on the dashboard lobby.",
+    "category": "Authentication + Onboarding + Lobby",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the sign up tab"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with a new unique email value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign up form"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid 18+ date of birth in the DOB field"
+      },
+      {
+        "type": "action",
+        "description": "Select between 1 and 8 interests"
+      },
+      {
+        "type": "action",
+        "description": "Enable Terms and Privacy consent"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard lobby"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Create a new account and reach onboarding",
+    "description": "Verifies a new user can sign up with a valid email and password and is routed into onboarding on success.",
+    "category": "Email Signup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the Sign up tab"
+      },
+      {
+        "type": "action",
+        "description": "Fill user-unique email into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid password that meets complexity requirements into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the signup form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the onboarding page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Complete onboarding with valid 18+ info, interests, and consent",
+    "description": "Verifies a new or not-yet-onboarded user can complete onboarding with valid inputs and is redirected to the dashboard afterward.",
+    "category": "Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid display name (2–30 characters) into the display name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a date of birth that proves the user is 18+ in the date of birth field"
+      },
+      {
+        "type": "action",
+        "description": "Select a gender value"
+      },
+      {
+        "type": "action",
+        "description": "Select between 1 and 8 interest tags"
+      },
+      {
+        "type": "action",
+        "description": "Check the Terms & Privacy consent checkbox"
+      },
+      {
+        "type": "action",
+        "description": "Submit the onboarding form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Onboarding requires 18+ and consent and 1–8 interests",
+    "description": "Verifies the onboarding form blocks completion when required fields are missing and succeeds when an 18+ DOB, Terms/Privacy consent, and 1–8 interests are provided.",
+    "category": "Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to complete onboarding without selecting required consent or interests"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify onboarding validation errors are displayed"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid 18+ date of birth into the date of birth field"
+      },
+      {
+        "type": "action",
+        "description": "Select 1 to 8 interests"
+      },
+      {
+        "type": "action",
+        "description": "Accept the terms and privacy consent"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Log in and reach dashboard when onboarding is complete",
+    "description": "Verifies an onboarded user can log in successfully and is routed to the dashboard.",
+    "category": "Email Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Enforce onboarding completion before accessing the dashboard",
+    "description": "Verifies an authenticated user who has not completed onboarding is forced into onboarding when trying to reach the dashboard.",
+    "category": "Authentication + Onboarding Gating",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the sign up tab"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with a new unique email value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign up form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is on the onboarding page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Chat view supports local send and end chat to return to dashboard",
+    "description": "Verifies a user in an active chat can send a message that appears in their message list and can end the chat to return to the dashboard.",
+    "category": "Realtime Chat",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /chat"
+      },
+      {
+        "type": "action",
+        "description": "Fill Hello from automated test into the message input field"
+      },
+      {
+        "type": "action",
+        "description": "Send the message"
+      },
+      {
+        "type": "action",
+        "description": "End the chat"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Enter matchmaking queue and cancel to return to lobby",
+    "description": "Verifies an onboarded user can start matchmaking, see the searching state, cancel, and return to the idle lobby view.",
+    "category": "Lobby and Matchmaking Queue",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Toggle match mode between Chat and Games"
+      },
+      {
+        "type": "action",
+        "description": "Toggle at least one interest chip"
+      },
+      {
+        "type": "action",
+        "description": "Start matching"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the searching view to appear"
+      },
+      {
+        "type": "action",
+        "description": "Cancel searching"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the idle lobby view is shown with controls to start matching"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Report user flow requires reason and submits with default block enabled",
+    "description": "Verifies the report dialog enforces a required reason and can submit a report with the default Also block selection leading back to the dashboard.",
+    "category": "Report User",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /chat"
+      },
+      {
+        "type": "action",
+        "description": "Open the report dialog"
+      },
+      {
+        "type": "action",
+        "description": "Pick one of the report reasons"
+      },
+      {
+        "type": "action",
+        "description": "Verify the Also block option is enabled by default"
+      },
+      {
+        "type": "action",
+        "description": "Submit the report"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a report confirmation is visible and the user returns to the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Dashboard matchmaking start and cancel",
+    "description": "Verifies a returning user can start matchmaking from the dashboard, see a searching state, and cancel to return to the lobby state.",
+    "category": "Dashboard Matchmaking",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to start matching"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the searching state to appear"
+      },
+      {
+        "type": "action",
+        "description": "Cancel matching"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard lobby state is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Accessing protected routes redirects to login",
+    "description": "Verifies an unauthenticated visitor is redirected to the login page when attempting to access protected routes.",
+    "category": "Route Protection",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /chat"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Block access to protected routes when unauthenticated",
+    "description": "Verifies unauthenticated users are redirected to login when attempting to open dashboard, chat, games, or settings.",
+    "category": "Authentication + Route Protection",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /chat"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to the login page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Report dialog requires a reason before submit",
+    "description": "Verifies the report flow prevents submission without a selected reason and allows submission once a reason is chosen, returning the user to the dashboard afterward.",
+    "category": "Safety (Report/Block)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /chat"
+      },
+      {
+        "type": "action",
+        "description": "Open the report user dialog"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit the report without selecting a reason"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the report submit action is blocked by validation"
+      },
+      {
+        "type": "action",
+        "description": "Select a report reason"
+      },
+      {
+        "type": "action",
+        "description": "Submit the report"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Start matchmaking and cancel from searching state",
+    "description": "Verifies a returning user can enter the matchmaking queue from the dashboard, see the searching state, and cancel back to the lobby.",
+    "category": "Matchmaking Lobby",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to start matching"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the searching state to appear"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to cancel matchmaking"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the lobby ready state is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Sign out and protected pages require login again",
+    "description": "Verifies that a signed-in user can log out to the public landing page and that protected pages then redirect to the login page.",
+    "category": "Logout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the sign-out control from the authenticated navigation"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to the login page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Reject login with invalid credentials",
+    "description": "Verifies a user entering an incorrect password sees an invalid-credentials error and remains on the login page.",
+    "category": "Email Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill user-unique email into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill invalid password text into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an invalid-credentials error is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Dashboard mode toggle and interest chip tuning persists locally",
+    "description": "Verifies a user can toggle matchmaking mode between chat and games, adjust interest chips, and see the updated selection reflected in the lobby UI.",
+    "category": "Dashboard Matchmaking",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Toggle matchmaking mode to games"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the selected interest chips in the lobby"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the lobby shows the updated matchmaking mode and interest selection"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Switch matching mode and tune interests from the dashboard",
+    "description": "Verifies a returning user can toggle between chat and games matching modes and adjust interest selections without leaving the dashboard.",
+    "category": "Matchmaking Configuration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Select the games matching mode"
+      },
+      {
+        "type": "action",
+        "description": "Adjust interest chip selections"
+      },
+      {
+        "type": "action",
+        "description": "Select the chat matching mode"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected matching mode is reflected in the lobby controls"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Browse games catalogue and select an available game to preselect in lobby",
+    "description": "Verifies a user can browse available and coming-soon sections on the games catalogue, select an available game, and return to the dashboard with a game preselected.",
+    "category": "Games Catalogue",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /games"
+      },
+      {
+        "type": "action",
+        "description": "Scroll through the games catalogue"
+      },
+      {
+        "type": "action",
+        "description": "Select an available game"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a game is shown as preselected for matchmaking"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Log out and enforce redirect for protected routes",
+    "description": "Verifies logging out ends the authenticated session and protected routes redirect back to login afterward.",
+    "category": "Authentication + Logout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /logout"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to the login page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Update matching interests and see them reflected in the lobby",
+    "description": "Verifies an authenticated member can change interest preferences in settings and see the updated interests reflected back on the dashboard lobby.",
+    "category": "Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open settings"
+      },
+      {
+        "type": "action",
+        "description": "Toggle one interest tag in matching preferences"
+      },
+      {
+        "type": "action",
+        "description": "Save the preference changes"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to return to the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard displays the updated interests in the lobby UI"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Logout ends session and protected routes redirect to login",
+    "description": "Verifies a user can log out and is redirected to the login page when trying to access protected pages afterward.",
+    "category": "Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /logout"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC023",
+    "title": "Reject signup when Terms/Privacy consent is required later",
+    "description": "Verifies a user can reach onboarding after signup where Terms/Privacy consent is collected, confirming signup does not incorrectly block before onboarding.",
+    "category": "Email Signup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the Sign up tab"
+      },
+      {
+        "type": "action",
+        "description": "Fill user-unique email into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid password that meets complexity requirements into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the signup form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the onboarding page"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC024",
+    "title": "Prevent onboarding submission for under-18 date of birth",
+    "description": "Verifies onboarding blocks submission when the selected date of birth indicates the user is under 18 and shows an inline validation error.",
+    "category": "Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid display name (2–30 characters) into the display name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a date of birth that makes the user under 18 in the date of birth field"
+      },
+      {
+        "type": "action",
+        "description": "Select a gender value"
+      },
+      {
+        "type": "action",
+        "description": "Select between 1 and 8 interest tags"
+      },
+      {
+        "type": "action",
+        "description": "Check the Terms & Privacy consent checkbox"
+      },
+      {
+        "type": "action",
+        "description": "Submit the onboarding form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a date-of-birth validation error is visible and onboarding is not completed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC025",
+    "title": "Start authentication from landing",
+    "description": "Verifies an unauthenticated visitor can start authentication from the landing page and reach the login screen.",
+    "category": "Landing/Legal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a call-to-action to start signing in or signing up"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC026",
+    "title": "Settings update profile and interests and reflect in lobby",
+    "description": "Verifies a user can update profile fields and interests in settings, save changes, and see the updated preferences reflected back on the dashboard.",
+    "category": "Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /settings"
+      },
+      {
+        "type": "action",
+        "description": "Fill Test Display Name into the display name field"
+      },
+      {
+        "type": "action",
+        "description": "Select 1 to 8 interests in matching preferences"
+      },
+      {
+        "type": "action",
+        "description": "Save settings changes"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to return to the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard reflects the updated matching preferences"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC027",
+    "title": "Update profile details from settings",
+    "description": "Verifies an authenticated member can update profile fields and see a confirmation with refreshed data in settings.",
+    "category": "Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open settings"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new display name into the display name field"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated display name is visible in the settings profile section"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC028",
+    "title": "Require Terms & Privacy consent during onboarding",
+    "description": "Verifies onboarding blocks submission when consent is not provided and shows an inline error requiring consent.",
+    "category": "Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid display name (2–30 characters) into the display name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a date of birth that proves the user is 18+ in the date of birth field"
+      },
+      {
+        "type": "action",
+        "description": "Select a gender value"
+      },
+      {
+        "type": "action",
+        "description": "Select between 1 and 8 interest tags"
+      },
+      {
+        "type": "action",
+        "description": "Ensure the Terms & Privacy consent checkbox is unchecked"
+      },
+      {
+        "type": "action",
+        "description": "Submit the onboarding form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a consent validation error is visible and onboarding is not completed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC029",
+    "title": "Lobby renders greeting and live online counter",
+    "description": "Verifies the dashboard lobby shows a time-aware greeting and an online counter for an authenticated user.",
+    "category": "Lobby and Matchmaking Queue",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a greeting is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an online counter is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC030",
+    "title": "Update profile and matching preferences in settings",
+    "description": "Verifies a user can edit profile fields and interests in settings and see the saved preferences reflected when returning to the dashboard.",
+    "category": "Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /settings"
+      },
+      {
+        "type": "action",
+        "description": "Fill a new display name into the display name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid region"
+      },
+      {
+        "type": "action",
+        "description": "Adjust interest selections"
+      },
+      {
+        "type": "action",
+        "description": "Save settings changes"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation to return to the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard reflects the updated preferences"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC031",
+    "title": "Request a password reset email",
+    "description": "Verifies a user can submit a password reset request and sees a success confirmation.",
+    "category": "Password Reset",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forgot-password"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password reset request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a password reset request success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC032",
+    "title": "Require at least one interest during onboarding",
+    "description": "Verifies onboarding blocks submission when no interests are selected and shows an inline error requiring at least one interest.",
+    "category": "Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid display name (2–30 characters) into the display name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a date of birth that proves the user is 18+ in the date of birth field"
+      },
+      {
+        "type": "action",
+        "description": "Select a gender value"
+      },
+      {
+        "type": "action",
+        "description": "Ensure zero interest tags are selected"
+      },
+      {
+        "type": "action",
+        "description": "Check the Terms & Privacy consent checkbox"
+      },
+      {
+        "type": "action",
+        "description": "Submit the onboarding form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an interests validation error is visible and onboarding is not completed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC033",
+    "title": "Request password reset shows confirmation",
+    "description": "Verifies a user can request a password reset and sees a success confirmation after submitting the request.",
+    "category": "Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forgot-password"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password reset request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a password reset request confirmation is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC034",
+    "title": "Request password reset from forgot password page",
+    "description": "Verifies a user can submit the forgot password form and see a confirmation that reset instructions were sent.",
+    "category": "Account Recovery",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forgot-password"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password reset request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a reset request confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC035",
+    "title": "Landing page sections and sign-in CTA",
+    "description": "Verifies a visitor can browse the landing content sections and use the sign-in call-to-action to reach the login page.",
+    "category": "Landing Page",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Scroll through the landing page content"
+      },
+      {
+        "type": "action",
+        "description": "Click a header navigation link that scrolls to a section on the page"
+      },
+      {
+        "type": "action",
+        "description": "Click the sign-in call to action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Reject signup with weak password",
+    "description": "Verifies the signup form shows a password complexity validation error when the password does not meet requirements and does not proceed to onboarding.",
+    "category": "Email Signup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the Sign up tab"
+      },
+      {
+        "type": "action",
+        "description": "Fill user-unique email into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a weak password into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the signup form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a password validation error is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Match mode selection persists across leaving and returning to lobby",
+    "description": "Verifies that selecting a match mode in the lobby remains selected after navigating away to Games and returning to the dashboard.",
+    "category": "Lobby and Matchmaking Queue",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Switch match mode to Games"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the games catalogue"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to return to the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the lobby shows Games mode as the currently selected match mode"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC038",
+    "title": "Unblock a user from settings unblock list",
+    "description": "Verifies a user can remove a previously blocked user from the unblock list in settings and see it removed from that list.",
+    "category": "Block and Unblock",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /settings"
+      },
+      {
+        "type": "action",
+        "description": "Open blocking management (unblock list)"
+      },
+      {
+        "type": "action",
+        "description": "If the list is empty, navigate to /chat and block a user via the report flow, then return to the unblock list"
+      },
+      {
+        "type": "action",
+        "description": "Unblock a user from the unblock list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the unblocked user is no longer shown in the unblock list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC039",
+    "title": "Change gender and region in settings",
+    "description": "Verifies an authenticated member can change gender and region and see a confirmation that changes were saved.",
+    "category": "Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open settings"
+      },
+      {
+        "type": "action",
+        "description": "Select a different gender value"
+      },
+      {
+        "type": "action",
+        "description": "Select a different region value"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the newly selected gender and region are shown as the current values"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC040",
+    "title": "Stay on signup when required fields are empty",
+    "description": "Verifies the signup form shows required-field validation when submitted without email and password and does not proceed.",
+    "category": "Email Signup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the Sign up tab"
+      },
+      {
+        "type": "action",
+        "description": "Submit the signup form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify required-field validation errors are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC041",
+    "title": "Validate login form required fields",
+    "description": "Verifies the login form prevents submission when required fields are missing and shows inline validation errors.",
+    "category": "Email Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify required-field validation errors are visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC042",
+    "title": "Validate onboarding requires Terms/Privacy consent",
+    "description": "Verifies onboarding cannot be completed unless the user agrees to Terms and Privacy.",
+    "category": "Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid 18+ date of birth in the DOB field"
+      },
+      {
+        "type": "action",
+        "description": "Select between 1 and 8 interests"
+      },
+      {
+        "type": "action",
+        "description": "Ensure Terms and Privacy consent is not enabled"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a consent validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC043",
+    "title": "Theme persists after reload with no flash",
+    "description": "Verifies the selected theme persists across a reload and the rendered page loads directly in the chosen theme without an intermediate flash.",
+    "category": "Theme Toggle",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the theme toggle in the header"
+      },
+      {
+        "type": "action",
+        "description": "Reload the page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the page loads in the previously selected theme"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the page does not briefly render in the opposite theme during load"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC044",
+    "title": "Landing legal routes are accessible",
+    "description": "Verifies a visitor can access terms, privacy, and community guidelines pages from the public site.",
+    "category": "Landing Page",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view terms of service"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the terms page content is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /privacy"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the privacy policy page content is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /community-guidelines"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the community guidelines page content is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC045",
+    "title": "Reject signup with invalid email format",
+    "description": "Verifies the signup form prevents submission with an invalid email and shows an inline validation error while staying on the login page.",
+    "category": "Email Signup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the Sign up tab"
+      },
+      {
+        "type": "action",
+        "description": "Fill invalid email text into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid password that meets complexity requirements into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the signup form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an email validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC046",
+    "title": "Prevent saving an under-18 date of birth in settings",
+    "description": "Verifies the settings form blocks saving when a member enters a date of birth indicating they are under 18.",
+    "category": "Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open settings"
+      },
+      {
+        "type": "action",
+        "description": "Fill a date of birth that makes the user under 18 into the date of birth field"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a date of birth validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no success confirmation is shown for the save attempt"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC047",
+    "title": "View legal pages from landing",
+    "description": "Verifies an unauthenticated visitor can open Terms, Privacy, and Community Guidelines pages from the landing experience and each page renders its legal content.",
+    "category": "Landing/Legal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the terms of service"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify terms of service content is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the privacy policy"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify privacy policy content is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the community guidelines"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify community guidelines content is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC048",
+    "title": "Validate onboarding rejects under-18 DOB",
+    "description": "Verifies onboarding prevents completion when a user enters a date of birth indicating they are under 18.",
+    "category": "Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Fill a date of birth indicating under 18 in the DOB field"
+      },
+      {
+        "type": "action",
+        "description": "Select between 1 and 8 interests"
+      },
+      {
+        "type": "action",
+        "description": "Enable Terms and Privacy consent"
+      },
+      {
+        "type": "action",
+        "description": "Submit onboarding"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an age validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC049",
+    "title": "Switch theme from landing page",
+    "description": "Verifies a visitor can toggle the theme on the landing page and immediately see the application palette change.",
+    "category": "Theme Toggle",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the theme toggle in the header"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the page theme changes to the opposite palette"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC050",
+    "title": "Landing and legal pages are accessible to unauthenticated visitors",
+    "description": "Verifies unauthenticated visitors can view landing and legal routes without being forced to log in.",
+    "category": "Public Pages",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /terms"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /privacy"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /community-guidelines"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the legal content pages render successfully"
+      }
+    ],
+    "priority": "Low"
+  }
+]

@@ -9,7 +9,7 @@ export async function updateProfile({
 	userId: string;
 	data: ProfileFormValues;
 }) {
-	const { error } = await supabase
+	const { data: updated, error } = await supabase
 		.from("profiles")
 		.update({
 			display_name: data.displayName,
@@ -17,9 +17,23 @@ export async function updateProfile({
 			gender: data.gender || null,
 			region: data.region || null,
 		})
-		.eq("id", userId);
+		.eq("id", userId)
+		.select("id")
+		.single();
 
 	if (error) throw error;
+	if (!updated) {
+		throw new Error(
+			"Profile update returned no rows — check RLS policies on profiles.",
+		);
+	}
+
+	// Keep auth.user_metadata.display_name in sync so UIs that read from the
+	// session user (e.g. the dashboard greeting) reflect the change immediately.
+	const { error: authError } = await supabase.auth.updateUser({
+		data: { display_name: data.displayName },
+	});
+	if (authError) throw authError;
 }
 
 /** Update matching preferences (interests). */
@@ -30,12 +44,19 @@ export async function updatePreferences({
 	userId: string;
 	data: PreferencesFormValues;
 }) {
-	const { error } = await supabase
+	const { data: updated, error } = await supabase
 		.from("profiles")
 		.update({
 			interests: data.interests,
 		})
-		.eq("id", userId);
+		.eq("id", userId)
+		.select("id")
+		.single();
 
 	if (error) throw error;
+	if (!updated) {
+		throw new Error(
+			"Preferences update returned no rows — check RLS policies on profiles.",
+		);
+	}
 }

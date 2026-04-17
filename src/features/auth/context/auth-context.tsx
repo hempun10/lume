@@ -30,7 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		} = supabase.auth.onAuthStateChange((event, session) => {
 			setSession(session);
 
-			if (event === "INITIAL_SESSION") {
+			if (
+				event === "INITIAL_SESSION" ||
+				event === "SIGNED_IN" ||
+				event === "SIGNED_OUT" ||
+				event === "TOKEN_REFRESHED" ||
+				event === "USER_UPDATED"
+			) {
 				setIsLoading(false);
 			}
 		});
