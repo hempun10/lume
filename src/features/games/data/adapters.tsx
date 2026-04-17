@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { RockPaperScissorsBoard } from "../components/rock-paper-scissors-board";
 import { TicTacToeBoard } from "../components/tic-tac-toe-board";
 import { TriviaBoard } from "../components/trivia-board";
+import { TwoTruthsBoard } from "../components/two-truths-board";
 import { WouldYouRatherBoard } from "../components/would-you-rather-board";
 import {
 	ROCK_PAPER_SCISSORS_ENGINE,
@@ -12,6 +13,7 @@ import {
 	type TicTacToeState,
 } from "../engines/tic-tac-toe";
 import { TRIVIA_ENGINE, type TriviaState } from "../engines/trivia";
+import { TWO_TRUTHS_ENGINE, type TwoTruthsState } from "../engines/two-truths";
 import type { GameEngine, GameResult, Seat } from "../engines/types";
 import {
 	WOULD_YOU_RATHER_ENGINE,
@@ -126,12 +128,30 @@ const triviaAdapter: GameAdapter<TriviaState> = {
 	renderStatus: () => null,
 };
 
+const twoTruthsAdapter: GameAdapter<TwoTruthsState> = {
+	id: "two-truths",
+	title: "Two Truths & a Lie",
+	engine: TWO_TRUTHS_ENGINE,
+	renderBoard: ({ state, myTurn, onMove, mySeat }) => (
+		<TwoTruthsBoard
+			state={state}
+			mySeat={mySeat}
+			myTurn={myTurn}
+			onMove={onMove}
+		/>
+	),
+	renderSeatBadge: () => null,
+	// Board handles phase-aware status (reader/guesser/reveal/summary).
+	renderStatus: () => null,
+};
+
 // biome-ignore lint/suspicious/noExplicitAny: Adapter state types differ per game.
 const REGISTRY: Record<string, GameAdapter<any>> = {
 	"tic-tac-toe": ticTacToeAdapter,
 	"would-you-rather": wouldYouRatherAdapter,
 	"rock-paper-scissors": rockPaperScissorsAdapter,
 	trivia: triviaAdapter,
+	"two-truths": twoTruthsAdapter,
 };
 
 export function getGameAdapter(

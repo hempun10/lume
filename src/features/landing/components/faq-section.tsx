@@ -21,7 +21,7 @@ const faqs = [
 	{
 		question: "What games are there?",
 		answer:
-			"Four playable today: tic-tac-toe, trivia, would-you-rather, and rock-paper-scissors. A round takes 2–5 minutes and runs right alongside your conversation. More on the way.",
+			"Five playable today: tic-tac-toe, trivia, would-you-rather, rock-paper-scissors, and two truths & a lie. A round takes 2–5 minutes and runs right alongside your conversation. More on the way.",
 	},
 	{
 		question: "Is it safe?",
