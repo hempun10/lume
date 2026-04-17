@@ -15,11 +15,11 @@ export const GAMES: Game[] = [
 		id: "trivia",
 		name: "Trivia",
 		description:
-			"Answer random trivia questions together. Compete to see who knows more useless facts.",
+			"Six quick multiple-choice questions. Answer blind, reveal together, see who knows more.",
 		icon: "brain",
 		players: "2 players",
-		duration: "~5 min",
-		status: "coming_soon",
+		duration: "~3 min",
+		status: "available",
 	},
 	{
 		id: "word-game",

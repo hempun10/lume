@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ConnectFourBoard } from "../components/connect-four-board";
 import { RockPaperScissorsBoard } from "../components/rock-paper-scissors-board";
 import { TicTacToeBoard } from "../components/tic-tac-toe-board";
+import { TriviaBoard } from "../components/trivia-board";
 import { WouldYouRatherBoard } from "../components/would-you-rather-board";
 import {
 	CONNECT_FOUR_ENGINE,
@@ -15,6 +16,7 @@ import {
 	TIC_TAC_TOE_ENGINE,
 	type TicTacToeState,
 } from "../engines/tic-tac-toe";
+import { TRIVIA_ENGINE, type TriviaState } from "../engines/trivia";
 import type { GameEngine, GameResult, Seat } from "../engines/types";
 import {
 	WOULD_YOU_RATHER_ENGINE,
@@ -134,12 +136,29 @@ const rockPaperScissorsAdapter: GameAdapter<RockPaperScissorsState> = {
 	renderStatus: () => null,
 };
 
+const triviaAdapter: GameAdapter<TriviaState> = {
+	id: "trivia",
+	title: "Trivia",
+	engine: TRIVIA_ENGINE,
+	renderBoard: ({ state, myTurn, onMove, mySeat }) => (
+		<TriviaBoard
+			state={state}
+			mySeat={mySeat}
+			myTurn={myTurn}
+			onMove={onMove}
+		/>
+	),
+	renderSeatBadge: () => null,
+	renderStatus: () => null,
+};
+
 // biome-ignore lint/suspicious/noExplicitAny: Adapter state types differ per game.
 const REGISTRY: Record<string, GameAdapter<any>> = {
 	"tic-tac-toe": ticTacToeAdapter,
 	"connect-four": connectFourAdapter,
 	"would-you-rather": wouldYouRatherAdapter,
 	"rock-paper-scissors": rockPaperScissorsAdapter,
+	trivia: triviaAdapter,
 };
 
 export function getGameAdapter(
