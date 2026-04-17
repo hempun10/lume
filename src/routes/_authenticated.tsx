@@ -41,8 +41,9 @@ export const Route = createFileRoute("/_authenticated")({
 			if (err instanceof Error === false && typeof err === "object") {
 				throw err;
 			}
-			// Query/network errors → redirect to onboarding as a safe fallback
-			throw redirect({ to: "/onboarding" });
+			// Query/network errors → redirect to login (safer than onboarding,
+			// which can loop a signed-out user back through the auth guard).
+			throw redirect({ to: "/login" });
 		}
 
 		return { session: session as Session | null };
@@ -79,12 +80,14 @@ function AuthenticatedLayout() {
 	const { session: routeSession } = Route.useRouteContext();
 	const { session: authSession, isLoading } = useAuth();
 
-	// Use whichever session is available — reactive auth state takes priority,
-	// falling back to the route context session that beforeLoad already verified.
-	const session = authSession ?? routeSession;
+	// Once the auth listener has loaded, trust its state (including null after
+	// SIGNED_OUT). Only fall back to the route context session while the listener
+	// is still initializing — this covers the SSR → hydration race on first paint
+	// without keeping stale sessions alive after logout.
+	const session = isLoading ? (authSession ?? routeSession) : authSession;
 	const user = session?.user ?? null;
 
-	if (isLoading) {
+	if (isLoading && !session) {
 		return <AuthPending />;
 	}
 

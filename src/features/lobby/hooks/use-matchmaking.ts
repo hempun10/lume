@@ -53,6 +53,7 @@ export function useMatchmaking(): UseMatchmakingReturn {
 	const queueEntryIdRef = useRef<string | null>(null);
 	const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const matchedHandledRef = useRef(false);
+	const cancelledRef = useRef(false);
 
 	const cleanup = useCallback(() => {
 		if (timerRef.current) {
@@ -103,6 +104,7 @@ export function useMatchmaking(): UseMatchmakingReturn {
 			if (!user) return;
 
 			matchedHandledRef.current = false;
+			cancelledRef.current = false;
 
 			setState({
 				status: "queuing",
@@ -141,6 +143,12 @@ export function useMatchmaking(): UseMatchmakingReturn {
 				});
 			});
 
+			// Bail out if user cancelled while we were awaiting the subscribe ack.
+			if (cancelledRef.current) {
+				cleanup();
+				return;
+			}
+
 			// 2. Only now insert into the queue — channel is live.
 			const { data, error } = await supabase
 				.from("match_queue")
@@ -156,10 +164,17 @@ export function useMatchmaking(): UseMatchmakingReturn {
 			if (error) {
 				cleanup();
 				if (error.code === "23505") {
+					// Ghost row from a prior cancelled attempt — clean it up so the
+					//   next Start click can proceed immediately.
+					await supabase
+						.from("match_queue")
+						.update({ status: "cancelled" })
+						.eq("user_id", user.id)
+						.eq("status", "waiting");
 					setState((prev) => ({
 						...prev,
 						status: "idle",
-						error: "You already have an active search. Please wait.",
+						error: "Previous search was still active. Please try again.",
 					}));
 				} else {
 					setState((prev) => ({
@@ -172,6 +187,18 @@ export function useMatchmaking(): UseMatchmakingReturn {
 			}
 
 			queueEntryIdRef.current = data.id;
+
+			// If cancel fired between INSERT and now, mark this new row cancelled
+			// and bail before starting timers.
+			if (cancelledRef.current) {
+				await supabase
+					.from("match_queue")
+					.update({ status: "cancelled" })
+					.eq("id", data.id);
+				queueEntryIdRef.current = null;
+				cleanup();
+				return;
+			}
 
 			// 3. DB poll fallback — if the broadcast is ever missed (dropped
 			//    WS frame, service role broadcasting before subscribe, etc.)
@@ -203,6 +230,7 @@ export function useMatchmaking(): UseMatchmakingReturn {
 	);
 
 	const cancelMatching = useCallback(async () => {
+		cancelledRef.current = true;
 		cleanup();
 
 		if (queueEntryIdRef.current) {
@@ -211,10 +239,18 @@ export function useMatchmaking(): UseMatchmakingReturn {
 				.update({ status: "cancelled" })
 				.eq("id", queueEntryIdRef.current);
 			queueEntryIdRef.current = null;
+		} else if (user) {
+			// Defensive cleanup: if cancel fired before we captured the entry id,
+			// cancel any waiting row this user has to avoid ghost rows.
+			await supabase
+				.from("match_queue")
+				.update({ status: "cancelled" })
+				.eq("user_id", user.id)
+				.eq("status", "waiting");
 		}
 
 		setState(INITIAL_STATE);
-	}, [cleanup]);
+	}, [cleanup, user]);
 
 	// Cleanup on unmount
 	useEffect(() => {

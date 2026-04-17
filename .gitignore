@@ -23,3 +23,6 @@ todos.json
 
 # Supabase
 supabase/.temp
+
+# TestSprite runtime cache
+testsprite_tests/tmp/
