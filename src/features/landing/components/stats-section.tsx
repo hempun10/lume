@@ -6,10 +6,9 @@ const stats = [
 			"Tap the button. A real person is on the other side before you blink.",
 	},
 	{
-		value: "5",
+		value: "4",
 		title: "built-in games",
-		description:
-			"Tic-tac-toe, trivia, connect four, would-you-rather, rock-paper-scissors.",
+		description: "Tic-tac-toe, trivia, would-you-rather, rock-paper-scissors.",
 	},
 	{
 		value: "0",

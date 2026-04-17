@@ -1,6 +1,7 @@
 import { Check, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { Seat } from "../engines/types";
 import {
 	agreementCount,
 	currentPrompt,
@@ -12,6 +13,7 @@ import {
 
 interface Props {
 	state: WouldYouRatherState;
+	mySeat: Seat;
 	myTurn: boolean;
 	onMove: (move: number) => void;
 }
@@ -27,7 +29,7 @@ interface Props {
  *    button advances to the next prompt.
  *  - finished: agreement tally over all N prompts + a mini history.
  */
-export function WouldYouRatherBoard({ state, myTurn, onMove }: Props) {
+export function WouldYouRatherBoard({ state, mySeat, myTurn, onMove }: Props) {
 	if (state.phase === "finished") {
 		return <FinishedView state={state} />;
 	}
@@ -39,6 +41,11 @@ export function WouldYouRatherBoard({ state, myTurn, onMove }: Props) {
 	// In picking phase, lock the options once this seat has picked.
 	// In revealed phase, options are display-only.
 	const optionsDisabled = revealed || !myTurn;
+
+	// During picking, only the viewer's own pick should highlight.
+	// Opponent's pick stays hidden until both have committed.
+	const myPick = mySeat === "A" ? state.aPick : state.bPick;
+	const opponentPick = mySeat === "A" ? state.bPick : state.aPick;
 
 	return (
 		<div className="flex w-full max-w-sm flex-col items-stretch gap-4">
@@ -53,8 +60,8 @@ export function WouldYouRatherBoard({ state, myTurn, onMove }: Props) {
 
 			<OptionCard
 				label={prompt.left}
-				aPicked={state.aPick === 0}
-				bPicked={state.bPick === 0}
+				myPicked={myPick === 0}
+				opponentPicked={opponentPick === 0}
 				revealed={revealed}
 				disabled={optionsDisabled}
 				onPick={() => onMove(WYR_MOVE_PICK_LEFT)}
@@ -66,8 +73,8 @@ export function WouldYouRatherBoard({ state, myTurn, onMove }: Props) {
 
 			<OptionCard
 				label={prompt.right}
-				aPicked={state.aPick === 1}
-				bPicked={state.bPick === 1}
+				myPicked={myPick === 1}
+				opponentPicked={opponentPick === 1}
 				revealed={revealed}
 				disabled={optionsDisabled}
 				onPick={() => onMove(WYR_MOVE_PICK_RIGHT)}
@@ -91,20 +98,23 @@ export function WouldYouRatherBoard({ state, myTurn, onMove }: Props) {
 
 function OptionCard({
 	label,
-	aPicked,
-	bPicked,
+	myPicked,
+	opponentPicked,
 	revealed,
 	disabled,
 	onPick,
 }: {
 	label: string;
-	aPicked: boolean;
-	bPicked: boolean;
+	myPicked: boolean;
+	/** Opponent's pick is only visible (both to styling and badges) once revealed. */
+	opponentPicked: boolean;
 	revealed: boolean;
 	disabled: boolean;
 	onPick: () => void;
 }) {
-	const highlighted = aPicked || bPicked;
+	// Before reveal, only the viewer's own pick highlights. This prevents
+	// leaking the opponent's choice during the simultaneous picking phase.
+	const highlighted = myPicked || (revealed && opponentPicked);
 	return (
 		<button
 			type="button"
@@ -123,8 +133,8 @@ function OptionCard({
 
 			{revealed && (
 				<div className="mt-3 flex flex-wrap gap-1.5">
-					{aPicked && <PickBadge who="You" />}
-					{bPicked && <PickBadge who="Stranger" />}
+					{myPicked && <PickBadge who="You" />}
+					{opponentPicked && <PickBadge who="Stranger" />}
 				</div>
 			)}
 		</button>

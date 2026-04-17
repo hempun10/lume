@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth";
+import { cn } from "@/lib/utils";
 import { GAMES } from "../../games/data/games";
 import {
 	clearPendingGame,
@@ -128,8 +129,13 @@ export function ChatView({ roomId }: ChatViewProps) {
 
 	return (
 		<div className="flex h-full">
-			{/* Chat column — takes remaining space */}
-			<div className="flex min-w-0 flex-1 flex-col">
+			{/* Chat column — takes remaining space; hidden on mobile while game panel is open */}
+			<div
+				className={cn(
+					"flex min-w-0 flex-1 flex-col",
+					showGame && "hidden md:flex",
+				)}
+			>
 				<ChatHeader
 					startedAt={session.startedAt}
 					onEnd={endChat}
@@ -160,9 +166,9 @@ export function ChatView({ roomId }: ChatViewProps) {
 				<MessageInput onSend={sendMessage} onTyping={broadcastTyping} />
 			</div>
 
-			{/* Game panel — 40% width on desktop */}
+			{/* Game panel — full-width on mobile, 40% side panel on desktop */}
 			{showGame && (
-				<div className="hidden w-[40%] shrink-0 border-l border-border/50 md:flex">
+				<div className="flex w-full shrink-0 border-border/50 md:w-[40%] md:border-l">
 					<div className="flex-1">
 						<GamePanel
 							roomId={roomId}
