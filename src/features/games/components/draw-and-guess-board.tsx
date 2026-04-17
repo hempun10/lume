@@ -1119,6 +1119,12 @@ export function dispatchBoardEvent(
 	data: unknown,
 ) {
 	const map = boardHandlerRegistry.get(sendCustomEvent);
+	console.log("[D&G][dispatch]", {
+		event,
+		hasMap: !!map,
+		hasHandler: !!map?.[event],
+		registrySize: boardHandlerRegistry.size,
+	});
 	map?.[event]?.(data);
 }
 
@@ -1138,8 +1144,13 @@ function useCustomEventsBridge(
 			proxy[key] = (data) => ref.current[key]?.(data);
 		}
 		boardHandlerRegistry.set(sendCustomEvent, proxy);
+		console.log("[D&G][bridge] registered", {
+			keys: Object.keys(proxy),
+			registrySize: boardHandlerRegistry.size,
+		});
 		return () => {
 			boardHandlerRegistry.delete(sendCustomEvent);
+			console.log("[D&G][bridge] UNregistered");
 		};
 	}, [sendCustomEvent]);
 }

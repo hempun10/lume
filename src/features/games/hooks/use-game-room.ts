@@ -226,6 +226,14 @@ export function useGameRoom<State>(
 					event: string;
 					data: unknown;
 				};
+				console.log("[D&G][recv]", {
+					event: d?.event,
+					from: d?.sender_id,
+					me: userId,
+					self: d?.sender_id === userId,
+					hasHandler: !!customEventsRef.current?.[d?.event],
+					registeredKeys: Object.keys(customEventsRef.current ?? {}),
+				});
 				if (!d || d.sender_id === userId) return;
 				const handler = customEventsRef.current?.[d.event];
 				if (handler) handler(d.data, d.sender_id);
@@ -319,7 +327,11 @@ export function useGameRoom<State>(
 
 	const sendCustomEvent = useCallback(
 		(event: string, payload: unknown) => {
-			if (!channelRef.current) return;
+			if (!channelRef.current) {
+				console.log("[D&G][send] NO CHANNEL", event);
+				return;
+			}
+			console.log("[D&G][send]", event, payload);
 			channelRef.current.send({
 				type: "broadcast",
 				event: "custom_event",
