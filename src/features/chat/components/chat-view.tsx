@@ -1,6 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth";
+import { GAMES } from "../../games/data/games";
+import {
+	clearPendingGame,
+	getPendingGame,
+} from "../../games/data/pending-game";
 import { useGameInvite } from "../hooks/use-game-invite";
 import { useRealtimeChat } from "../hooks/use-realtime-chat";
 import { useStrangerProfile } from "../hooks/use-stranger-profile";
@@ -40,6 +45,33 @@ export function ChatView({ roomId }: ChatViewProps) {
 			setShowGame(true);
 		}
 	}, [gameInvite.status]);
+
+	/**
+	 * If the user arrived from the games catalog (Play → match → chat),
+	 * auto-send the invite and open the game panel the moment the chat
+	 * is connected. Fires exactly once, only when no invite is already
+	 * in flight, and clears the pending intent so a refresh doesn't
+	 * repeat it.
+	 */
+	const autoInvitedRef = useRef(false);
+	useEffect(() => {
+		if (autoInvitedRef.current) return;
+		if (session.status !== "active") return;
+		if (gameInvite.status !== "idle") return;
+
+		const pending = getPendingGame();
+		if (!pending) return;
+
+		const game = GAMES.find(
+			(g) => g.id === pending && g.status === "available",
+		);
+		clearPendingGame();
+		if (!game) return;
+
+		autoInvitedRef.current = true;
+		setShowGame(true);
+		gameInvite.sendInvite(game.id, game.name);
+	}, [session.status, gameInvite]);
 
 	function handleBackToLobby() {
 		navigate({ to: "/dashboard" });

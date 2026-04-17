@@ -8,6 +8,7 @@ interface SearchingViewProps {
 	elapsedSeconds: number;
 	matchStatus: MatchStatus;
 	onCancel: () => void;
+	gameName?: string;
 }
 
 function formatTime(seconds: number): string {
@@ -37,9 +38,12 @@ export function SearchingView({
 	elapsedSeconds,
 	matchStatus,
 	onCancel,
+	gameName,
 }: SearchingViewProps) {
 	const isMatched = matchStatus === "matched" || matchStatus === "navigating";
 	const { eyebrow, heading } = getStatusLine(matchStatus);
+	const resolvedHeading =
+		!isMatched && gameName ? `Finding a ${gameName} partner` : heading;
 
 	return (
 		<div className="mx-auto flex h-full w-full max-w-md flex-col items-center justify-center gap-10 px-4 py-10 duration-500 animate-in fade-in">
@@ -66,7 +70,7 @@ export function SearchingView({
 					{eyebrow}
 				</p>
 				<h1 className="text-balance font-semibold text-3xl text-foreground tracking-tight md:text-4xl">
-					{heading}
+					{resolvedHeading}
 				</h1>
 				{!isMatched && (
 					<p className="font-mono text-5xl text-foreground tabular-nums md:text-6xl">
