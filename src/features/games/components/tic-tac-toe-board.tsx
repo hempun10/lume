@@ -17,7 +17,7 @@ export function TicTacToeBoard({
 	onCellClick,
 }: TicTacToeBoardProps) {
 	return (
-		<div className="grid grid-cols-3 gap-2">
+		<div className="grid w-full max-w-xs grid-cols-3 gap-2">
 			{board.map((cell, i) => {
 				const key = `pos-${i}`;
 				return (
