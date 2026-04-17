@@ -273,8 +273,8 @@ const drawAndGuessAdapter: GameAdapter<DrawAndGuessState> = {
 	// Two kinds of events:
 	//   - `round_setup` / `reveal`: mutate shared state (applied via
 	//     `setGameState` + engine reducers).
-	//   - `stroke_start` / `stroke_point` / `stroke_end` / `fill` /
-	//     `clear` / `undo`: mutate the board's local canvas refs. We
+	//   - `stroke_start` / `stroke_point` / `stroke_end` / `clear` /
+	//     `undo`: mutate the board's local canvas refs. We
 	//     forward these to the board via `dispatchBoardEvent`, which
 	//     looks up the handler map the board registers on mount.
 	getCustomEvents: (setGameState, sendCustomEvent) => {
@@ -313,7 +313,6 @@ const drawAndGuessAdapter: GameAdapter<DrawAndGuessState> = {
 			stroke_start: forward("stroke_start"),
 			stroke_point: forward("stroke_point"),
 			stroke_end: forward("stroke_end"),
-			fill: forward("fill"),
 			clear: forward("clear"),
 			undo: forward("undo"),
 		};

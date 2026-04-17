@@ -3,9 +3,7 @@ import {
 	ChevronRight,
 	Eraser,
 	Eye,
-	PaintBucket,
 	Paintbrush,
-	Pencil,
 	Undo2,
 	X,
 } from "lucide-react";
@@ -18,6 +16,12 @@ import {
 	useState,
 } from "react";
 import { Button } from "@/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { pickRoundOptions } from "../data/draw-and-guess-words";
 import {
@@ -29,6 +33,7 @@ import {
 	type DrawAndGuessState,
 	drawerSeatFor,
 } from "../engines/draw-and-guess";
+import { playTickPulse, playTimeoutBuzz } from "../utils/sounds";
 
 /* ------------------------------- constants ------------------------------- */
 
@@ -43,20 +48,16 @@ const COLORS = [
 ] as const;
 const BRUSH_SIZES = [3, 6, 12] as const;
 const STROKE_BATCH_MS = 50;
-
-type Tool = "brush" | "fill";
+const WORD_REVEAL_MS = 2000;
 
 type DrawablePoint = { x: number; y: number };
 
-type Drawable =
-	| {
-			type: "stroke";
-			id: string;
-			color: string;
-			width: number;
-			points: DrawablePoint[];
-	  }
-	| { type: "fill"; color: string; x: number; y: number };
+type Drawable = {
+	id: string;
+	color: string;
+	width: number;
+	points: DrawablePoint[];
+};
 
 interface Props {
 	state: DrawAndGuessState;
@@ -269,27 +270,70 @@ function RoundView({
 		}
 	}, [state.guess, revealed, iAmDrawer, correctIdxForDrawer, onReveal]);
 
+	// Guesser-only audio cues: a short pulse for each of the final
+	// 10 seconds, and a low buzz when the timer hits zero without a
+	// guess. Tracked via a ref so we fire once per second boundary.
+	const lastPulseSecondRef = useRef<number | null>(null);
+	const timeoutBuzzedRef = useRef(false);
+	useEffect(() => {
+		if (revealed) {
+			lastPulseSecondRef.current = null;
+			timeoutBuzzedRef.current = false;
+			return;
+		}
+		if (iAmDrawer || locked) return;
+		const seconds = Math.ceil(remaining / 1000);
+		if (seconds > 0 && seconds <= 10) {
+			if (lastPulseSecondRef.current !== seconds) {
+				lastPulseSecondRef.current = seconds;
+				playTickPulse();
+			}
+		}
+		if (remaining === 0 && !timeoutBuzzedRef.current) {
+			timeoutBuzzedRef.current = true;
+			playTimeoutBuzz();
+		}
+	}, [remaining, revealed, iAmDrawer, locked]);
+
+	// Word-reveal overlay for the drawer: briefly show the target
+	// word centered over the canvas at the start of the round, then
+	// fade out. Guesser never sees this.
+	const [showWordOverlay, setShowWordOverlay] = useState(false);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional round reset.
+	useEffect(() => {
+		if (!iAmDrawer || !targetWord || revealed) {
+			setShowWordOverlay(false);
+			return;
+		}
+		setShowWordOverlay(true);
+		const id = window.setTimeout(
+			() => setShowWordOverlay(false),
+			WORD_REVEAL_MS,
+		);
+		return () => window.clearTimeout(id);
+	}, [state.round, iAmDrawer, targetWord]);
+
 	return (
 		<div className="flex flex-col gap-3">
 			<TimerBar remainingMs={remaining} revealed={revealed} />
 
-			{iAmDrawer && targetWord && !revealed && (
-				<div className="rounded-lg border border-brand-500/30 bg-brand-500/5 px-3 py-2 text-center text-xs">
-					<span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-						Draw:
-					</span>{" "}
-					<span className="text-base font-semibold text-foreground">
-						{targetWord}
-					</span>
-				</div>
-			)}
-
-			<DrawingSurface
-				iAmDrawer={iAmDrawer}
-				revealed={revealed}
-				sendCustomEvent={sendCustomEvent}
-				roundKey={state.round}
-			/>
+			<div className="relative">
+				<DrawingSurface
+					iAmDrawer={iAmDrawer}
+					revealed={revealed}
+					sendCustomEvent={sendCustomEvent}
+					roundKey={state.round}
+				/>
+				{iAmDrawer && targetWord && (
+					<WordRevealOverlay word={targetWord} show={showWordOverlay} />
+				)}
+				{iAmDrawer && targetWord && !revealed && !showWordOverlay && (
+					<div className="pointer-events-none absolute left-2 top-2 rounded-md bg-background/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
+						Draw:{" "}
+						<span className="text-foreground normal-case">{targetWord}</span>
+					</div>
+				)}
+			</div>
 
 			<GuessPanel
 				options={options}
@@ -336,6 +380,28 @@ function RoundView({
 }
 
 /* -------------------------------- timer -------------------------------- */
+
+function WordRevealOverlay({ word, show }: { word: string; show: boolean }) {
+	return (
+		<div
+			className={cn(
+				"pointer-events-none absolute inset-0 z-10 flex items-center justify-center",
+				"transition-opacity duration-300 ease-out motion-reduce:transition-none",
+				show ? "opacity-100" : "opacity-0",
+			)}
+			aria-hidden={!show}
+		>
+			<div className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-background/95 px-6 py-4 shadow-lg backdrop-blur">
+				<span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+					Your word
+				</span>
+				<span className="text-balance text-center text-2xl font-semibold text-foreground">
+					{word}
+				</span>
+			</div>
+		</div>
+	);
+}
 
 function TimerBar({
 	remainingMs,
@@ -391,7 +457,6 @@ function DrawingSurface({
 
 	const [color, setColor] = useState<string>(COLORS[0]);
 	const [width, setWidth] = useState<number>(BRUSH_SIZES[1]);
-	const [tool, setTool] = useState<Tool>("brush");
 
 	/* Reset on round change. */
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect depends only on roundKey.
@@ -416,48 +481,40 @@ function DrawingSurface({
 		ctx.fillStyle = "#ffffff";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 		for (const d of drawablesRef.current) {
-			if (d.type === "fill") {
-				ctx.fillStyle = d.color;
-				ctx.fillRect(0, 0, canvas.width, canvas.height);
-			} else {
-				drawStrokePath(ctx, d.color, d.width, d.points);
-			}
+			drawStrokePath(ctx, d.color, d.width, d.points);
 		}
 	}, []);
 
 	/* Incremental: draw just the newest segment of the current stroke. */
-	const drawSegment = useCallback(
-		(stroke: Drawable & { type: "stroke" }, fromIdx: number) => {
-			const canvas = canvasRef.current;
-			if (!canvas) return;
-			const ctx = canvas.getContext("2d");
-			if (!ctx) return;
-			ctx.strokeStyle = stroke.color;
-			ctx.lineWidth = stroke.width;
-			ctx.lineCap = "round";
-			ctx.lineJoin = "round";
+	const drawSegment = useCallback((stroke: Drawable, fromIdx: number) => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+		ctx.strokeStyle = stroke.color;
+		ctx.lineWidth = stroke.width;
+		ctx.lineCap = "round";
+		ctx.lineJoin = "round";
+		ctx.beginPath();
+		const pts = stroke.points;
+		if (pts.length === 0) return;
+		const start = pts[Math.max(0, fromIdx - 1)];
+		if (!start) return;
+		ctx.moveTo(start.x, start.y);
+		for (let i = Math.max(fromIdx, 1); i < pts.length; i++) {
+			const p = pts[i];
+			if (!p) continue;
+			ctx.lineTo(p.x, p.y);
+		}
+		ctx.stroke();
+		if (pts.length === 1) {
+			// single-point tap: render a dot.
+			ctx.fillStyle = stroke.color;
 			ctx.beginPath();
-			const pts = stroke.points;
-			if (pts.length === 0) return;
-			const start = pts[Math.max(0, fromIdx - 1)];
-			if (!start) return;
-			ctx.moveTo(start.x, start.y);
-			for (let i = Math.max(fromIdx, 1); i < pts.length; i++) {
-				const p = pts[i];
-				if (!p) continue;
-				ctx.lineTo(p.x, p.y);
-			}
-			ctx.stroke();
-			if (pts.length === 1) {
-				// single-point tap: render a dot.
-				ctx.fillStyle = stroke.color;
-				ctx.beginPath();
-				ctx.arc(pts[0].x, pts[0].y, stroke.width / 2, 0, Math.PI * 2);
-				ctx.fill();
-			}
-		},
-		[],
-	);
+			ctx.arc(pts[0].x, pts[0].y, stroke.width / 2, 0, Math.PI * 2);
+			ctx.fill();
+		}
+	}, []);
 
 	/* ---------- remote event handlers (guesser receives strokes) ---------- */
 	// We can't use the adapter's customEvents plumbing here because
@@ -481,7 +538,6 @@ function DrawingSurface({
 			};
 			if (!d.id || !d.color || typeof d.width !== "number") return;
 			const stroke: Drawable = {
-				type: "stroke",
 				id: d.id,
 				color: d.color,
 				width: d.width,
@@ -497,24 +553,13 @@ function DrawingSurface({
 			};
 			if (!d.id || !Array.isArray(d.points)) return;
 			const last = drawablesRef.current[drawablesRef.current.length - 1];
-			if (!last || last.type !== "stroke" || last.id !== d.id) return;
+			if (!last || last.id !== d.id) return;
 			const prevLen = last.points.length;
 			last.points.push(...d.points);
 			drawSegment(last, prevLen);
 		},
 		stroke_end: () => {
 			currentStrokeRef.current = null;
-		},
-		fill: (data) => {
-			const d = data as { color?: string };
-			if (!d.color) return;
-			drawablesRef.current.push({
-				type: "fill",
-				color: d.color,
-				x: 0,
-				y: 0,
-			});
-			redraw();
 		},
 		clear: () => {
 			drawablesRef.current = [];
@@ -534,7 +579,7 @@ function DrawingSurface({
 		flushTimerRef.current = null;
 		const stroke = currentStrokeRef.current;
 		const points = pendingPointsRef.current;
-		if (!stroke || stroke.type !== "stroke" || points.length === 0) return;
+		if (!stroke || points.length === 0) return;
 		pendingPointsRef.current = [];
 		sendCustomEvent("stroke_point", {
 			id: stroke.id,
@@ -569,21 +614,8 @@ function DrawingSurface({
 			const p = pointFromEvent(e);
 			if (!p) return;
 
-			if (tool === "fill") {
-				drawablesRef.current.push({
-					type: "fill",
-					color,
-					x: p.x,
-					y: p.y,
-				});
-				redraw();
-				sendCustomEvent("fill", { color, x: p.x, y: p.y });
-				return;
-			}
-
 			const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 			const stroke: Drawable = {
-				type: "stroke",
 				id,
 				color,
 				width,
@@ -599,12 +631,10 @@ function DrawingSurface({
 		[
 			iAmDrawer,
 			revealed,
-			tool,
 			color,
 			width,
 			pointFromEvent,
 			drawSegment,
-			redraw,
 			sendCustomEvent,
 			scheduleFlush,
 		],
@@ -614,7 +644,7 @@ function DrawingSurface({
 		(e: ReactPointerEvent<HTMLCanvasElement>) => {
 			if (!iAmDrawer || revealed) return;
 			const stroke = currentStrokeRef.current;
-			if (!stroke || stroke.type !== "stroke") return;
+			if (!stroke) return;
 			const p = pointFromEvent(e);
 			if (!p) return;
 			const prevLen = stroke.points.length;
@@ -637,7 +667,7 @@ function DrawingSurface({
 		}
 		flushPending();
 		sendCustomEvent("stroke_end", {
-			id: stroke.type === "stroke" ? stroke.id : null,
+			id: stroke.id,
 		});
 		currentStrokeRef.current = null;
 	}, [iAmDrawer, revealed, flushPending, sendCustomEvent]);
@@ -671,11 +701,7 @@ function DrawingSurface({
 					onPointerCancel={handlePointerUp}
 					className={cn(
 						"block aspect-square w-full touch-none select-none",
-						iAmDrawer && !revealed
-							? tool === "fill"
-								? "cursor-crosshair"
-								: "cursor-crosshair"
-							: "cursor-not-allowed",
+						iAmDrawer && !revealed ? "cursor-crosshair" : "cursor-not-allowed",
 					)}
 					aria-label={iAmDrawer ? "Drawing canvas" : "Opponent's drawing"}
 				/>
@@ -690,10 +716,8 @@ function DrawingSurface({
 				<Toolbar
 					color={color}
 					width={width}
-					tool={tool}
 					onColor={setColor}
 					onWidth={setWidth}
-					onTool={setTool}
 					onUndo={handleUndo}
 					onClear={handleClear}
 				/>
@@ -739,122 +763,118 @@ function drawStrokePath(
 function Toolbar({
 	color,
 	width,
-	tool,
 	onColor,
 	onWidth,
-	onTool,
 	onUndo,
 	onClear,
 }: {
 	color: string;
 	width: number;
-	tool: Tool;
 	onColor: (c: string) => void;
 	onWidth: (w: number) => void;
-	onTool: (t: Tool) => void;
 	onUndo: () => void;
 	onClear: () => void;
 }) {
 	return (
-		<div className="flex flex-wrap items-center justify-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-2">
-			{/* Colors */}
-			<div className="flex items-center gap-1">
-				{COLORS.map((c) => (
-					<button
-						key={c}
-						type="button"
-						onClick={() => onColor(c)}
-						aria-label={`Color ${c}`}
-						aria-pressed={c === color}
-						className={cn(
-							"size-6 rounded-full border-2 transition-transform motion-safe:duration-150 ease-out",
-							c === color
-								? "border-foreground scale-110"
-								: "border-border hover:scale-105",
-						)}
-						style={{ backgroundColor: c }}
-					/>
-				))}
+		<TooltipProvider delayDuration={200}>
+			<div className="flex flex-wrap items-center justify-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-2">
+				{/* Colors */}
+				<div className="flex items-center gap-1">
+					{COLORS.map((c) => (
+						<Tooltip key={c}>
+							<TooltipTrigger asChild>
+								<button
+									type="button"
+									onClick={() => onColor(c)}
+									aria-label={`Color ${c}`}
+									aria-pressed={c === color}
+									className={cn(
+										"size-6 rounded-full border-2 transition-transform motion-safe:duration-150 ease-out",
+										c === color
+											? "border-foreground scale-110"
+											: "border-border hover:scale-105",
+									)}
+									style={{ backgroundColor: c }}
+								/>
+							</TooltipTrigger>
+							<TooltipContent side="top" sideOffset={6}>
+								Color
+							</TooltipContent>
+						</Tooltip>
+					))}
+				</div>
+
+				<div className="h-6 w-px bg-border" />
+
+				{/* Brush sizes */}
+				<div className="flex items-center gap-1">
+					{BRUSH_SIZES.map((w, i) => {
+						const label =
+							i === 0 ? "Thin brush" : i === 1 ? "Medium brush" : "Thick brush";
+						return (
+							<Tooltip key={w}>
+								<TooltipTrigger asChild>
+									<button
+										type="button"
+										onClick={() => onWidth(w)}
+										aria-label={label}
+										aria-pressed={w === width}
+										className={cn(
+											"flex size-7 items-center justify-center rounded-md border transition-colors motion-safe:duration-150 ease-out",
+											w === width
+												? "border-foreground bg-muted"
+												: "border-border hover:bg-muted/50",
+										)}
+									>
+										<span
+											className="block rounded-full bg-foreground"
+											style={{ width: w, height: w }}
+										/>
+									</button>
+								</TooltipTrigger>
+								<TooltipContent side="top" sideOffset={6}>
+									{label}
+								</TooltipContent>
+							</Tooltip>
+						);
+					})}
+				</div>
+
+				<div className="h-6 w-px bg-border" />
+
+				{/* Actions */}
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<button
+							type="button"
+							onClick={onUndo}
+							aria-label="Undo last stroke"
+							className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+						>
+							<Undo2 className="size-3.5" />
+						</button>
+					</TooltipTrigger>
+					<TooltipContent side="top" sideOffset={6}>
+						Undo
+					</TooltipContent>
+				</Tooltip>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<button
+							type="button"
+							onClick={onClear}
+							aria-label="Clear canvas"
+							className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+						>
+							<Eraser className="size-3.5" />
+						</button>
+					</TooltipTrigger>
+					<TooltipContent side="top" sideOffset={6}>
+						Clear canvas
+					</TooltipContent>
+				</Tooltip>
 			</div>
-
-			<div className="h-6 w-px bg-border" />
-
-			{/* Brush sizes */}
-			<div className="flex items-center gap-1">
-				{BRUSH_SIZES.map((w) => (
-					<button
-						key={w}
-						type="button"
-						onClick={() => onWidth(w)}
-						aria-label={`Brush size ${w}`}
-						aria-pressed={w === width}
-						className={cn(
-							"flex size-7 items-center justify-center rounded-md border transition-colors motion-safe:duration-150 ease-out",
-							w === width
-								? "border-foreground bg-muted"
-								: "border-border hover:bg-muted/50",
-						)}
-					>
-						<span
-							className="block rounded-full bg-foreground"
-							style={{ width: w, height: w }}
-						/>
-					</button>
-				))}
-			</div>
-
-			<div className="h-6 w-px bg-border" />
-
-			{/* Tools */}
-			<button
-				type="button"
-				onClick={() => onTool("brush")}
-				aria-label="Brush"
-				aria-pressed={tool === "brush"}
-				className={cn(
-					"flex size-7 items-center justify-center rounded-md border transition-colors",
-					tool === "brush"
-						? "border-foreground bg-muted"
-						: "border-border hover:bg-muted/50",
-				)}
-			>
-				<Pencil className="size-3.5" />
-			</button>
-			<button
-				type="button"
-				onClick={() => onTool("fill")}
-				aria-label="Fill"
-				aria-pressed={tool === "fill"}
-				className={cn(
-					"flex size-7 items-center justify-center rounded-md border transition-colors",
-					tool === "fill"
-						? "border-foreground bg-muted"
-						: "border-border hover:bg-muted/50",
-				)}
-			>
-				<PaintBucket className="size-3.5" />
-			</button>
-
-			<div className="h-6 w-px bg-border" />
-
-			{/* Actions */}
-			<button
-				type="button"
-				onClick={onUndo}
-				aria-label="Undo"
-				className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-			>
-				<Undo2 className="size-3.5" />
-			</button>
-			<button
-				type="button"
-				onClick={onClear}
-				aria-label="Clear canvas"
-				className="flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-			>
-				<Eraser className="size-3.5" />
-			</button>
-		</div>
+		</TooltipProvider>
 	);
 }
 
