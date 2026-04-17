@@ -85,10 +85,10 @@ export const GAMES: Game[] = [
 		id: "drawing",
 		name: "Draw & Guess",
 		description:
-			"One person draws, the other guesses. Simple, chaotic, and surprisingly fun.",
+			"One person draws, the other picks from four options. Four rounds, roles swap each turn.",
 		icon: "pencil",
 		players: "2 players",
 		duration: "~5 min",
-		status: "coming_soon",
+		status: "available",
 	},
 ];

@@ -89,8 +89,8 @@ function GameRoom({
 	// the updated map is picked up on the next dispatch.
 	useEffect(() => {
 		if (!adapter.getCustomEvents) return;
-		setCustomEvents(adapter.getCustomEvents(setGameState));
-	}, [adapter, setGameState]);
+		setCustomEvents(adapter.getCustomEvents(setGameState, sendCustomEvent));
+	}, [adapter, setGameState, sendCustomEvent]);
 
 	const seatBadge = adapter.renderSeatBadge(mySeat);
 
