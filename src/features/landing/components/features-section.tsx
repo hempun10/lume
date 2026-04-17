@@ -13,29 +13,37 @@ import {
 	Users,
 } from "lucide-react";
 import { MockChatPreview, MockTicTacToePreview } from "./mocks/product-mocks";
+import { SectionEyebrow } from "./section-eyebrow";
+
+const CHIP_BRAND =
+	"bg-brand-50 text-brand-600 ring-1 ring-brand-500/10 dark:bg-brand-500/10 dark:text-brand-400 dark:ring-brand-400/20";
+const CHIP_PURPLE =
+	"bg-purple-50 text-purple-600 ring-1 ring-purple-500/10 dark:bg-purple-500/10 dark:text-purple-400 dark:ring-purple-400/20";
+const CHIP_GREEN =
+	"bg-green-50 text-green-600 ring-1 ring-green-500/10 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-400/20";
 
 const chatFeatures = [
 	{
 		icon: MessageCircle,
-		iconColor: "text-brand-600",
+		chipClass: CHIP_BRAND,
 		title: "Text-first",
 		description: "No webcam pressure. Just type.",
 	},
 	{
 		icon: Users,
-		iconColor: "text-brand-600",
+		chipClass: CHIP_BRAND,
 		title: "Interest matching",
 		description: "Paired on what you actually like talking about.",
 	},
 	{
 		icon: Globe,
-		iconColor: "text-brand-600",
+		chipClass: CHIP_BRAND,
 		title: "Global pool",
 		description: "Real people from 190+ countries, online right now.",
 	},
 	{
 		icon: Sparkles,
-		iconColor: "text-brand-600",
+		chipClass: CHIP_BRAND,
 		title: "Conversation starters",
 		description: "Stuck for words? Tap a prompt, send it, keep going.",
 	},
@@ -44,25 +52,25 @@ const chatFeatures = [
 const gameFeatures = [
 	{
 		icon: Gamepad2,
-		iconColor: "text-purple-600",
+		chipClass: CHIP_PURPLE,
 		title: "Play inside the chat",
 		description: "The board opens beside the conversation. No context switch.",
 	},
 	{
 		icon: Dice5,
-		iconColor: "text-purple-600",
+		chipClass: CHIP_PURPLE,
 		title: "2–5 minute rounds",
 		description: "Quick enough to play, not long enough to get awkward.",
 	},
 	{
 		icon: Trophy,
-		iconColor: "text-purple-600",
+		chipClass: CHIP_PURPLE,
 		title: "Best-of / rematch",
 		description: "Tap rematch and keep playing until someone has to go.",
 	},
 	{
 		icon: Swords,
-		iconColor: "text-purple-600",
+		chipClass: CHIP_PURPLE,
 		title: "Synced in real time",
 		description: "Moves, reveals, and scores stay in lock-step across devices.",
 	},
@@ -71,25 +79,25 @@ const gameFeatures = [
 const safetyFeatures = [
 	{
 		icon: Shield,
-		iconColor: "text-green-600",
+		chipClass: CHIP_GREEN,
 		title: "AI moderation",
 		description: "Harmful content is filtered before it lands.",
 	},
 	{
 		icon: Ban,
-		iconColor: "text-green-600",
+		chipClass: CHIP_GREEN,
 		title: "One-tap block",
 		description: "Skip, block, and report live in one gesture.",
 	},
 	{
 		icon: Eye,
-		iconColor: "text-green-600",
+		chipClass: CHIP_GREEN,
 		title: "Anonymous by default",
 		description: "No photos, no names. Share what you want to share.",
 	},
 	{
 		icon: UserCheck,
-		iconColor: "text-green-600",
+		chipClass: CHIP_GREEN,
 		title: "18+ only",
 		description: "Age-gated at signup. Kept that way.",
 	},
@@ -102,7 +110,7 @@ interface FeatureBlockProps {
 	description: string;
 	features: {
 		icon: React.ComponentType<{ className?: string }>;
-		iconColor: string;
+		chipClass: string;
 		title: string;
 		description: string;
 	}[];
@@ -124,10 +132,7 @@ function FeatureBlock({
 	const header = (
 		<>
 			<div className="pb-5">
-				<div className="flex items-center gap-2.5">
-					<div className={`h-2 w-4 rounded-full ${labelColor}`} />
-					<p className="text-sm font-medium text-foreground">{label}</p>
-				</div>
+				<SectionEyebrow label={label} dotClass={labelColor} />
 			</div>
 			<div className="mb-10">
 				<h2 className="max-w-xl font-semibold text-xl leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
@@ -144,7 +149,11 @@ function FeatureBlock({
 		<div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-10">
 			{features.map((feature) => (
 				<div key={feature.title}>
-					<feature.icon className={`mb-3 h-9 w-9 ${feature.iconColor}`} />
+					<div
+						className={`mb-3 inline-flex size-9 items-center justify-center rounded-xl ${feature.chipClass}`}
+					>
+						<feature.icon className="size-[18px]" />
+					</div>
 					<h4 className="text-sm font-semibold text-foreground">
 						{feature.title}
 					</h4>

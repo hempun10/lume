@@ -1,12 +1,20 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { MockLobbyPreview } from "./mocks/product-mocks";
+import { SectionEyebrow } from "./section-eyebrow";
 
 export function HeroSection() {
 	return (
 		<section className="w-full pt-10 md:pt-20">
 			<div className="grid gap-12 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-10">
 				<div>
+					<div className="mb-5">
+						<SectionEyebrow
+							label="Text-first stranger chat"
+							dotClass="bg-brand-500"
+						/>
+					</div>
+
 					<h1 className="max-w-2xl text-balance font-semibold text-3xl leading-[1.1] tracking-tight text-foreground sm:text-4xl md:text-5xl">
 						Meet a stranger. Chat. Play a quick game. Move on.
 					</h1>

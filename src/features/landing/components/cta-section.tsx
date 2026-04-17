@@ -4,8 +4,8 @@ import { ArrowRight, Sparkles } from "lucide-react";
 export function CtaSection() {
 	return (
 		<section>
-			<div className="relative mb-10 inline-flex justify-center">
-				<Sparkles className="h-10 w-10 text-brand-500" />
+			<div className="mb-8 inline-flex size-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-1 ring-brand-500/15 dark:bg-brand-500/10 dark:text-brand-400 dark:ring-brand-400/20">
+				<Sparkles className="size-6" />
 			</div>
 
 			<div className="mb-10">

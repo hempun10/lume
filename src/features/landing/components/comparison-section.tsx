@@ -1,4 +1,5 @@
 import { Check, X } from "lucide-react";
+import { SectionEyebrow } from "./section-eyebrow";
 
 const rows = [
 	{
@@ -35,6 +36,9 @@ export function ComparisonSection() {
 	return (
 		<section>
 			<div className="mb-14">
+				<div className="mb-5">
+					<SectionEyebrow label="Compare" dotClass="bg-foreground" />
+				</div>
 				<h2 className="max-w-xl font-semibold text-xl leading-[1.2] tracking-tight text-foreground sm:text-2xl md:text-3xl">
 					Not another clone of the old
 					<br />
@@ -67,11 +71,15 @@ export function ComparisonSection() {
 									{row.feature}
 								</td>
 								<td className="px-4 py-3 text-sm text-foreground">
-									<Check className="mr-2 inline h-4 w-4 text-green-600" />
+									<span className="mr-2 inline-flex size-5 items-center justify-center rounded-md bg-green-50 text-green-600 ring-1 ring-green-500/15 align-[-4px] dark:bg-green-500/10 dark:text-green-400 dark:ring-green-400/20">
+										<Check className="size-3" strokeWidth={2.5} />
+									</span>
 									{row.lume}
 								</td>
 								<td className="px-4 py-3 text-sm text-muted-foreground">
-									<X className="mr-2 inline h-4 w-4 text-muted-foreground/60" />
+									<span className="mr-2 inline-flex size-5 items-center justify-center rounded-md bg-muted text-muted-foreground/70 ring-1 ring-border align-[-4px]">
+										<X className="size-3" strokeWidth={2.5} />
+									</span>
 									{row.others}
 								</td>
 							</tr>
