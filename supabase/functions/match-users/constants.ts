@@ -25,7 +25,7 @@ export const HIGH_QUEUE_DEPTH_THRESHOLD = 20;
  * How long before two users who just finished a chat can match again.
  * Keep this in sync with is_recent_pair() in the SQL migration.
  */
-export const RECENT_PAIR_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+export const RECENT_PAIR_WINDOW_MS = 60 * 1000; // 1 minute
 
 /**
  * Scoring weights — higher = more influence on match choice.

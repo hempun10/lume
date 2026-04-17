@@ -6,27 +6,28 @@
 ![TanStack Start](https://img.shields.io/badge/TanStack_Start-latest-orange)
 ![Supabase](https://img.shields.io/badge/Supabase-Auth-green)
 
-A social platform for meeting strangers through text chat and multiplayer games. An alternative to **Omegle** and **rumi.social**.
+A social platform for meeting strangers through ephemeral text chat and lightweight multiplayer games. A safer, game-forward alternative to **Omegle** and **rumi.social**.
 
-Built with **TanStack Start**, **Supabase Auth**, protected routes, and **shadcn/ui**.
+Built with **TanStack Start** (React 19 + Vite 7 + Nitro SSR), **Supabase** (Auth, Realtime, Edge Functions, pg_cron), **Tailwind v4**, and **shadcn/ui**.
 
 [![Live Demo](public/og-image.svg)](https://lume.chat)
 
-**[Live Demo](https://lume.chat)**
+**[Live Demo](https://lume.chat)** · **[PRD](docs/PRD.md)** · **[Testing strategy](docs/TESTING.md)**
 
 ## What's Included
 
-- **TanStack Start** — Full-stack React with file-based routing and SSR
-- **Supabase Auth** — Email/password authentication (sign-up, login, password reset)
-- **Protected routes** — `/_authenticated` layout guard redirects unauthenticated users
-- **shadcn/ui** — Pre-configured with Alert, Button, Card, Dialog, Input, and Label components
-- **Tailwind CSS v4** — Utility-first styling
-- **Biome** — Linting and formatting
-- **Vitest** — Testing framework
-- **Playwright** — E2E testing with Chromium
-- **CI/CD** — GitHub Actions for checks, E2E tests, and deployment
-- **Vercel Analytics** — Automatic page view tracking in production
-- **Husky** — Pre-commit hooks
+- **Auth** — Email/password signup, login, password reset (no OAuth). Signup → onboarding → dashboard.
+- **Onboarding** — 18+ age gate, display name, DOB, gender, region, interest tags, Terms & Privacy consent.
+- **Lobby** — Editorial feed with greeting, hero match card, games rail, conversation starters, and vibe preview. Live online counter via Supabase Presence.
+- **Matchmaking** — Server-authoritative pairing via an Edge Function invoked by pg_cron every 2 s. Scores interest overlap + region match + age proximity; respects blocks and a recent-pair cooldown.
+- **Realtime chat** — Supabase Broadcast, messages never persisted, typing indicator, presence, end/disconnect states, elapsed timer.
+- **Games** — 7 inline 2-player games: Tic Tac Toe, Trivia, Would You Rather, Rock Paper Scissors, Two Truths & a Lie, Emoji Charades, and **Draw & Guess** (with per-round difficulty picker). Each has a pure-function engine and syncs over Broadcast.
+- **Safety** — Report modal (7 reasons + notes), block (silent), recent-pair cooldown (1 min), Edge Function pre-filter for blocked/recent pairs, stub legal routes at `/terms` `/privacy` `/community-guidelines`.
+- **Settings** — Edit profile (name, DOB, gender, region) and interests.
+- **Theme** — Light/dark toggle (persists to localStorage, no FOUC).
+- **Landing site** — Hero, Features, Comparison, How It Works, FAQ, CTA, Release Notes.
+- **Tooling** — Biome (lint/format), TypeScript strict, Husky pre-commit, Vercel Analytics.
+- **CI/CD** — GitHub Actions for checks + Vercel deployment.
 
 ## Prerequisites
 
@@ -93,18 +94,23 @@ The app runs at [http://127.0.0.1:3000](http://127.0.0.1:3000).
 
 ## Routes
 
-| Route              | Description                                                       |
-| ------------------ | ----------------------------------------------------------------- |
-| `/`                | Landing page                                                      |
-| `/about`           | About this project                                                |
-| `/features`        | Features overview                                                 |
-| `/release-notes`   | Release notes listing                                             |
-| `/release-notes/*` | Individual release note pages (e.g. `/release-notes/v1-0-0`)     |
-| `/login`           | Sign in / sign up                                                 |
-| `/logout`          | Signs out and redirects to `/`                                    |
-| `/forgot-password` | Request a password reset email                                    |
-| `/reset-password`  | Set a new password (via email link)                               |
-| `/dashboard`       | Protected — requires authentication otherwise redirects to /login |
+| Route                     | Description                                                              |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `/`                       | Landing page (hero, features, comparison, how-it-works, FAQ, CTA)        |
+| `/terms`                  | Terms of Service                                                         |
+| `/privacy`                | Privacy Policy                                                           |
+| `/community-guidelines`   | Community Guidelines                                                     |
+| `/login`                  | Sign in / sign up                                                        |
+| `/logout`                 | Signs out and redirects to `/`                                           |
+| `/forgot-password`        | Request a password reset email                                           |
+| `/reset-password`         | Set a new password (via email link)                                      |
+| `/onboarding`             | Protected — 18+ age gate, profile setup, interests, consent              |
+| `/dashboard`              | Protected — lobby (greeting, hero match card, games rail, starters)      |
+| `/chat`                   | Protected — realtime chat with inline game panel and safety controls     |
+| `/games`                  | Protected — games catalogue (browse before matching)                     |
+| `/settings`               | Protected — edit profile and interests                                   |
+
+Protected routes redirect to `/login` when signed out, and to `/onboarding` when the profile is incomplete.
 
 ### Local Email Testing
 
@@ -113,7 +119,12 @@ Password reset and confirmation emails are captured by Mailpit:
 
 ## Database
 
-The database has a single `profiles` table that auto-populates via a trigger when users sign up.
+Core tables (see `supabase/migrations/`):
+
+- `profiles` — auto-populated via trigger on signup; holds display name, DOB, gender, region, interests, onboarding status
+- `matchmaking_queue` — pending match requests (TTL via pg_cron)
+- `matches` — active pairings (server-authoritative; ephemeral)
+- `reports` / `blocks` — safety tables for report + block flows
 
 ### Scripts
 
@@ -126,7 +137,17 @@ npm run db:types    # Regenerate TypeScript types
 npm run db:migrate  # Run pending migrations
 ```
 
-Migrations are in `supabase/migrations/`. Seed data is defined in `supabase/seed-data.ts` (single source of truth) and applied by `supabase/seed.ts`.
+Migrations are in `supabase/migrations/`. Seed data lives in `supabase/seed-data.ts` (single source of truth) and is applied by `supabase/seed.ts`.
+
+### Edge Functions
+
+```bash
+npm run functions:serve   # Run edge functions locally
+npm run functions:deploy  # Deploy to hosted Supabase
+npm run functions:invoke  # Invoke a function for debugging
+```
+
+The `match-users` function is invoked every 2 seconds by a `pg_cron` job to drain the queue.
 
 ## shadcn/ui
 
@@ -136,46 +157,40 @@ Components are in `src/components/ui/`. To add more:
 npx shadcn@latest add <component-name>
 ```
 
-## Building & Testing
+## Building & Checks
 
 ```bash
-npm run build       # Production build
-npm run test        # Run unit tests (Vitest)
-npm run test:e2e    # Run E2E tests (Playwright)
-npm run test:e2e:ui # Run E2E tests with interactive UI
-npm run typecheck   # TypeScript check
-npm run check       # Biome lint + format
+npm run build      # Production build (Nitro SSR + client bundle)
+npm run preview    # Serve the production build locally
+npm run typecheck  # TypeScript check (tsc --noEmit)
+npm run check      # Biome lint + format
+npm run lint       # Biome lint only
+npm run format     # Biome format only
 ```
 
-### E2E Tests
-
-E2E tests use Playwright with Chromium against a local Supabase instance. See `docs/e2e-tests/1-read-me.md` for full documentation.
-
-```bash
-# Prerequisites: Supabase running and seeded
-npm run db:start
-npm run db:reset
-
-# Run tests
-npm run test:e2e
-```
+> There is no `npm test` script — automated testing is driven by **TestSprite** against a running preview build. See [`docs/TESTING.md`](docs/TESTING.md).
 
 ## Deployment
 
-Configured for Vercel deployment. Set the `VERCEL_*` environment variables and push to trigger the deploy workflow.
+Configured for Vercel deployment. Set the `VERCEL_*` environment variables and push to trigger the deploy workflow. The `main` branch auto-deploys to production; every PR gets a preview URL.
 
 ## Key Files
 
-| File                                      | Purpose                                      |
-| ----------------------------------------- | -------------------------------------------- |
-| `src/routes/__root.tsx`                   | Root layout with `AuthProvider`, `Header`, `Footer`, and Vercel Analytics |
-| `src/routes/_authenticated.tsx`           | Auth guard layout for protected routes       |
-| `src/routes/_authenticated/dashboard.tsx` | Example protected page                       |
-| `src/context/AuthContext.tsx`             | React context for auth state                 |
-| `src/utils/supabase.ts`                   | Supabase client singleton + `getSessionReady()` |
-| `src/utils/auth.ts`                       | `requireAuth()` auth guard for protected routes |
-| `src/components/Footer.tsx`               | Site-wide footer with release notes and GitHub links |
-| `vitest.config.ts`                        | Vitest config (excludes `e2e/` from unit tests) |
+| File                                                   | Purpose                                                              |
+| ------------------------------------------------------ | -------------------------------------------------------------------- |
+| `src/routes/__root.tsx`                                | Root layout with providers, header, footer, analytics                |
+| `src/routes/_authenticated.tsx`                        | Auth + onboarding guard for protected routes                         |
+| `src/routes/_landing.tsx`                              | Landing-site shell                                                   |
+| `src/features/auth/context/auth-context.tsx`           | React context for auth state + profile                               |
+| `src/features/matchmaking/`                            | Queue hooks, match UI, presence counter                              |
+| `src/features/chat/`                                   | Realtime chat, typing indicator, end states, game panel host        |
+| `src/features/games/`                                  | Game engines, boards, catalogue (`data/games.ts`)                    |
+| `src/features/safety/`                                 | Report modal, block flow                                             |
+| `src/lib/supabase/client.ts`                           | Supabase browser client singleton                                    |
+| `supabase/functions/match-users/`                      | Server-authoritative matching edge function + tunable constants      |
+| `supabase/migrations/`                                 | SQL schema, RLS policies, `is_recent_pair()` cooldown                |
+| `docs/PRD.md`                                          | Product requirements (input for TestSprite)                          |
+| `docs/TESTING.md`                                      | Test strategy, credentials, TestSprite config, gotchas               |
 
 ## Learn More
 

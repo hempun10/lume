@@ -48,10 +48,10 @@ src/
 │   │   ├── types/       # ChatMessage (senderId-based), ChatSession, ChatStatus
 │   │   └── index.ts     # Barrel exports
 │   ├── games/           # Games catalog + playable games
-│   │   ├── components/  # GamesView, GameCard, and per-game boards (TicTacToeBoard, ConnectFourBoard, TriviaBoard, WouldYouRatherBoard, RockPaperScissorsBoard)
-│   │   ├── engines/     # Pure function game engines (tic-tac-toe, connect-four, trivia, would-you-rather, rock-paper-scissors)
+│   │   ├── components/  # GamesView, GameCard, and per-game boards (TicTacToe, Trivia, WouldYouRather, RockPaperScissors, TwoTruths, EmojiCharades, DrawAndGuess)
+│   │   ├── engines/     # Pure function game engines (tic-tac-toe, trivia, would-you-rather, rock-paper-scissors, two-truths, emoji-charades, draw-and-guess)
 │   │   ├── hooks/       # useGameRoom (Broadcast moves + Presence + rematch)
-│   │   ├── data/        # games.ts (game catalog — 5 available, 3 coming soon)
+│   │   ├── data/        # games.ts (game catalog — 7 available, 2 coming soon)
 │   │   ├── types/       # Game, GameStatus types
 │   │   └── index.ts     # Barrel exports
 │   ├── settings/        # Settings/profile feature
@@ -86,9 +86,8 @@ src/
 │   ├── _landing/index.tsx # Landing page route (renders LandingPage)
 │   ├── _authenticated.tsx # Route guard layout (redirects to /login if unauthenticated, to /onboarding if incomplete, wraps in DashboardShell)
 │   ├── _authenticated/dashboard.tsx # Lobby/matching page
-│   ├── _authenticated/chat.tsx    # 1-on-1 stranger chat (roomId search param)
-│   ├── _authenticated/game.tsx    # Game room (roomId search param)
-│   ├── _authenticated/games.tsx   # Game catalog
+│   ├── _authenticated/chat.tsx    # 1-on-1 stranger chat (roomId search param) + inline game panel
+│   ├── _authenticated/games.tsx   # Game catalogue (browse before matching)
 │   ├── _authenticated/settings.tsx # Profile & preferences settings
 │   ├── _authenticated/onboarding.tsx # Post-signup onboarding (set display name)
 │   ├── login.tsx        # Combined login/signup (thin shell, delegates to LoginView)
@@ -124,16 +123,18 @@ src/
 - `src/features/games/components/games-view.tsx` — Game catalog page with available/coming-soon sections
 - `src/features/games/components/game-view.tsx` — Game room wrapper (connects to game room, renders board, handles rematch)
 - `src/features/games/components/tic-tac-toe-board.tsx` — 3x3 game board with animated marks and win highlighting
-- `src/features/games/components/connect-four-board.tsx` — 7-column drop-disc board with win-line highlighting
 - `src/features/games/components/trivia-board.tsx` — Six-question multiple-choice trivia with blind answers + reveal
 - `src/features/games/components/would-you-rather-board.tsx` — Eight either/or prompts with synced reveal
 - `src/features/games/components/rock-paper-scissors-board.tsx` — Best-of-five with blind commit + simultaneous reveal
+- `src/features/games/components/two-truths-board.tsx` — Two truths & a lie (take turns authoring + guessing)
+- `src/features/games/components/emoji-charades-board.tsx` — Emoji charades with prompt author and guesser roles
+- `src/features/games/components/draw-and-guess-board.tsx` — Live drawing canvas + guess input, per-round difficulty picker (easy / medium / hard)
 - `src/features/games/engines/tic-tac-toe.ts` — Pure function game engine (createInitialState, applyMove, checkWinner, isDraw)
-- `src/features/games/engines/connect-four.ts` / `trivia.ts` / `would-you-rather.ts` / `rock-paper-scissors.ts` — Pure function engines for the remaining available games
-- `src/features/games/engines/types.ts` — Shared game engine types
-- `src/features/games/hooks/use-game-room.ts` — Game room hook (Broadcast moves, Presence player detection, rematch protocol)
+- `src/features/games/engines/trivia.ts` / `would-you-rather.ts` / `rock-paper-scissors.ts` / `two-truths.ts` / `emoji-charades.ts` / `draw-and-guess.ts` — Pure function engines for the remaining available games
+- `src/features/games/engines/types.ts` — Shared game engine types + `customEvents` adapter (engines can register non-move Broadcast events that `useGameRoom` wires up automatically — used for drawing strokes in Draw & Guess)
+- `src/features/games/hooks/use-game-room.ts` — Game room hook (Broadcast moves, Presence player detection, rematch protocol, customEvents)
 - `src/features/games/components/game-card.tsx` — Individual game card (icon, name, description, players, duration, play button with onPlay callback)
-- `src/features/games/data/games.ts` — Game catalog. Available: Tic Tac Toe, Trivia, Connect Four, Would You Rather, Rock Paper Scissors. Coming soon: Word Chain, Chess, Draw & Guess.
+- `src/features/games/data/games.ts` — Game catalogue. **Available (7):** Tic Tac Toe, Trivia, Would You Rather, Rock Paper Scissors, Two Truths & a Lie, Emoji Charades, Draw & Guess. **Coming soon (2):** Word Chain, Chess.
 - `src/features/settings/components/settings-view.tsx` — Settings page layout with profile + preferences sections (delegates mutations to useSettingsMutations hook)
 - `src/features/settings/components/profile-section.tsx` — Editable profile form (display name, DOB, gender, region) — uses shared DateOfBirthPicker + GenderSelect
 - `src/features/settings/components/preferences-section.tsx` — Editable matching preferences (interests tag selector)
@@ -187,8 +188,7 @@ npm run db:types         # Regenerate TypeScript types from schema
 npm run lint             # Biome lint
 npm run format           # Biome format
 npm run check            # Lint + format
-npm run typecheck        # TypeScript type checking
-npm run cleanup          # Interactive cleanup — remove demo pages, analytics; rename project
+npm run typecheck       # TypeScript type checking
 ```
 
 ## Key Patterns
@@ -197,7 +197,7 @@ npm run cleanup          # Interactive cleanup — remove demo pages, analytics;
 - **Auth flow** — Email/password only, no OAuth. Email confirmation is disabled (`enable_confirmations = false` in `supabase/config.toml`). Signup auto-signs in the user and redirects to `/onboarding`. Login redirects to `/dashboard`. Auth UI uses a UserJot-inspired split-screen layout (form card left, branding panel with dot-grid right).
 - **Onboarding** — New users are redirected to `/onboarding` after signup to complete their profile (display name, date of birth, gender, region, interests). The `_authenticated` layout guard redirects to onboarding if `onboarding_completed` is false, catching users who somehow skip it. Users must be 18+ (DOB validated client-side). Region is optional. Interests use a tag chip selector (1–8 selections from a predefined list).
 - **Lobby/Dashboard** — The main authenticated view at `/dashboard`, rendered as a vertical editorial feed (`max-w-5xl`, stacked sections, subtle staggered entrance). The hero card is the primary CTA (mode toggle + interest chips + live online counter + Start matching button). Below it: a Games rail, interest-seeded conversation starters (copy + shuffle), and a profile vibe preview linking to `/settings`. The lobby reuses `INTEREST_OPTIONS` from `src/features/onboarding/schema.ts` for matching interests. Visual style is monochrome editorial — no gradients or glow, one accent (primary) for the CTA, `tabular-nums` + `font-mono` for numeric data (online count, interest counter).
-- **Games** — Games are played inline within chat via a side-by-side game panel (no standalone `/games` or `/game` routes after the UX redesign). Game definitions live in `src/features/games/data/games.ts`. Five games are playable: **Tic Tac Toe**, **Trivia**, **Connect Four**, **Would You Rather**, and **Rock Paper Scissors**. Three are marked "coming soon": Word Chain, Chess, Draw & Guess. Each playable game has a pure-function engine in `src/features/games/engines/` and a board component in `src/features/games/components/`. Game state is synced client-side via Supabase Broadcast on the chat room's channel (no DB writes for moves). The `useGameRoom` hook handles the full game lifecycle: connecting, waiting for opponent, playing, finished, and rematch.
+- **Games** — Games are played inline within chat via a side-by-side game panel. `/games` is a catalogue route (browse before matching) but gameplay itself happens inside `/chat`. Game definitions live in `src/features/games/data/games.ts`. Seven games are playable: **Tic Tac Toe**, **Trivia**, **Would You Rather**, **Rock Paper Scissors**, **Two Truths & a Lie**, **Emoji Charades**, and **Draw & Guess** (with a per-round difficulty picker: easy / medium / hard). Two are marked "coming soon": Word Chain, Chess. Each playable game has a pure-function engine in `src/features/games/engines/` and a board component in `src/features/games/components/`. Game state is synced client-side via Supabase Broadcast on the chat room's channel (no DB writes for moves). The `useGameRoom` hook handles the full game lifecycle: connecting, waiting for opponent, playing, finished, and rematch. Engines can opt into extra Broadcast events via the `customEvents` adapter (used by Draw & Guess for live stroke sync).
 - **Settings** — Profile and preferences editor at `/settings`. Two card sections: Profile (display name, DOB, gender, region) and Matching Preferences (interests). Fetches profile from Supabase via `profileDetailOptions` query (reuses `profileKeys` from onboarding for cache coherence). Saves via `updateProfile` and `updatePreferences` mutations. Shows success/error feedback inline.
 - **Profiles table** has columns: `id`, `display_name`, `date_of_birth`, `gender`, `region`, `interests` (text[]), `onboarding_completed` (boolean), `created_at`, `updated_at`
 - **Session initialisation** — `getSessionReady()` in `src/lib/supabase/client.ts` waits for Supabase's `INITIAL_SESSION` event before calling `getSession()`. This prevents race conditions on fresh page loads where `getSession()` returns `null` before localStorage is restored. All `beforeLoad` guards use this helper via `requireAuth()`. The login page also has a client-side `useEffect` fallback because SSR `beforeLoad` runs server-side without access to localStorage.
@@ -233,7 +233,7 @@ Migration `20260417121137_add_safety_tables.sql` adds the moderation primitives:
 - **`reports`** — reporter_id, reported_id, room_id, reason (check: `harassment|nudity|spam|underage|hate_speech|self_harm|other`), notes (≤1000 chars), status, reviewed_at. RLS: users see only reports they filed.
 - **`blocks`** — blocker_id, blocked_id (unique pair). RLS: only the blocker can see/insert/delete their rows — the blocked user **never** learns they were blocked.
 - **`match_history`** — canonical ordered pair (`user_a_id < user_b_id`) + matched_at. Used for the recent-pair cooldown.
-- **Helper functions:** `canonical_pair(a,b)`, `is_recent_pair(a,b)` (30-min window via `RECENT_PAIR_WINDOW`), `is_blocked_pair(a,b)` (mutual).
+- **Helper functions:** `canonical_pair(a,b)`, `is_recent_pair(a,b)` (**1-minute window** — was 30 minutes originally; shortened in migration `20260418060000_shorten_recent_pair_window.sql` for hackathon demo/testing), `is_blocked_pair(a,b)` (mutual).
 - **`match_pair(p_a, p_b)` RPC** — SECURITY DEFINER; now rejects blocked + recent pairs and logs a `match_history` row on success.
 
 The `match-users` Edge Function also pre-filters the batch via `fetchExclusions()` (see `supabase/functions/match-users/queue.ts`) so blocked/recent pairs are skipped before the RPC is called.
@@ -264,6 +264,12 @@ Client surfaces:
 ## Seed Data
 
 Seed data lives in `supabase/seed-data.ts` as the single source of truth. Always reference seed data from this file rather than hardcoding values (in scripts, etc.). Keep `seed-data.ts` and `seed.ts` up to date when schema or data changes.
+
+## Testing
+
+There is no Vitest or Playwright suite — automated testing is driven by **TestSprite** against a production preview build (`npm run build && npm run preview`). See [`docs/TESTING.md`](docs/TESTING.md) for the test strategy, credentials, TestSprite configuration, feature→test-case matrix, and known gotchas (e.g. single-browser limitations for two-user matchmaking/chat/game flows).
+
+The canonical product spec for TestSprite (and for onboarding new contributors) lives in [`docs/PRD.md`](docs/PRD.md).
 
 ## Updates made by Claude
 
