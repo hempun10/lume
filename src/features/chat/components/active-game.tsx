@@ -178,6 +178,7 @@ function GameRoom({
 					myTurn,
 					disabled: isFinished,
 					onMove: makeMove,
+					mySeat,
 				})}
 
 				{isFinished && (

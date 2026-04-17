@@ -1,11 +1,16 @@
 import type { ReactNode } from "react";
 import { ConnectFourBoard } from "../components/connect-four-board";
+import { RockPaperScissorsBoard } from "../components/rock-paper-scissors-board";
 import { TicTacToeBoard } from "../components/tic-tac-toe-board";
 import { WouldYouRatherBoard } from "../components/would-you-rather-board";
 import {
 	CONNECT_FOUR_ENGINE,
 	type ConnectFourState,
 } from "../engines/connect-four";
+import {
+	ROCK_PAPER_SCISSORS_ENGINE,
+	type RockPaperScissorsState,
+} from "../engines/rock-paper-scissors";
 import {
 	TIC_TAC_TOE_ENGINE,
 	type TicTacToeState,
@@ -31,6 +36,7 @@ export interface GameAdapter<State> {
 		myTurn: boolean;
 		disabled: boolean;
 		onMove: (move: number) => void;
+		mySeat: Seat;
 	}) => ReactNode;
 	renderSeatBadge: (seat: Seat) => ReactNode;
 	/**
@@ -111,11 +117,29 @@ const wouldYouRatherAdapter: GameAdapter<WouldYouRatherState> = {
 	renderStatus: () => null,
 };
 
+const rockPaperScissorsAdapter: GameAdapter<RockPaperScissorsState> = {
+	id: "rock-paper-scissors",
+	title: "Rock Paper Scissors",
+	engine: ROCK_PAPER_SCISSORS_ENGINE,
+	renderBoard: ({ state, myTurn, onMove, mySeat }) => (
+		<RockPaperScissorsBoard
+			state={state}
+			mySeat={mySeat}
+			myTurn={myTurn}
+			onMove={onMove}
+		/>
+	),
+	renderSeatBadge: () => null,
+	// Board owns the status UI (score bar + per-round result).
+	renderStatus: () => null,
+};
+
 // biome-ignore lint/suspicious/noExplicitAny: Adapter state types differ per game.
 const REGISTRY: Record<string, GameAdapter<any>> = {
 	"tic-tac-toe": ticTacToeAdapter,
 	"connect-four": connectFourAdapter,
 	"would-you-rather": wouldYouRatherAdapter,
+	"rock-paper-scissors": rockPaperScissorsAdapter,
 };
 
 export function getGameAdapter(
