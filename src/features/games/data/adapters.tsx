@@ -1,10 +1,21 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import {
+	DrawAndGuessBoard,
+	dispatchBoardEvent,
+} from "../components/draw-and-guess-board";
 import { EmojiCharadesBoard } from "../components/emoji-charades-board";
 import { RockPaperScissorsBoard } from "../components/rock-paper-scissors-board";
 import { TicTacToeBoard } from "../components/tic-tac-toe-board";
 import { TriviaBoard } from "../components/trivia-board";
 import { TwoTruthsBoard } from "../components/two-truths-board";
 import { WouldYouRatherBoard } from "../components/would-you-rather-board";
+import {
+	applyReveal as applyDrawReveal,
+	applyRoundSetup,
+	DRAW_AND_GUESS_ENGINE,
+	type DrawAndGuessPick,
+	type DrawAndGuessState,
+} from "../engines/draw-and-guess";
 import {
 	EMOJI_CHARADES_ENGINE,
 	type EmojiCharadesState,
@@ -67,10 +78,14 @@ export interface GameAdapter<State> {
 	 * the broadcast channel. Called once per game instance with the
 	 * hook's `setGameState` so handlers can apply transitions driven
 	 * by side-channel events (e.g. user-authored text, reveals).
+	 * `sendCustomEvent` is also provided as a stable identity key for
+	 * board-level side registries (e.g. Draw & Guess forwards drawing
+	 * events to canvas refs via a registry keyed by this function).
 	 * Handlers fire only for events from the other seat.
 	 */
 	getCustomEvents?: (
 		setGameState: Dispatch<SetStateAction<State | null>>,
+		sendCustomEvent: (event: string, payload: unknown) => void,
 	) => Record<string, CustomEventHandler>;
 	/**
 	 * Optional: override the status line shown above the board
@@ -233,6 +248,80 @@ const twoTruthsAdapter: GameAdapter<TwoTruthsState> = {
 	renderStatus: () => null,
 };
 
+const drawAndGuessAdapter: GameAdapter<DrawAndGuessState> = {
+	id: "drawing",
+	title: "Draw & Guess",
+	engine: DRAW_AND_GUESS_ENGINE,
+	renderBoard: ({
+		state,
+		myTurn,
+		onMove,
+		mySeat,
+		sendCustomEvent,
+		setGameState,
+	}) => (
+		<DrawAndGuessBoard
+			state={state}
+			mySeat={mySeat}
+			myTurn={myTurn}
+			onMove={onMove}
+			sendCustomEvent={sendCustomEvent}
+			setGameState={setGameState}
+		/>
+	),
+	renderSeatBadge: () => null,
+	// Two kinds of events:
+	//   - `round_setup` / `reveal`: mutate shared state (applied via
+	//     `setGameState` + engine reducers).
+	//   - `stroke_start` / `stroke_point` / `stroke_end` / `fill` /
+	//     `clear` / `undo`: mutate the board's local canvas refs. We
+	//     forward these to the board via `dispatchBoardEvent`, which
+	//     looks up the handler map the board registers on mount.
+	getCustomEvents: (setGameState, sendCustomEvent) => {
+		const forward =
+			(event: string): CustomEventHandler =>
+			(payload) => {
+				dispatchBoardEvent(sendCustomEvent, event, payload);
+			};
+		return {
+			round_setup: (payload) => {
+				const data = payload as { options?: unknown } | null;
+				const opts = data?.options;
+				if (
+					!Array.isArray(opts) ||
+					opts.length !== 4 ||
+					!opts.every((v): v is string => typeof v === "string")
+				) {
+					return;
+				}
+				const options = [opts[0], opts[1], opts[2], opts[3]] as [
+					string,
+					string,
+					string,
+					string,
+				];
+				setGameState((prev) => (prev ? applyRoundSetup(prev, options) : prev));
+			},
+			reveal: (payload) => {
+				const data = payload as { correctIdx?: unknown } | null;
+				const idx = data?.correctIdx;
+				if (idx !== 0 && idx !== 1 && idx !== 2 && idx !== 3) return;
+				setGameState((prev) =>
+					prev ? applyDrawReveal(prev, idx as DrawAndGuessPick) : prev,
+				);
+			},
+			stroke_start: forward("stroke_start"),
+			stroke_point: forward("stroke_point"),
+			stroke_end: forward("stroke_end"),
+			fill: forward("fill"),
+			clear: forward("clear"),
+			undo: forward("undo"),
+		};
+	},
+	// Board handles phase-aware status.
+	renderStatus: () => null,
+};
+
 // biome-ignore lint/suspicious/noExplicitAny: Adapter state types differ per game.
 const REGISTRY: Record<string, GameAdapter<any>> = {
 	"tic-tac-toe": ticTacToeAdapter,
@@ -241,6 +330,7 @@ const REGISTRY: Record<string, GameAdapter<any>> = {
 	trivia: triviaAdapter,
 	"two-truths": twoTruthsAdapter,
 	"emoji-charades": emojiCharadesAdapter,
+	drawing: drawAndGuessAdapter,
 };
 
 export function getGameAdapter(
