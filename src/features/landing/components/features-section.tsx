@@ -4,6 +4,7 @@ import {
 	Eye,
 	Gamepad2,
 	Globe,
+	type LucideIcon,
 	MessageCircle,
 	Shield,
 	Sparkles,
@@ -15,46 +16,42 @@ import {
 import { MockChatPreview, MockTicTacToePreview } from "./mocks/product-mocks";
 import { SectionEyebrow } from "./section-eyebrow";
 
-// UserJot-style rotating icon palette. Each chat/games feature gets its own
-// accent color to add visual rhythm to the grid. Safety intentionally stays
+// UserJot-style icon palette. Only the icon itself is colored — no background
+// chip, no ring. Colors are taken directly from the UserJot reference:
+// rose, purple, blue, green, orange, violet, emerald, pink. Each Chat/Games
+// feature rotates through this palette. Safety intentionally stays
 // single-color (green) so it reads as one unified "trust" block.
-const CHIP_AMBER =
-	"bg-amber-50 text-amber-600 ring-1 ring-amber-500/10 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-400/20";
-const CHIP_INDIGO =
-	"bg-indigo-50 text-indigo-600 ring-1 ring-indigo-500/10 dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-400/20";
-const CHIP_PURPLE =
-	"bg-purple-50 text-purple-600 ring-1 ring-purple-500/10 dark:bg-purple-500/10 dark:text-purple-400 dark:ring-purple-400/20";
-const CHIP_ROSE =
-	"bg-rose-50 text-rose-600 ring-1 ring-rose-500/10 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-400/20";
-const CHIP_BLUE =
-	"bg-blue-50 text-blue-600 ring-1 ring-blue-500/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-400/20";
-const CHIP_TEAL =
-	"bg-teal-50 text-teal-600 ring-1 ring-teal-500/10 dark:bg-teal-500/10 dark:text-teal-400 dark:ring-teal-400/20";
-const CHIP_GREEN =
-	"bg-green-50 text-green-600 ring-1 ring-green-500/10 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-400/20";
+const ICON_ROSE = "text-rose-500 dark:text-rose-400";
+const ICON_PURPLE = "text-purple-500 dark:text-purple-400";
+const ICON_BLUE = "text-blue-500 dark:text-blue-400";
+const ICON_GREEN = "text-green-500 dark:text-green-400";
+const ICON_ORANGE = "text-orange-500 dark:text-orange-400";
+const ICON_VIOLET = "text-violet-500 dark:text-violet-400";
+const ICON_EMERALD = "text-emerald-500 dark:text-emerald-400";
+const ICON_PINK = "text-pink-500 dark:text-pink-400";
 
 const chatFeatures = [
 	{
 		icon: MessageCircle,
-		chipClass: CHIP_INDIGO,
+		iconColor: ICON_ROSE,
 		title: "Text-first",
 		description: "No webcam pressure. Just type.",
 	},
 	{
 		icon: Users,
-		chipClass: CHIP_AMBER,
+		iconColor: ICON_ORANGE,
 		title: "Interest matching",
 		description: "Paired on what you actually like talking about.",
 	},
 	{
 		icon: Globe,
-		chipClass: CHIP_TEAL,
+		iconColor: ICON_BLUE,
 		title: "Global pool",
 		description: "Real people from 190+ countries, online right now.",
 	},
 	{
 		icon: Sparkles,
-		chipClass: CHIP_ROSE,
+		iconColor: ICON_PINK,
 		title: "Conversation starters",
 		description: "Stuck for words? Tap a prompt, send it, keep going.",
 	},
@@ -63,25 +60,25 @@ const chatFeatures = [
 const gameFeatures = [
 	{
 		icon: Gamepad2,
-		chipClass: CHIP_PURPLE,
+		iconColor: ICON_PURPLE,
 		title: "Play inside the chat",
 		description: "The board opens beside the conversation. No context switch.",
 	},
 	{
 		icon: Dice5,
-		chipClass: CHIP_AMBER,
+		iconColor: ICON_EMERALD,
 		title: "2–5 minute rounds",
 		description: "Quick enough to play, not long enough to get awkward.",
 	},
 	{
 		icon: Trophy,
-		chipClass: CHIP_ROSE,
+		iconColor: ICON_ORANGE,
 		title: "Best-of / rematch",
 		description: "Tap rematch and keep playing until someone has to go.",
 	},
 	{
 		icon: Swords,
-		chipClass: CHIP_BLUE,
+		iconColor: ICON_VIOLET,
 		title: "Synced in real time",
 		description: "Moves, reveals, and scores stay in lock-step across devices.",
 	},
@@ -92,25 +89,25 @@ const gameFeatures = [
 const safetyFeatures = [
 	{
 		icon: Shield,
-		chipClass: CHIP_GREEN,
+		iconColor: ICON_GREEN,
 		title: "AI moderation",
 		description: "Harmful content is filtered before it lands.",
 	},
 	{
 		icon: Ban,
-		chipClass: CHIP_GREEN,
+		iconColor: ICON_GREEN,
 		title: "One-tap block",
 		description: "Skip, block, and report live in one gesture.",
 	},
 	{
 		icon: Eye,
-		chipClass: CHIP_GREEN,
+		iconColor: ICON_GREEN,
 		title: "Anonymous by default",
 		description: "No photos, no names. Share what you want to share.",
 	},
 	{
 		icon: UserCheck,
-		chipClass: CHIP_GREEN,
+		iconColor: ICON_GREEN,
 		title: "18+ only",
 		description: "Age-gated at signup. Kept that way.",
 	},
@@ -122,8 +119,8 @@ interface FeatureBlockProps {
 	heading: string;
 	description: string;
 	features: {
-		icon: React.ComponentType<{ className?: string }>;
-		chipClass: string;
+		icon: LucideIcon;
+		iconColor: string;
 		title: string;
 		description: string;
 	}[];
@@ -162,11 +159,10 @@ function FeatureBlock({
 		<div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-10">
 			{features.map((feature) => (
 				<div key={feature.title}>
-					<div
-						className={`mb-3 inline-flex size-9 items-center justify-center rounded-xl ${feature.chipClass}`}
-					>
-						<feature.icon className="size-[18px]" />
-					</div>
+					<feature.icon
+						className={`mb-3 size-7 ${feature.iconColor}`}
+						strokeWidth={2}
+					/>
 					<h4 className="text-sm font-semibold text-foreground">
 						{feature.title}
 					</h4>
