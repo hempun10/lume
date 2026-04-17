@@ -9,6 +9,7 @@ import {
 	MessageSquare,
 	Pencil,
 	Scale,
+	Smile,
 	Type,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ const iconMap: Record<string, LucideIcon> = {
 	scale: Scale,
 	hand: Hand,
 	"message-square": MessageSquare,
+	smile: Smile,
 };
 
 interface GameCardProps {
