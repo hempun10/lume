@@ -232,6 +232,18 @@ function ComposeForm({
 				</button>
 			</div>
 
+			<div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+				<span>Your 2 truths + 1 lie</span>
+				<span
+					className={cn(
+						"transition-colors",
+						lieIdx === null ? "text-destructive/80" : "text-muted-foreground",
+					)}
+				>
+					{lieIdx === null ? "Tap a number to mark the lie" : "Ready to send"}
+				</span>
+			</div>
+
 			<ul className="flex flex-col gap-2">
 				{statements.map((value, i) => {
 					const idx = i as TwoTruthsPick;
@@ -247,14 +259,17 @@ function ComposeForm({
 								onClick={() => setLieIdx(idx)}
 								aria-pressed={isLie}
 								aria-label={`Mark statement ${i + 1} as the lie`}
+								title={isLie ? "This is the lie" : "Tap to mark as the lie"}
 								className={cn(
-									"flex size-8 shrink-0 items-center justify-center rounded-md border text-xs font-semibold tabular-nums transition-colors motion-safe:duration-150 ease-out",
+									"flex size-9 shrink-0 items-center justify-center rounded-md border text-xs font-semibold tabular-nums transition-colors motion-safe:duration-150 ease-out",
 									isLie
-										? "border-destructive bg-destructive/10 text-destructive"
-										: "border-border bg-card text-muted-foreground hover:border-border/80",
+										? "border-destructive bg-destructive text-destructive-foreground"
+										: lieIdx === null
+											? "border-dashed border-muted-foreground/50 bg-card text-muted-foreground hover:border-destructive/60 hover:text-destructive"
+											: "border-border bg-card text-muted-foreground hover:border-border/80",
 								)}
 							>
-								{isLie ? <X className="size-3.5" aria-hidden /> : i + 1}
+								{isLie ? <X className="size-4" aria-hidden /> : i + 1}
 							</button>
 							<Input
 								value={value}
@@ -278,11 +293,17 @@ function ComposeForm({
 				})}
 			</ul>
 
+			{lieIdx === null && allFilled && (
+				<p className="-mt-1 text-center text-xs font-medium text-destructive">
+					Tap one of the numbers on the left to mark the lie
+				</p>
+			)}
+
 			<div className="flex items-center justify-between text-[10px] text-muted-foreground">
 				<span>
 					{lieIdx === null
-						? "Tap a number to mark the lie"
-						: `Lie: #${lieIdx + 1}`}
+						? "Which one is the lie?"
+						: `Lie marked: #${lieIdx + 1}`}
 				</span>
 				<span className="tabular-nums">
 					{statements.reduce((n, s) => n + s.length, 0)}/
@@ -297,7 +318,11 @@ function ComposeForm({
 				className="gap-2 active:scale-[0.97]"
 			>
 				<Send className="size-3.5" />
-				Send to stranger
+				{!allFilled
+					? "Fill in all three statements"
+					: lieIdx === null
+						? "Mark the lie to continue"
+						: "Send to stranger"}
 			</Button>
 		</form>
 	);
