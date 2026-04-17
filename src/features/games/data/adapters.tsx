@@ -285,7 +285,10 @@ const drawAndGuessAdapter: GameAdapter<DrawAndGuessState> = {
 			};
 		return {
 			round_setup: (payload) => {
-				const data = payload as { options?: unknown } | null;
+				const data = payload as {
+					options?: unknown;
+					difficulty?: unknown;
+				} | null;
 				const opts = data?.options;
 				if (
 					!Array.isArray(opts) ||
@@ -294,13 +297,20 @@ const drawAndGuessAdapter: GameAdapter<DrawAndGuessState> = {
 				) {
 					return;
 				}
+				const rawDiff = data?.difficulty;
+				const difficulty =
+					rawDiff === "easy" || rawDiff === "medium" || rawDiff === "hard"
+						? rawDiff
+						: "easy";
 				const options = [opts[0], opts[1], opts[2], opts[3]] as [
 					string,
 					string,
 					string,
 					string,
 				];
-				setGameState((prev) => (prev ? applyRoundSetup(prev, options) : prev));
+				setGameState((prev) =>
+					prev ? applyRoundSetup(prev, options, difficulty) : prev,
+				);
 			},
 			reveal: (payload) => {
 				const data = payload as { correctIdx?: unknown } | null;

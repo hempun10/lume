@@ -23,7 +23,10 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { pickRoundOptions } from "../data/draw-and-guess-words";
+import {
+	type DrawAndGuessDifficulty,
+	pickRoundOptions,
+} from "../data/draw-and-guess-words";
 import {
 	applyReveal,
 	applyRoundSetup,
@@ -120,12 +123,12 @@ export function DrawAndGuessBoard({
 			{state.phase === "setup" && (
 				<SetupCoordinator
 					iAmDrawer={iAmDrawer}
-					onDrawerReady={(options, correctIdx, word) => {
+					onDrawerReady={(options, correctIdx, word, difficulty) => {
 						correctIdxRef.current = correctIdx;
 						setTargetWord(word);
-						sendCustomEvent("round_setup", { options });
+						sendCustomEvent("round_setup", { options, difficulty });
 						setGameState((prev) =>
-							prev ? applyRoundSetup(prev, options) : prev,
+							prev ? applyRoundSetup(prev, options, difficulty) : prev,
 						);
 					}}
 				/>
@@ -163,6 +166,16 @@ export function DrawAndGuessBoard({
 
 /* ---------------------- setup: drawer picks options ---------------------- */
 
+const DIFFICULTY_TIERS: {
+	id: DrawAndGuessDifficulty;
+	label: string;
+	blurb: string;
+}[] = [
+	{ id: "easy", label: "Easy", blurb: "Everyday objects" },
+	{ id: "medium", label: "Medium", blurb: "Same-category siblings" },
+	{ id: "hard", label: "Hard", blurb: "Abstract + compound" },
+];
+
 function SetupCoordinator({
 	iAmDrawer,
 	onDrawerReady,
@@ -172,20 +185,65 @@ function SetupCoordinator({
 		options: readonly [string, string, string, string],
 		correctIdx: DrawAndGuessPick,
 		word: string,
+		difficulty: DrawAndGuessDifficulty,
 	) => void;
 }) {
-	// Drawer picks options exactly once on mount of this phase.
+	// Drawer taps a tier. We gate with a ref so rapid re-renders or
+	// a second tap can't fire the callback twice.
 	const calledRef = useRef(false);
-	useEffect(() => {
-		if (!iAmDrawer || calledRef.current) return;
-		calledRef.current = true;
-		const { options, correctIdx } = pickRoundOptions();
-		onDrawerReady(options, correctIdx, options[correctIdx]);
-	}, [iAmDrawer, onDrawerReady]);
+	const [pending, setPending] = useState<DrawAndGuessDifficulty | null>(null);
+
+	const pick = useCallback(
+		(difficulty: DrawAndGuessDifficulty) => {
+			if (calledRef.current) return;
+			calledRef.current = true;
+			setPending(difficulty);
+			const { options, correctIdx } = pickRoundOptions(difficulty);
+			onDrawerReady(options, correctIdx, options[correctIdx], difficulty);
+		},
+		[onDrawerReady],
+	);
+
+	if (!iAmDrawer) {
+		return (
+			<div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center text-xs text-muted-foreground">
+				Stranger is choosing difficulty...
+			</div>
+		);
+	}
+
+	if (pending) {
+		return (
+			<div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center text-xs text-muted-foreground">
+				Picking a {pending} word...
+			</div>
+		);
+	}
 
 	return (
-		<div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center text-xs text-muted-foreground">
-			{iAmDrawer ? "Picking a word..." : "Stranger is picking a word..."}
+		<div className="flex flex-col gap-2 rounded-xl border border-border bg-card px-4 py-4">
+			<p className="text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+				Pick a difficulty
+			</p>
+			<div className="grid grid-cols-3 gap-2">
+				{DIFFICULTY_TIERS.map((t) => (
+					<button
+						key={t.id}
+						type="button"
+						onClick={() => pick(t.id)}
+						className={cn(
+							"flex flex-col items-center gap-0.5 rounded-lg border border-border bg-background px-2 py-2.5",
+							"text-xs font-semibold text-foreground transition-colors motion-safe:duration-150 ease-out",
+							"hover:border-brand-500/50 hover:bg-brand-500/5 active:scale-[0.98]",
+						)}
+					>
+						<span>{t.label}</span>
+						<span className="text-[10px] font-normal text-muted-foreground">
+							{t.blurb}
+						</span>
+					</button>
+				))}
+			</div>
 		</div>
 	);
 }
@@ -315,7 +373,12 @@ function RoundView({
 
 	return (
 		<div className="flex flex-col gap-3">
-			<TimerBar remainingMs={remaining} revealed={revealed} />
+			<div className="flex items-center gap-2">
+				<div className="flex-1">
+					<TimerBar remainingMs={remaining} revealed={revealed} />
+				</div>
+				{state.difficulty && <DifficultyPill tier={state.difficulty} />}
+			</div>
 
 			<div className="relative">
 				<DrawingSurface
@@ -380,6 +443,25 @@ function RoundView({
 }
 
 /* -------------------------------- timer -------------------------------- */
+
+function DifficultyPill({ tier }: { tier: DrawAndGuessDifficulty }) {
+	const label = tier[0].toUpperCase() + tier.slice(1);
+	return (
+		<output
+			className={cn(
+				"shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+				tier === "easy" && "border-brand-500/40 bg-brand-500/5 text-brand-500",
+				tier === "medium" &&
+					"border-amber-500/40 bg-amber-500/5 text-amber-500",
+				tier === "hard" &&
+					"border-destructive/40 bg-destructive/5 text-destructive",
+			)}
+			aria-label={`Difficulty: ${label}`}
+		>
+			{label}
+		</output>
+	);
+}
 
 function WordRevealOverlay({ word, show }: { word: string; show: boolean }) {
 	return (
@@ -1055,9 +1137,6 @@ function FinishedView({
 					const iDrew = h.drawerSeat === mySeat;
 					const correctWord = h.options[h.correctIdx];
 					const got = h.guess === h.correctIdx;
-					// "got" means the guesser got it right — scores +1 to
-					// both players regardless of who drew. We show the
-					// outcome on every row so totals add up visibly.
 					const scored = got;
 					return (
 						<li
@@ -1069,11 +1148,14 @@ function FinishedView({
 								!scored && "border-destructive/30 bg-destructive/5",
 							)}
 						>
-							<span className="min-w-0 flex-1 truncate text-muted-foreground">
-								<span className="text-[10px] uppercase tracking-wide">
-									{iDrew ? "You drew" : "Stranger drew"}
-								</span>{" "}
-								<span className="text-foreground">{correctWord}</span>
+							<span className="flex min-w-0 flex-1 items-center gap-2">
+								<DifficultyPill tier={h.difficulty} />
+								<span className="min-w-0 flex-1 truncate text-muted-foreground">
+									<span className="text-[10px] uppercase tracking-wide">
+										{iDrew ? "You drew" : "Stranger drew"}
+									</span>{" "}
+									<span className="text-foreground">{correctWord}</span>
+								</span>
 							</span>
 							<span className="flex shrink-0 items-center gap-1 text-[10px] font-semibold uppercase tracking-wide">
 								{scored ? (

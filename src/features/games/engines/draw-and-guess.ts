@@ -30,6 +30,7 @@
  *   - Guesser wrong or timed out → 0/0.
  */
 
+import type { DrawAndGuessDifficulty } from "../data/draw-and-guess-words";
 import type {
 	GameResult as EngineGameResult,
 	GameEngine,
@@ -50,6 +51,7 @@ export interface DrawAndGuessHistoryEntry {
 	options: readonly [string, string, string, string];
 	correctIdx: DrawAndGuessPick;
 	guess: DrawAndGuessPick | null;
+	difficulty: DrawAndGuessDifficulty;
 }
 
 export interface DrawAndGuessState {
@@ -59,6 +61,8 @@ export interface DrawAndGuessState {
 	totalRounds: number;
 	/** 4 multiple-choice options for the current round. */
 	options: readonly [string, string, string, string] | null;
+	/** Tier the drawer chose for this round. */
+	difficulty: DrawAndGuessDifficulty | null;
 	/** Guesser's pick. Null until they lock in (or timeout). */
 	guess: DrawAndGuessPick | null;
 	/** Correct option index. Null until reveal is broadcast. */
@@ -79,6 +83,7 @@ export function createInitialState(
 		round: 0,
 		totalRounds: DRAW_AND_GUESS_TOTAL_ROUNDS,
 		options: null,
+		difficulty: null,
 		guess: null,
 		correctIdx: null,
 		aScore: 0,
@@ -114,9 +119,10 @@ function isPick(move: number): move is DrawAndGuessPick {
 export function applyRoundSetup(
 	state: DrawAndGuessState,
 	options: readonly [string, string, string, string],
+	difficulty: DrawAndGuessDifficulty,
 ): DrawAndGuessState {
 	if (state.phase !== "setup") return state;
-	return { ...state, options, phase: "drawing" };
+	return { ...state, options, difficulty, phase: "drawing" };
 }
 
 /**
@@ -170,6 +176,7 @@ export function applyMove(
 				options: state.options,
 				correctIdx: state.correctIdx,
 				guess: state.guess,
+				difficulty: state.difficulty ?? "easy",
 			},
 		];
 		const isLast = state.round + 1 >= state.totalRounds;
@@ -179,6 +186,7 @@ export function applyMove(
 				...state,
 				round: isLast ? state.round : state.round + 1,
 				options: null,
+				difficulty: null,
 				guess: null,
 				correctIdx: null,
 				history: nextHistory,
