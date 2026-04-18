@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth";
 import { supabase } from "@/lib/supabase/client";
-import type { ChatMessage, ChatSession } from "../types";
+import type { ChatMessage, ChatSession, ReplyTarget } from "../types";
 
 interface UseRealtimeChatReturn {
 	session: ChatSession;
-	sendMessage: (text: string) => void;
+	sendMessage: (text: string, replyTo?: ReplyTarget) => void;
 	endChat: () => void;
 	broadcastTyping: () => void;
 	toggleReaction: (messageId: string, emoji: string) => void;
@@ -14,11 +14,18 @@ interface UseRealtimeChatReturn {
 	channelRef: React.RefObject<ReturnType<typeof supabase.channel> | null>;
 }
 
+interface BroadcastReplySnapshot {
+	id: string;
+	sender_id: string;
+	text: string;
+}
+
 interface BroadcastMessagePayload {
 	sender_id: string;
 	text: string;
 	timestamp: string;
 	id: string;
+	reply_to?: BroadcastReplySnapshot;
 }
 
 interface BroadcastTypingPayload {
@@ -57,6 +64,13 @@ function handleIncomingMessage(
 		senderId: data.sender_id,
 		text: data.text,
 		timestamp: new Date(data.timestamp),
+		replyTo: data.reply_to
+			? {
+					id: data.reply_to.id,
+					senderId: data.reply_to.sender_id,
+					text: data.reply_to.text,
+				}
+			: undefined,
 	};
 	setSession((prev) => ({
 		...prev,
@@ -302,7 +316,7 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 	}, [userId, roomId]);
 
 	const sendMessage = useCallback(
-		(text: string) => {
+		(text: string, replyTo?: ReplyTarget) => {
 			if (session.status !== "active" || !text.trim() || !channelRef.current) {
 				return;
 			}
@@ -312,6 +326,13 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 				sender_id: userId,
 				text: text.trim(),
 				timestamp: new Date().toISOString(),
+				reply_to: replyTo
+					? {
+							id: replyTo.id,
+							sender_id: replyTo.senderId,
+							text: replyTo.text,
+						}
+					: undefined,
 			};
 
 			const msg: ChatMessage = {
@@ -319,6 +340,7 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 				senderId: userId,
 				text: msgPayload.text,
 				timestamp: new Date(msgPayload.timestamp),
+				replyTo,
 			};
 			setSession((prev) => ({
 				...prev,
