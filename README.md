@@ -10,7 +10,7 @@ A social platform for meeting strangers through ephemeral text chat and lightwei
 
 Built with **TanStack Start** (React 19 + Vite 7 + Nitro SSR), **Supabase** (Auth, Realtime, Edge Functions, pg_cron), **Tailwind v4**, and **shadcn/ui**. Tested end-to-end with **[TestSprite MCP](https://www.testsprite.com/)**.
 
-**[Live Demo](https://lume.chat)** · **[PRD](docs/PRD.md)** · **[Testing strategy](docs/TESTING.md)** · **[Submission write-up](SUBMISSION.md)**
+**[Live Demo](https://lume.chat)** · **[PRD](docs/PRD.md)**
 
 ## What's Included
 
@@ -166,7 +166,7 @@ npm run lint       # Biome lint only
 npm run format     # Biome format only
 ```
 
-> There is no `npm test` script — automated testing is driven by **TestSprite** against a running preview build. See [`docs/TESTING.md`](docs/TESTING.md).
+> There is no `npm test` script — automated testing is driven by **TestSprite** against a running preview build.
 
 ## Testing with TestSprite
 
@@ -191,7 +191,7 @@ npm run db:reset          # migrate + seed Alice & Bob
 npm run build && npm run preview  # production preview on :3000
 ```
 
-Then from the IDE: *"Can you test this project with TestSprite?"* See [`docs/TESTING.md`](docs/TESTING.md) for the full TestSprite configuration (credentials, PRD upload, additional instructions).
+Then from the IDE: *"Can you test this project with TestSprite?"*
 
 ## Deployment
 
@@ -213,7 +213,6 @@ Configured for Vercel deployment. Set the `VERCEL_*` environment variables and p
 | `supabase/functions/match-users/`                      | Server-authoritative matching edge function + tunable constants      |
 | `supabase/migrations/`                                 | SQL schema, RLS policies, `is_recent_pair()` cooldown                |
 | `docs/PRD.md`                                          | Product requirements (input for TestSprite)                          |
-| `docs/TESTING.md`                                      | Test strategy, credentials, TestSprite config, gotchas               |
 
 ## Learn More
 
