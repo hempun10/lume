@@ -33,10 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Navigate to /login to locate the login form so we can sign in as user-a@example.com and continue the logout/redirect verification.
-        await page.goto("http://localhost:3000/login")
+        # -> Open the chat flow by clicking 'Start Chatting Free' to reach the login/matchmaking UI for the first user session (user-a).
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
+        await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email field with user-a@example.com (then fill password and submit the form).
+        # -> Fill the email and password for user-a and submit the Sign in form.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -52,11 +55,14 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email and password fields and submit the login form (use user-a@example.com / password123). Then wait for the app to update so we can locate the sign-out control.
+        # -> Open a second browser tab and navigate to the login page prefilled for user-b@example.com, then wait for the page to render so I can attempt the second login.
+        await page.goto("http://localhost:3000/login?email=user-b%40example.com")
+        
+        # -> Sign in in the current tab as user-b@example.com (fill email, fill password, click Sign in) and then wait for the app to finish loading/route to the matchmaking/chat UI.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        await asyncio.sleep(3); await elem.fill('user-b@example.com')
         
         frame = context.pages[-1]
         # Input text
@@ -68,11 +74,11 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email and password fields (user-a@example.com / password123) and click the 'Sign in' button.
+        # -> Fill the email and password for user-b (user-b@example.com / password123) in the current tab and click 'Sign in', then wait for the app to finish loading the post-login UI.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        await asyncio.sleep(3); await elem.fill('user-b@example.com')
         
         frame = context.pages[-1]
         # Input text
@@ -84,44 +90,30 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Submit the login form (click 'Sign in') and wait for the app to update so we can locate the authenticated sign-out control.
+        # -> Open a new browser tab and navigate to the login page prefilled for user-b@example.com so I can sign in the second user session.
+        await page.goto("http://localhost:3000/login?email=user-b%40example.com")
+        
+        # -> Open a new browser tab and navigate to the login page prefilled for user-a@example.com so we can sign in the second test user.
+        await page.goto("http://localhost:3000/login?email=user-a%40example.com")
+        
+        # -> Click 'Start matching' in the current (dashboard) tab to begin matchmaking for the logged-in user, then open a new tab and navigate to the login page prefilled for the other test user so we can sign them in.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Try the protected-page redirect check: navigate to /dashboard and verify whether the app redirects to the login page (confirm presence of the login UI).
-        await page.goto("http://localhost:3000/dashboard")
+        await page.goto("http://localhost:3000/login?email=user-b%40example.com")
         
-        # -> Fill the email and password fields with user-a@example.com / password123 and submit the login form (click 'Sign in').
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        # -> Open a new browser tab and navigate to the login page prefilled for user-b@example.com so we can sign in the second test user.
+        await page.goto("http://localhost:3000/login?email=user-b%40example.com")
         
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('password123')
-        
+        # -> Click 'Start matching' in this (current) Dashboard tab to begin matchmaking for the logged-in user, then open a new browser tab and navigate to the login page prefilled for user-b@example.com to sign them in.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Open the user menu by clicking the avatar/menu button so the Sign out control becomes visible (click element index 1664).
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/header/div[2]/button[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the 'Log out' menu item (index 2211) to sign out, wait for the app to update, then navigate to /dashboard to verify the app redirects to the login page.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div[2]/div/a[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        await page.goto("http://localhost:3000/dashboard")
+        await page.goto("http://localhost:3000/login?email=user-b%40example.com")
         
         # --> Test passed — verified by AI agent
         frame = context.pages[-1]

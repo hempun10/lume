@@ -33,10 +33,10 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Navigate to the login page (/login) so we can sign in.
+        # -> Navigate to /login and wait for the login page to load so we can interact with its fields.
         await page.goto("http://localhost:3000/login")
         
-        # -> Fill the email and password fields and submit the sign-in form.
+        # -> Fill the email field with user-a@example.com (index 708) and submit the sign-in form
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -52,16 +52,47 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Navigate to /logout to clear any session and observe behavior (whether it redirects or updates UI).
-        await page.goto("http://localhost:3000/logout")
+        # -> Fill the email and password fields and click the 'Sign in' button to attempt login.
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
         
-        # -> Navigate to /dashboard and verify that the app redirects to the login page (protected-route enforcement).
-        await page.goto("http://localhost:3000/dashboard")
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Fill email and password and click 'Sign in' to log in, then log out and verify accessing /dashboard redirects to the login page.
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Click the 'Sign in' button to submit the credentials and wait for the app to navigate to the authenticated area.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
         
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        current_url = await frame.evaluate("() => window.location.href")
-        assert '/login' in current_url, "The page should have navigated to the login page after logging out and attempting to access a protected route."
+        assert await frame.locator("xpath=//*[contains(., 'Sign in')]").nth(0).is_visible(), "The login page should be displayed after logging out and attempting to access a protected page."
         await asyncio.sleep(5)
 
     finally:

@@ -33,51 +33,50 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' button to open the login/signup flow (element index 139).
+        # -> Click the 'Start Chatting Free' button to open the login/matchmaking flow.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Sign up' button to open the signup form, then fill email and password and submit the form.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
+        # -> Fill the email and password fields and click 'Sign in' to log in as user-a@example.com.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('automation+signup1@example.com')
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
         
-        # -> Click the 'Sign up' control to ensure the signup form/view is active (do not fill dependent fields in the same action).
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Sign up' control to ensure the signup view is active. After the UI updates, re-observe fields before filling the password.
+        # -> Fill the email and password fields and click 'Sign in' to log in as user-a@example.com (attempt 2/2).
         frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
         
-        # -> Click the 'Sign up' control (index 747) to ensure the signup view is active, then re-observe the form before filling the password.
         frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
         
-        # -> Click the 'Sign up' control (index 747) to activate the signup view so password and the correct submit button appear, then re-observe the form.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        current_url = await frame.evaluate("() => window.location.href")
-        assert '/onboarding' in current_url, "The page should have navigated to the onboarding page after signup"
+        assert await frame.locator("xpath=//*[contains(., 'Search')]").nth(0).is_visible(), "The emoji picker should be visible with a search input after clicking the Insert emoji button"
+        assert not await frame.locator("xpath=//*[contains(., 'Search')]").nth(0).is_visible(), "The emoji picker popover should be closed after selecting an emoji so the picker is no longer visible"
+        assert (await frame.locator("xpath=//*[contains(., 'Hello 😄')]").nth(0).text_content()) == 'Hello 😄', "The chat textarea should contain 'Hello 😄' with the inserted emoji after selection so typing can continue"
+        assert await frame.locator("xpath=//*[contains(., 'Hello 😄')]").nth(0).is_visible(), "The conversation should display a sent message bubble containing Hello 😄 after submitting the message"
         await asyncio.sleep(5)
 
     finally:

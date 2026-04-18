@@ -1,6 +1,6 @@
 # Lume
 
-A social platform for meeting strangers through text chat and multiplayer games — an alternative to Omegle and rumi.social. Built with TanStack Start (full-stack React SSR framework), Supabase authentication, protected routes, and shadcn/ui.
+A social platform for meeting strangers through text chat and multiplayer games — an alternative to Omegle-style random chat. Built with TanStack Start (full-stack React SSR framework), Supabase authentication, protected routes, and shadcn/ui.
 
 Originally scaffolded from a TanStack Start + Supabase Auth starter template, inspired by:
 

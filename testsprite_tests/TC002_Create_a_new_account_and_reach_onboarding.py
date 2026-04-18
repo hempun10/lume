@@ -33,38 +33,22 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the Sign In page/modal so I can switch to the Sign up tab and fill the signup form.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/header/nav/div[2]/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # -> Navigate to the login page at /login to access the Sign up flow.
+        await page.goto("http://localhost:3000/login")
         
-        # -> Click the 'Sign up' button to open the signup form so I can observe its fields before filling them.
+        # -> Click the 'Sign up' button to open the signup form (index 719).
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill a unique email and a valid password into the signup form, submit it, and verify the app routes to onboarding.
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('signup-20260417-230000@example.com')
+        # -> Open the signup page/form (use direct navigation to /signup since clicking Sign up did not open the form).
+        await page.goto("http://localhost:3000/signup")
         
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('Password123!')
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # --> Test passed — verified by AI agent
+        # --> Assertions to verify final state
         frame = context.pages[-1]
         current_url = await frame.evaluate("() => window.location.href")
-        assert current_url is not None, "Test completed successfully"
+        assert '/onboarding' in current_url, "The page should have navigated to the onboarding page after successful signup"
         await asyncio.sleep(5)
 
     finally:

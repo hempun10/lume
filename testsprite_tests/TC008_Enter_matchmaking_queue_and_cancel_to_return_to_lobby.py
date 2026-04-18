@@ -33,13 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the entry point to start (click the 'Start Chatting Free' button/link to reach the login/signup flow).
+        # -> Click 'Start Chatting Free' to begin the sign-in/onboarding flow (or reach the login page).
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill email and password with user-a@example.com / password123 and submit the sign in form.
+        # -> Fill the email field with user-a@example.com, fill the password with password123, and submit the sign-in form.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -55,93 +55,93 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Toggle match mode from Text Chat to Games by clicking the 'Games' radio button.
+        # -> Fill the email and password fields on the login form and submit the sign-in form (attempt the second sign-in).
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Fill the email and password fields with user-a@example.com / password123 and submit the sign-in form (final attempt).
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Attempt to submit the login form by clicking the 'Sign in' button once, then wait for the app to render the post-login/dashboard view.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Fill the email and password fields and submit the sign-in form to reach the dashboard.
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Click the 'Games' match mode button to toggle match mode from Chat to Games (element index 2058).
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/button[2]').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Toggle at least one interest chip (enable 'Movies'), then start matchmaking by clicking a playable game's Play button (Tic Tac Toe).
+        # -> Select an interest chip (Gaming) to ensure at least one interest is active, then open Browse games so we can pick a playable game and start matching.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div[2]/div[2]/button[3]').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div[2]/div[2]/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section[2]/div[2]/div/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the Tic Tac Toe Play button to start matchmaking, wait for the searching view to appear, then check for 'Searching' text or a 'Cancel' button.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/div[3]/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the 'Cancel' button to stop searching and return to the idle lobby view.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the 'Games' radio button to switch match mode from Text Chat to Games so we can start a Games matchmaking run.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/button[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the Tic Tac Toe 'Play' button to start matchmaking, wait for the searching view to appear, then check the page for 'Searching' text, a 'Cancel' button, and any match/timer UI.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section[2]/div[2]/div/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the Tic Tac Toe 'Play' button to start matchmaking, wait for the searching view to appear, and check for 'Searching' text, a match timer, or a 'Cancel' button.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/div[3]/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the 'Games' radio button to switch match mode to Games, then stop and let the UI update so we can start matchmaking next.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/button[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the Tic Tac Toe 'Play' button to start matchmaking, then wait for the searching view to appear (look for 'Searching', a timer, or a 'Cancel' button).
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section[2]/div[2]/div/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the Tic Tac Toe 'Play' button to start matchmaking, wait for the UI to settle, then inspect the page for a 'Searching' state (text/timer) and a visible 'Cancel' control.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/div[3]/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the visible 'Cancel' button to stop searching and return to the idle lobby, then verify the idle lobby view (presence of Play/start controls) is shown.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the 'Start matching' control to begin matchmaking, wait for the searching view to appear, then inspect for a visible 'Cancel' control so we can cancel next.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the visible 'Cancel' button to stop searching, wait for the UI to update, then verify the idle lobby view is shown (presence of 'Play' or 'Start matching' controls and absence of 'Searching' and timer).
+        # -> Click the 'Play' button for a playable game (Tic Tac Toe) to start matchmaking and observe the searching state.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/div[3]/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Start matching' button to begin matchmaking and wait for the searching view to appear (look for 'Searching', a timer like '00:', and a visible 'Cancel' control).
+        # -> Click the 'Start matching' button on the lobby to begin a new search, then wait for the searching UI to appear.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Click the 'Cancel' button to stop the search, then verify the app returns to the idle lobby view with controls to start matching.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
         # --> Test passed — verified by AI agent

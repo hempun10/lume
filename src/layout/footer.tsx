@@ -17,10 +17,7 @@ const footerLinks = {
 		{ label: "Privacy", href: "/privacy" },
 		{ label: "Terms", href: "/terms" },
 	],
-	compare: [
-		{ label: "Omegle Alternative", href: "/compare/omegle" },
-		{ label: "Rumi Alternative", href: "/compare/rumi" },
-	],
+	compare: [{ label: "Omegle Alternative", href: "/compare/omegle" }],
 };
 
 export function Footer() {

@@ -33,23 +33,14 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click 'Start Chatting Free' to reach the signup/login flow so we can create a fresh un-onboarded account.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # -> Navigate to /login so we can sign up or log in and then attempt to access /dashboard to verify onboarding redirect.
+        await page.goto("http://localhost:3000/login")
         
-        # -> Open the sign up form by clicking the 'Sign up' button so we can create a fresh un-onboarded account.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Fill the email field with a new unique email, fill password, submit the sign up form, then navigate to /dashboard to verify onboarding redirect.
+        # -> Fill email and password, submit the sign-in form, wait for the app to respond, then navigate to /dashboard to verify the onboarding redirect.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('unonboarded-20260417-001@example.com')
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
         
         frame = context.pages[-1]
         # Input text
@@ -61,16 +52,12 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Navigate to /dashboard and verify whether the user is redirected to onboarding (or allowed into dashboard).
+        # -> Navigate to /dashboard and verify whether the user is redirected to the onboarding page.
         await page.goto("http://localhost:3000/dashboard")
         
-        # -> Navigate to /dashboard while authenticated and confirm the app forces the user onto the onboarding page (i.e., redirect to /onboarding).
-        await page.goto("http://localhost:3000/dashboard")
-        
-        # --> Test passed — verified by AI agent
+        # --> Assertions to verify final state
         frame = context.pages[-1]
-        current_url = await frame.evaluate("() => window.location.href")
-        assert current_url is not None, "Test completed successfully"
+        assert await frame.locator("xpath=//*[contains(., 'Onboarding')]").nth(0).is_visible(), "The onboarding page should be shown because the authenticated user has not completed onboarding and was redirected when attempting to access the dashboard."
         await asyncio.sleep(5)
 
     finally:
