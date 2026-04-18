@@ -119,9 +119,9 @@ export function MessageInput({
 		<div className="shrink-0 border-t border-border/50">
 			{replyTo ? (
 				<div className="px-4 pt-3">
-					<div className="flex min-w-0 items-stretch gap-2 rounded-lg border-l-2 border-primary bg-muted/60 px-3 py-2">
+					<div className="flex min-w-0 items-stretch gap-2 rounded-xl bg-muted/60 px-3 py-2">
 						<div className="min-w-0 flex-1">
-							<p className="text-xs font-medium text-primary">
+							<p className="text-xs font-medium text-foreground">
 								Replying to {replyLabel}
 							</p>
 							<p className="truncate text-xs text-muted-foreground">
