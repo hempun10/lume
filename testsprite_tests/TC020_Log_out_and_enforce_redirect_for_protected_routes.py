@@ -33,10 +33,10 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Navigate to /login and load the login page
+        # -> Navigate to /login and wait for the page to finish loading so the login form's interactive elements appear.
         await page.goto("http://localhost:3000/login")
         
-        # -> Fill the email field with user-a@example.com and the password field with password123, then submit the form.
+        # -> Fill the email field (index 709) with user-a@example.com and then fill password and submit the form.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -52,24 +52,26 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Open the user menu to locate the logout action (click the avatar/menu button). Then wait for the menu to render so the logout option can be clicked.
+        # -> Fill the email (index 859) and password (index 866) fields and submit the login form by clicking the Sign in button (index 867).
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/header/div[2]/button[2]').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Log out' menu item to sign out, then navigate to /settings and confirm the app redirects to /login.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div[2]/div/a[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        await page.goto("http://localhost:3000/settings")
-        
-        # --> Test passed — verified by AI agent
+        # --> Assertions to verify final state
         frame = context.pages[-1]
         current_url = await frame.evaluate("() => window.location.href")
-        assert current_url is not None, "Test completed successfully"
+        assert '/login' in current_url, "The page should have navigated to /login after logging out when trying to access a protected route."
         await asyncio.sleep(5)
 
     finally:

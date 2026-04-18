@@ -33,13 +33,10 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' CTA to reach the authentication flow (login/signup).
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # -> Navigate to /login
+        await page.goto("http://localhost:3000/login")
         
-        # -> Fill the email and password fields and submit the sign-in form (use user-a@example.com / password123).
+        # -> Fill the email field with user-a@example.com, fill the password with password123, then click Sign in.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -55,22 +52,46 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'View all →' button under 'Games to try' to open the full games catalogue so we can browse the 'Playable' and 'Soon' sections.
+        # -> Fill the email and password fields and click the Sign in button to attempt authentication.
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section[2]/div/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Play' button for the first available game (Tic Tac Toe) to select it, then wait for the app to navigate/update.
+        # -> Fill the email and password using the visible inputs and click Sign in to authenticate.
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/div[3]/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # --> Test passed — verified by AI agent
+        # -> Attempt to reach the games catalogue directly (navigate to /games) so we can verify the catalogue browsing and game selection without relying on the login form which appears to be failing.
+        await page.goto("http://localhost:3000/games")
+        
+        # --> Assertions to verify final state
         frame = context.pages[-1]
         current_url = await frame.evaluate("() => window.location.href")
-        assert current_url is not None, "Test completed successfully"
+        assert '/dashboard' in current_url, "The page should have navigated to /dashboard after selecting a game and returning to the dashboard."
+        assert await frame.locator("xpath=//*[contains(., 'Awesome Game')]").nth(0).is_visible(), "The dashboard should show Awesome Game as preselected for matchmaking after returning from the games catalogue."
         await asyncio.sleep(5)
 
     finally:

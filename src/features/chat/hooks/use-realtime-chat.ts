@@ -285,7 +285,6 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 			.then(() => {});
 	}, [roomId, userId, session.status]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: channel setup runs once on mount
 	useEffect(() => {
 		if (!userId || !roomId) return;
 

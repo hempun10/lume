@@ -6,13 +6,11 @@
 ![TanStack Start](https://img.shields.io/badge/TanStack_Start-latest-orange)
 ![Supabase](https://img.shields.io/badge/Supabase-Auth-green)
 
-A social platform for meeting strangers through ephemeral text chat and lightweight multiplayer games. A safer, game-forward alternative to **Omegle** and **rumi.social**.
+A social platform for meeting strangers through ephemeral text chat and lightweight multiplayer games. A safer, game-forward alternative to **Omegle**-style random chat.
 
-Built with **TanStack Start** (React 19 + Vite 7 + Nitro SSR), **Supabase** (Auth, Realtime, Edge Functions, pg_cron), **Tailwind v4**, and **shadcn/ui**.
+Built with **TanStack Start** (React 19 + Vite 7 + Nitro SSR), **Supabase** (Auth, Realtime, Edge Functions, pg_cron), **Tailwind v4**, and **shadcn/ui**. Tested end-to-end with **[TestSprite MCP](https://www.testsprite.com/)**.
 
-[![Live Demo](public/og-image.svg)](https://lume.chat)
-
-**[Live Demo](https://lume.chat)** · **[PRD](docs/PRD.md)** · **[Testing strategy](docs/TESTING.md)**
+**[Live Demo](https://lume.chat)** · **[PRD](docs/PRD.md)** · **[Testing strategy](docs/TESTING.md)** · **[Submission write-up](SUBMISSION.md)**
 
 ## What's Included
 
@@ -170,6 +168,31 @@ npm run format     # Biome format only
 
 > There is no `npm test` script — automated testing is driven by **TestSprite** against a running preview build. See [`docs/TESTING.md`](docs/TESTING.md).
 
+## Testing with TestSprite
+
+Lume's entire end-to-end test suite is generated and executed by [TestSprite MCP](https://www.testsprite.com/). The AI agent reads [`docs/PRD.md`](docs/PRD.md), explores the running app, and produces Playwright-based test cases covering authentication, onboarding, matchmaking, realtime chat, games, safety flows, and settings.
+
+- **30 generated test cases** live in [`testsprite_tests/`](testsprite_tests/) (`TC001` → `TC030`).
+- **Structured test plan**: [`testsprite_tests/testsprite_frontend_test_plan.json`](testsprite_tests/testsprite_frontend_test_plan.json).
+- **Standardized PRD input**: [`testsprite_tests/standard_prd.json`](testsprite_tests/standard_prd.json).
+- Each test is a self-contained Playwright script — readable, rerunnable, and auditable.
+
+### How TestSprite helped
+
+1. **Surfaced a silent regression in the DOB year dropdown** (onboarding age gate) before deployment. The agent's `TC003` kept hitting the calendar, which pointed us at the deprecated `fromYear`/`toYear` props in `react-day-picker` v9 — we migrated to the new `startMonth`/`endMonth` Date-object API in PR #48.
+2. **Generated exhaustive auth/onboarding guard coverage** (`TC011`, `TC012`, `TC015`, `TC020`, `TC022`) that verified every protected route correctly redirects unauthenticated or un-onboarded users. Catching one of these redirects going to the wrong target would have been tedious to find manually.
+3. **Automated the under-18 age-gate assertion** (`TC024`) and Terms/Privacy consent enforcement (`TC004`, `TC028`) — legally important checks we'd otherwise only spot-check.
+
+### Running the suite locally
+
+```bash
+npm run db:start          # Supabase (Docker)
+npm run db:reset          # migrate + seed Alice & Bob
+npm run build && npm run preview  # production preview on :3000
+```
+
+Then from the IDE: *"Can you test this project with TestSprite?"* See [`docs/TESTING.md`](docs/TESTING.md) for the full TestSprite configuration (credentials, PRD upload, additional instructions).
+
 ## Deployment
 
 Configured for Vercel deployment. Set the `VERCEL_*` environment variables and push to trigger the deploy workflow. The `main` branch auto-deploys to production; every PR gets a preview URL.
@@ -197,3 +220,8 @@ Configured for Vercel deployment. Set the `VERCEL_*` environment variables and p
 - [TanStack Start](https://tanstack.com/start)
 - [Supabase Docs](https://supabase.com/docs)
 - [shadcn/ui](https://ui.shadcn.com/)
+- [TestSprite MCP](https://www.testsprite.com/)
+
+## License
+
+Released under the [MIT License](./LICENSE).

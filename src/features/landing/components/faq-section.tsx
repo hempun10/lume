@@ -14,7 +14,7 @@ const faqs = [
 			"Yes — email and password, takes about 30 seconds. Accounts let us age-gate the platform, moderate effectively, and keep your match preferences between sessions.",
 	},
 	{
-		question: "How is Lume different from Omegle or Rumi?",
+		question: "How is Lume different from Omegle-style random chat?",
 		answer:
 			"Text-first (no forced video), interest-based matching instead of purely random, real-time AI moderation, and built-in multiplayer games that live beside the chat. Safer, quicker to match, more to do.",
 	},

@@ -33,21 +33,16 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Navigate to /dashboard and verify that an unauthenticated user is redirected to the login page (or shown the login form).
+        # -> Navigate to /dashboard and verify the user is redirected to the login page (presence of login form or login-related text).
         await page.goto("http://localhost:3000/dashboard")
         
-        # -> Navigate to /chat and verify an unauthenticated user is redirected to or shown the login page.
+        # -> Navigate to /chat and verify whether the unauthenticated user is redirected to the login page (look for 'Log in', 'Sign in', 'Email', 'Password', or input fields).
         await page.goto("http://localhost:3000/chat")
         
-        # -> Navigate to /games and verify that an unauthenticated user is redirected to or shown the login page (then do the same for /settings).
-        await page.goto("http://localhost:3000/games")
-        
-        await page.goto("http://localhost:3000/settings")
-        
-        # --> Test passed — verified by AI agent
+        # --> Assertions to verify final state
         frame = context.pages[-1]
-        current_url = await frame.evaluate("() => window.location.href")
-        assert current_url is not None, "Test completed successfully"
+        assert await frame.locator("xpath=//*[contains(., 'Log in')]").nth(0).is_visible(), "The login form should be visible when an unauthenticated user attempts to access the dashboard.",
+        assert await frame.locator("xpath=//*[contains(., 'Log in')]").nth(0).is_visible(), "The login form should be visible when an unauthenticated user attempts to access the chat."]}
         await asyncio.sleep(5)
 
     finally:

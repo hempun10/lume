@@ -33,52 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the login page so we can sign in as the test user (navigate to /login).
+        # -> Navigate to /login to reach the login form (explicit navigation requested by the test steps).
         await page.goto("http://localhost:3000/login")
         
-        # -> Fill the email field with user-a@example.com, fill the password, and submit the login form.
+        # --> Assertions to verify final state
         frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('user-a@example.com')
-        
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('password123')
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Open the profile/settings page by clicking 'Edit' so we can toggle an interest in preferences.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section[4]/div/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Toggle the 'Movies' interest, save preferences, navigate back to the dashboard (lobby), and verify the updated interests and any success message are visible.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[3]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/div/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Wait for the preferences save to finish, return to the dashboard (lobby), and verify a success confirmation and the updated interests are displayed there.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/header/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # --> Test passed — verified by AI agent
-        frame = context.pages[-1]
-        current_url = await frame.evaluate("() => window.location.href")
-        assert current_url is not None, "Test completed successfully"
+        assert await frame.locator("xpath=//*[contains(., 'Preferences saved')]").nth(0).is_visible(), "A success confirmation should be visible after saving the preference changes.",
+        assert await frame.locator("xpath=//*[contains(., 'Interests')]").nth(0).is_visible(), "The dashboard lobby should display the updated interests after returning from settings."]}
         await asyncio.sleep(5)
 
     finally:

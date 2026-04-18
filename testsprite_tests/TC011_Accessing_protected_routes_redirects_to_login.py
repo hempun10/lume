@@ -33,22 +33,36 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Navigate to /dashboard and verify the visitor is redirected to the login page (look for login form or 'Log in' text).
+        # -> Navigate to /dashboard and verify the unauthenticated visitor is redirected to the login page (login UI or 'Log in' text is visible).
         await page.goto("http://localhost:3000/dashboard")
         
-        # -> Navigate to /chat and verify the visitor is redirected to the login page (look for 'Welcome back', 'Sign in', 'Email', 'Password', or login form fields).
+        # -> Navigate to /login to confirm the login UI renders. If the login page loads, then attempt each protected route (/dashboard, /chat, /settings) and verify they show the login UI or redirect to /login.
+        await page.goto("http://localhost:3000/login")
+        
+        # -> Navigate to /dashboard and verify the unauthenticated visitor is redirected to or shown the login page (login UI visible).
+        await page.goto("http://localhost:3000/dashboard")
+        
+        # -> Load the explicit /login page to ensure the sign-in form appears, then re-visit /dashboard and wait for the page to settle so we can detect whether it redirects or displays the login UI.
+        await page.goto("http://localhost:3000/login")
+        
+        await page.goto("http://localhost:3000/dashboard")
+        
+        # -> Load the /login page to show the sign-in form (baseline), then visit /dashboard, /chat, and /settings in sequence—after each navigation wait for the SPA to settle and check that the login UI is displayed or the route redirects to /login.
+        await page.goto("http://localhost:3000/login")
+        
+        await page.goto("http://localhost:3000/dashboard")
+        
+        # -> Show the login page (/login) as a baseline, then visit /chat and /settings in sequence. After each navigation, wait for the SPA to settle and check whether the login UI is displayed or the route redirects to /login. If pages remain stuck on a spinner with 0 interactive elements, mark the test as BLOCKED.
+        await page.goto("http://localhost:3000/login")
+        
         await page.goto("http://localhost:3000/chat")
         
-        # -> Navigate to /settings and verify that an unauthenticated visitor is redirected to the login page (look for 'Welcome back', 'Sign in', 'Email', 'Password', or visible login form).
-        await page.goto("http://localhost:3000/settings")
-        
-        # -> Navigate to /settings and verify the unauthenticated visitor is redirected to the login page (look for 'Welcome back', 'Sign in', 'Email', 'Password', input fields).
-        await page.goto("http://localhost:3000/settings")
-        
-        # --> Test passed — verified by AI agent
+        # --> Assertions to verify final state
         frame = context.pages[-1]
-        current_url = await frame.evaluate("() => window.location.href")
-        assert current_url is not None, "Test completed successfully"
+        assert await frame.locator("xpath=//*[contains(., 'Log in')]").nth(0).is_visible(), "The login page should be displayed when an unauthenticated user navigates to /dashboard."
+        assert await frame.locator("xpath=//*[contains(., 'Log in')]").nth(0).is_visible(), "The login page should be displayed when an unauthenticated user navigates to /chat."
+        assert await frame.locator("xpath=//*[contains(., 'Log in')]").nth(0).is_visible(), "The login page should be displayed when an unauthenticated user navigates to /settings."]}]}]}]
+        
         await asyncio.sleep(5)
 
     finally:
