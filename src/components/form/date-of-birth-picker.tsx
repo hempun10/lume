@@ -55,8 +55,8 @@ export function DateOfBirthPicker({
 							defaultMonth={MAX_DOB}
 							disabled={{ after: MAX_DOB }}
 							captionLayout="dropdown"
-							fromYear={1920}
-							toYear={MAX_DOB.getFullYear()}
+							startMonth={new Date(1920, 0)}
+							endMonth={MAX_DOB}
 						/>
 					</PopoverContent>
 				</Popover>
