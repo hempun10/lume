@@ -1,4 +1,4 @@
-import { SmilePlus } from "lucide-react";
+import { Reply, SmilePlus } from "lucide-react";
 import { useState } from "react";
 import {
 	EmojiPicker,
@@ -17,6 +17,7 @@ interface MessageActionsProps {
 	messageId: string;
 	alignRight?: boolean;
 	onReact: (messageId: string, emoji: string) => void;
+	onReply?: (messageId: string) => void;
 }
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"] as const;
@@ -30,6 +31,7 @@ export function MessageActions({
 	messageId,
 	alignRight,
 	onReact,
+	onReply,
 }: MessageActionsProps) {
 	const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -89,6 +91,16 @@ export function MessageActions({
 					</EmojiPicker>
 				</PopoverContent>
 			</Popover>
+			{onReply ? (
+				<button
+					type="button"
+					onClick={() => onReply(messageId)}
+					className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:outline-none"
+					aria-label="Reply to message"
+				>
+					<Reply className="h-4 w-4" />
+				</button>
+			) : null}
 		</div>
 	);
 }

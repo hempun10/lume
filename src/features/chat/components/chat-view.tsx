@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth";
 import { cn } from "@/lib/utils";
 import { GAMES } from "../../games/data/games";
@@ -10,6 +10,7 @@ import {
 import { useGameInvite } from "../hooks/use-game-invite";
 import { useRealtimeChat } from "../hooks/use-realtime-chat";
 import { useStrangerProfile } from "../hooks/use-stranger-profile";
+import type { ReplyTarget } from "../types";
 import { ChatEndedView } from "./chat-ended-view";
 import { ChatHeader } from "./chat-header";
 import { GameInviteModal } from "./game-invite-modal";
@@ -42,6 +43,22 @@ export function ChatView({ roomId }: ChatViewProps) {
 
 	const gameInvite = useGameInvite(channelRef, userId);
 	const [reportOpen, setReportOpen] = useState(false);
+	const [replyingTo, setReplyingTo] = useState<ReplyTarget | null>(null);
+
+	const handleReply = useCallback(
+		(messageId: string) => {
+			const target = session.messages.find((m) => m.id === messageId);
+			if (!target) return;
+			setReplyingTo({
+				id: target.id,
+				senderId: target.senderId,
+				text: target.text,
+			});
+		},
+		[session.messages],
+	);
+
+	const handleCancelReply = useCallback(() => setReplyingTo(null), []);
 
 	// Auto-open game panel when invite is accepted (by either side)
 	useEffect(() => {
@@ -156,6 +173,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 					strangerInterests={strangerProfile?.interests}
 					onPromptSelect={sendMessage}
 					onReact={toggleReaction}
+					onReply={handleReply}
 				/>
 				{session.messages.length > 0 &&
 					strangerProfile?.interests &&
@@ -165,7 +183,13 @@ export function ChatView({ roomId }: ChatViewProps) {
 							onSelect={sendMessage}
 						/>
 					)}
-				<MessageInput onSend={sendMessage} onTyping={broadcastTyping} />
+				<MessageInput
+					onSend={sendMessage}
+					onTyping={broadcastTyping}
+					replyTo={replyingTo}
+					onCancelReply={handleCancelReply}
+					currentUserId={userId}
+				/>
 			</div>
 
 			{/* Game panel — full-width on mobile, 40% side panel on desktop */}
