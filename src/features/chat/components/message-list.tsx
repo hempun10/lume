@@ -34,20 +34,47 @@ export function MessageList({
 	}, [messageCount, isStrangerTyping]);
 
 	// Jump to the original message when a quoted preview is clicked.
-	// We briefly highlight it so the user can orient.
+	// We briefly highlight the inner bubble so the user can orient (the
+	// outer wrapper includes the reaction row and toolbar, which makes
+	// the outline look loose — targeting the inner bubble keeps the cue
+	// tight).
 	const scrollToMessage = useCallback((id: string) => {
 		const container = containerRef.current;
 		if (!container) return;
-		const el = container.querySelector<HTMLElement>(
+		const wrapper = container.querySelector<HTMLElement>(
 			`[data-message-id="${id}"]`,
 		);
-		if (!el) return;
-		el.scrollIntoView({ behavior: "smooth", block: "center" });
-		el.classList.add("ring-2", "ring-primary/60", "rounded-2xl");
+		if (!wrapper) return;
+		wrapper.scrollIntoView({ behavior: "smooth", block: "center" });
+		const bubble = wrapper.querySelector<HTMLElement>("[data-bubble]");
+		const target = bubble ?? wrapper;
+		target.classList.add(
+			"ring-2",
+			"ring-primary",
+			"ring-offset-2",
+			"ring-offset-background",
+		);
 		window.setTimeout(() => {
-			el.classList.remove("ring-2", "ring-primary/60", "rounded-2xl");
+			target.classList.remove(
+				"ring-2",
+				"ring-primary",
+				"ring-offset-2",
+				"ring-offset-background",
+			);
 		}, 1200);
 	}, []);
+
+	// When the most recent message contains a GIF, its image reports its
+	// real size only after decoding. That late size change can leave the
+	// user scrolled above the bottom. Re-run the scroll whenever such a
+	// load completes so the newest content stays in view.
+	const handleGifLoad = useCallback(
+		(messageId: string) => {
+			if (messages[messages.length - 1]?.id !== messageId) return;
+			bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+		},
+		[messages],
+	);
 
 	if (messages.length === 0 && !isStrangerTyping) {
 		return onPromptSelect ? (
@@ -73,7 +100,7 @@ export function MessageList({
 						key={msg.id}
 						data-message-id={msg.id}
 						className={cn(
-							"group flex flex-col transition-shadow duration-300",
+							"group flex flex-col",
 							isOwn ? "items-end" : "items-start",
 						)}
 					>
@@ -84,8 +111,9 @@ export function MessageList({
 							)}
 						>
 							<div
+								data-bubble
 								className={cn(
-									"flex max-w-full flex-col overflow-hidden rounded-2xl text-sm",
+									"flex max-w-full flex-col overflow-hidden rounded-2xl text-sm transition-[box-shadow] duration-200",
 									msg.gif && !msg.text ? "bg-transparent" : "px-4 py-2",
 									isOwn
 										? msg.gif && !msg.text
@@ -141,9 +169,14 @@ export function MessageList({
 										width={msg.gif.width}
 										height={msg.gif.height}
 										loading="lazy"
+										onLoad={() => handleGifLoad(msg.id)}
 										className={cn(
-											"block h-auto max-w-[240px] rounded-xl bg-muted",
-											msg.text ? "mb-1" : "",
+											"block h-auto max-w-[240px] bg-muted/60",
+											// When the image fills the bubble (no text), the
+											// wrapper's rounded-2xl + overflow-hidden already
+											// clips it. With text, give the image its own
+											// corner radius so it feels tucked inside the bubble.
+											msg.text ? "mb-1 rounded-xl" : "",
 										)}
 									/>
 								) : null}

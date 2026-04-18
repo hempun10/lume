@@ -12,6 +12,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import type { GifResult } from "../lib/giphy";
 import type { GifAttachment, ReplyTarget } from "../types";
 import { GifPicker } from "./gif-picker";
@@ -117,8 +118,8 @@ export function MessageInput({
 	return (
 		<div className="shrink-0 border-t border-border/50">
 			{replyTo ? (
-				<div className="flex items-start gap-2 px-4 pt-3">
-					<div className="flex min-w-0 flex-1 items-stretch gap-2 rounded-lg border-l-2 border-primary bg-muted/60 px-3 py-2">
+				<div className="px-4 pt-3">
+					<div className="flex min-w-0 items-stretch gap-2 rounded-lg border-l-2 border-primary bg-muted/60 px-3 py-2">
 						<div className="min-w-0 flex-1">
 							<p className="text-xs font-medium text-primary">
 								Replying to {replyLabel}
@@ -130,7 +131,7 @@ export function MessageInput({
 						<button
 							type="button"
 							onClick={onCancelReply}
-							className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+							className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 							aria-label="Cancel reply"
 						>
 							<X className="h-3.5 w-3.5" />
@@ -138,7 +139,13 @@ export function MessageInput({
 					</div>
 				</div>
 			) : null}
-			<form onSubmit={handleSubmit} className="flex items-end gap-1 p-4">
+			<form
+				onSubmit={handleSubmit}
+				className={cn(
+					"flex items-end gap-1 px-4 pb-4",
+					replyTo ? "pt-2" : "pt-4",
+				)}
+			>
 				<Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
 					<PopoverTrigger asChild>
 						<Button
