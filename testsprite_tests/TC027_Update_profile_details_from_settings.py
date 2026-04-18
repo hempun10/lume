@@ -33,13 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' CTA to reach the login/signup flow and then inspect the login form fields.
+        # -> Click the 'Start Chatting Free' button to reach the login/signup flow.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email and password fields and submit the Sign in form (use user-a@example.com / password123).
+        # -> Fill the email and password fields, submit the login form (Sign in), then proceed to open Settings.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -55,13 +55,13 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Open the profile edit/settings by clicking the 'Edit your profile' link so we can update the display name.
+        # -> Open Settings / Edit Profile to update the display name (click the 'Edit' link).
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section[4]/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the display name with 'Alice Updated', save changes, wait for the UI to show confirmation, and extract/verify the success message and the updated display name in the settings form.
+        # -> Fill the Display name input with a new name ('Alice Updated'), click 'Save changes', wait for the UI to respond, and then verify a success confirmation and that the Display name was updated in the settings section.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div/form/div/div/input').nth(0)

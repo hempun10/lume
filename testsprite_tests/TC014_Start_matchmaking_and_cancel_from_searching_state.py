@@ -33,10 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Navigate to /login
-        await page.goto("http://localhost:3000/login")
+        # -> Click the 'Start Chatting Free' button to proceed to the login/signup flow.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
+        await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email and password fields with the provided credentials and click Sign in to log in (user-a@example.com / password123).
+        # -> Fill the email and password fields and submit the Sign in form for user-a@example.com.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -52,13 +55,19 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Start matching' button to enqueue for matchmaking, then wait for the searching state to appear (allow up to 6 seconds).
+        # -> Click the 'Start matching' button to enter the matchmaking queue, then wait for the searching state to appear.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Cancel' button to leave matchmaking and verify the lobby (ready) state is displayed.
+        # -> Click 'Start matching' again to attempt entering the matchmaking queue, then wait for the searching state to appear.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Click the 'Cancel' button to exit the matchmaking queue and verify the lobby (ready) state is displayed.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/button').nth(0)

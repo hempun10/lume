@@ -7,10 +7,14 @@ import type { LoginFormValues, SignupFormValues } from "../schema";
 import { LoginForm } from "./form-login";
 import { SignupForm } from "./form-signup";
 
-export function LoginView() {
+export function LoginView({
+	initialMode = "login",
+}: {
+	initialMode?: "login" | "signup";
+} = {}) {
 	const navigate = useNavigate();
 	const { session, isLoading } = useAuth();
-	const [mode, setMode] = useState<"login" | "signup">("login");
+	const [mode, setMode] = useState<"login" | "signup">(initialMode);
 
 	const loginMutation = useMutation({
 		mutationFn: signInWithPassword,

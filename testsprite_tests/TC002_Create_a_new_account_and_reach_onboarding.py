@@ -33,28 +33,28 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the login/sign-in view so I can switch to the Sign up tab.
+        # -> Open the Sign In page/modal so I can switch to the Sign up tab and fill the signup form.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/header/nav/div[2]/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Sign up' button to switch to the Sign up tab so the signup form fields appear.
+        # -> Click the 'Sign up' button to open the signup form so I can observe its fields before filling them.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email field with a unique email address and the password field with a valid password, then submit the signup form.
+        # -> Fill a unique email and a valid password into the signup form, submit it, and verify the app routes to onboarding.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('automated+20260417@example.com')
+        await asyncio.sleep(3); await elem.fill('signup-20260417-230000@example.com')
         
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('StrongPassw0rd!')
+        await asyncio.sleep(3); await elem.fill('Password123!')
         
         frame = context.pages[-1]
         # Click element

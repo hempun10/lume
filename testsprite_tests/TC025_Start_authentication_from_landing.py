@@ -33,7 +33,7 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' call-to-action on the landing page to start authentication and reach the login screen.
+        # -> Click the 'Start Chatting Free' call-to-action to begin the sign-in/sign-up flow and reach the login screen.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)

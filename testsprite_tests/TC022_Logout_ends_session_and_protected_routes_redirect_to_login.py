@@ -33,13 +33,10 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the login/sign-up flow by clicking 'Start Chatting Free' (element index 148).
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # -> Navigate to the login page (/login) so we can sign in.
+        await page.goto("http://localhost:3000/login")
         
-        # -> Fill in the email and password fields and submit the sign-in form (input index 699, input index 707, click index 712).
+        # -> Fill the email and password fields and submit the sign-in form.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -55,49 +52,16 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Submit the sign-in form (send Enter), then navigate to /logout, then navigate to /dashboard and verify the app shows the login page.
+        # -> Navigate to /logout to clear any session and observe behavior (whether it redirects or updates UI).
         await page.goto("http://localhost:3000/logout")
         
-        # -> Navigate to /dashboard and verify the app redirects to the login page (i.e., the login form or /login is displayed).
+        # -> Navigate to /dashboard and verify that the app redirects to the login page (protected-route enforcement).
         await page.goto("http://localhost:3000/dashboard")
         
-        # -> Open the account/avatar menu to reveal the logout action so we can sign out via the UI.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/header/div[2]/button[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click the 'Log out' menu item to sign out, wait for the app to process, then navigate to /dashboard and verify the app shows the login page (redirect to /login).
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div[2]/div/a[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        await page.goto("http://localhost:3000/dashboard")
-        
-        # -> Fill the Email and Password fields with user-a@example.com / password123 and submit the sign-in form.
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('user-a@example.com')
-        
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('password123')
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Allow the app to process the sign-in, then navigate to /dashboard to confirm we reach the logged-in dashboard (or see login if sign-in failed). After that, perform a UI logout and then navigate to /dashboard to verify we are redirected to the login page.
-        await page.goto("http://localhost:3000/dashboard")
-        
-        # --> Test passed — verified by AI agent
+        # --> Assertions to verify final state
         frame = context.pages[-1]
         current_url = await frame.evaluate("() => window.location.href")
-        assert current_url is not None, "Test completed successfully"
+        assert '/login' in current_url, "The page should have navigated to the login page after logging out and attempting to access a protected route."
         await asyncio.sleep(5)
 
     finally:

@@ -33,13 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the login/signup screen by clicking the 'Start Chatting Free' button (to reach /login or equivalent).
+        # -> Click the 'Sign In' link to navigate to the login page.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
+        elem = frame.locator('xpath=/html/body/header/nav/div[2]/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email field (index 700) with user-a@example.com, fill the password field (index 708) with password123, then click the 'Sign in' button (index 713) to submit the form.
+        # -> Fill the email and password fields with the provided test credentials and submit the form.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
