@@ -33,13 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the sign-in flow by clicking 'Start Chatting Free' to get to login (or sign-up) so we can authenticate as user-a@example.com.
+        # -> Click the 'Start Chatting Free' CTA to reach the authentication flow (login/signup).
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email and password fields and submit the sign-in form to authenticate as user-a@example.com.
+        # -> Fill the email and password fields and submit the sign-in form (use user-a@example.com / password123).
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -55,16 +55,13 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Navigate to /login and wait for the sign-in page to finish rendering so the email and password inputs are available.
-        await page.goto("http://localhost:3000/login")
-        
-        # -> Open the full games catalogue by clicking 'View all →' so I can browse Available and Coming Soon sections.
+        # -> Click the 'View all →' button under 'Games to try' to open the full games catalogue so we can browse the 'Playable' and 'Soon' sections.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section[2]/div/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Play' button for an available game (Tic Tac Toe) to start matchmaking / select the game, then verify the dashboard shows that game preselected.
+        # -> Click the 'Play' button for the first available game (Tic Tac Toe) to select it, then wait for the app to navigate/update.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/div[3]/button').nth(0)

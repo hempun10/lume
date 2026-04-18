@@ -33,16 +33,15 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Navigate to /dashboard and verify whether an unauthenticated user is redirected to the login page.
+        # -> Navigate to /dashboard and verify that an unauthenticated user is redirected to the login page (or shown the login form).
         await page.goto("http://localhost:3000/dashboard")
         
-        # -> Navigate to /chat and verify the user is redirected to the login page.
+        # -> Navigate to /chat and verify an unauthenticated user is redirected to or shown the login page.
         await page.goto("http://localhost:3000/chat")
         
-        # -> Navigate to /games and verify whether an unauthenticated user is redirected to the login page.
+        # -> Navigate to /games and verify that an unauthenticated user is redirected to or shown the login page (then do the same for /settings).
         await page.goto("http://localhost:3000/games")
         
-        # -> Navigate to /settings and verify whether an unauthenticated user is redirected to the login page, then finish the test.
         await page.goto("http://localhost:3000/settings")
         
         # --> Test passed — verified by AI agent

@@ -33,13 +33,10 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the login/signup flow by clicking 'Start Chatting Free' to reach the login page.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # -> Navigate to /login and open the login form.
+        await page.goto("http://localhost:3000/login")
         
-        # -> Fill the email field with user-a@example.com, fill the password field with an incorrect password, submit the form, and wait for the page response to verify an invalid-credentials error remains on the login page.
+        # -> Fill the email field with user-a@example.com (index 638) as the immediate next action.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -48,7 +45,7 @@ async def run_test():
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('wrongpassword')
+        await asyncio.sleep(3); await elem.fill('invalidpassword')
         
         frame = context.pages[-1]
         # Click element

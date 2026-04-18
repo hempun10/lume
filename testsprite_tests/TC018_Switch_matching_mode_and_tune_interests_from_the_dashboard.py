@@ -33,13 +33,10 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' button to open the login/signup flow (reach /login).
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # -> Navigate to the login page at /login so I can sign in with the provided test account.
+        await page.goto("http://localhost:3000/login")
         
-        # -> Fill the email field with user-a@example.com, fill the password, then submit the sign in form.
+        # -> Fill the email field with user-a@example.com and the password field with password123, then submit the form.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -55,7 +52,24 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Games' matching mode radio button to switch to Games mode, then adjust an interest chip (enable 'Music'), then switch back to 'Text Chat' and verify mode reflected.
+        # -> Click the 'Games' match mode radio to switch to games matching. After clicking, stop and wait for the UI to reflect the mode change before making any chip changes.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/button[2]').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Click the 'Movies' interest chip (index 1499) to toggle it on, then switch back to Text Chat by clicking the Text Chat radio (index 1493), and verify the lobby controls update accordingly.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div[2]/div[2]/button[3]').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Click the Games matching radio (index 1494) to switch to Games mode (immediate action).
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/button[2]').nth(0)
@@ -63,12 +77,7 @@ async def run_test():
         
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div[2]/div[2]/button[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/main/div/section/div/div[2]/div[2]/button[3]').nth(0)
         await asyncio.sleep(3); await elem.click()
         
         # --> Test passed — verified by AI agent

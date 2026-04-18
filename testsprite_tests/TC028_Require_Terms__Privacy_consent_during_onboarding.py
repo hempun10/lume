@@ -33,49 +33,30 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' button to begin the sign-in / onboarding flow (this should lead to login or signup).
+        # -> Open the signup / auth flow by clicking 'Start Chatting Free' to create a new account for onboarding.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email and password fields and submit the login form by clicking 'Sign in'.
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        # -> Navigate to /signup so I can create a fresh un-onboarded account via the signup flow.
+        await page.goto("http://localhost:3000/signup")
         
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('password123')
-        
+        # -> Click the 'Back to home' link to return to the homepage so I can locate an alternate path to signup or the auth flow.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Open the profile edit / onboarding page by clicking the 'Edit' control so the onboarding form is visible.
+        # -> Click the 'Start Chatting Free' button to open the login/auth flow so we can sign in or reach onboarding.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/section[4]/div/a').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Scroll to reveal the Terms & Privacy consent checkbox, observe its state, then submit the onboarding preferences while leaving consent unchecked to verify an inline validation error.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/div/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Click 'Save preferences' while consent remains unchecked, wait for the UI to update, and extract visible text to check for an inline consent validation error.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/div/button').nth(0)
+        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        assert await frame.locator("xpath=//*[contains(., 'You must accept the Terms & Privacy')]").nth(0).is_visible(), "The onboarding form should show a consent validation error after submitting without checking the Terms & Privacy consent."
+        assert await frame.locator("xpath=//*[contains(., 'You must accept the Terms & Privacy')]").nth(0).is_visible(), "The onboarding form should show a consent validation error because submission is blocked when Terms & Privacy are not accepted"
         await asyncio.sleep(5)
 
     finally:

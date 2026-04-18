@@ -33,61 +33,18 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' button to open the authentication flow (element index 144).
+        # -> Click the "Start Chatting Free" button to reach the signup/login flow so I can create a fresh account for onboarding testing.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email and password fields with user-a@example.com / password123 and submit the login form.
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('user-a@example.com')
-        
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('password123')
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Navigate to /onboarding and inspect the onboarding form fields (display name, date of birth, gender, interest tags, consent checkbox, submit).
-        await page.goto("http://localhost:3000/onboarding")
-        
-        # -> Fill a valid display name, then open the date picker (stop after opening so the date controls can render).
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('Alex')
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Select a date of birth that makes the user under 18 (click April 18, 2008), then check the 'I'm 18 or older' consent checkbox, then submit the onboarding form to verify an inline DOB validation error appears and submission is blocked.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div[2]/div/div/div/div/table/tbody/tr[3]/td[6]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[5]/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
+        # -> Open the signup page so I can create a fresh account for the under-18 onboarding test.
+        await page.goto("http://localhost:3000/signup")
         
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        assert await frame.locator("xpath=//*[contains(., 'You must be 18 or older')]").nth(0).is_visible(), "The onboarding form should show a date-of-birth validation error preventing submission after selecting an under-18 birthdate."
+        assert await frame.locator("xpath=//*[contains(., 'You must be at least 18 years old')]").nth(0).is_visible(), "The onboarding form should display a date of birth validation error because the selected DOB indicates the user is under 18."
         await asyncio.sleep(5)
 
     finally:

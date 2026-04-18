@@ -33,13 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the login page by clicking 'Start Chatting Free'.
+        # -> Click the 'Start Chatting Free' button to reach the login/signup page.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email field with user-a@example.com, then fill the password, submit the form, and wait for the app to update.
+        # -> Fill email and password, submit the sign-in form (click the 'Sign in' button). After the login completes, the next immediate action will be to locate and click the sign-out control in the authenticated navigation.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -55,21 +55,18 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Open the authenticated user menu (avatar/profile) so the Sign out control is visible, then click Sign out.
+        # -> Open the authenticated user menu so the Sign out control is visible.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/header/div[2]/button[2]').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Log out' menu item to sign out, wait for the app to update, then navigate to /dashboard to verify it redirects to the login page.
+        # -> Click the 'Log out' menu item to sign out, then navigate to /dashboard to verify it redirects to /login.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div[2]/div/a[2]').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        await page.goto("http://localhost:3000/dashboard")
-        
-        # -> Navigate to /dashboard and confirm the app redirects to the login page (verify protected page is not accessible when signed out).
         await page.goto("http://localhost:3000/dashboard")
         
         # --> Test passed — verified by AI agent

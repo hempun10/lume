@@ -33,21 +33,16 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Navigate to /dashboard and verify the app redirects to the login page or shows the login form for unauthenticated users.
+        # -> Navigate to /dashboard and verify the visitor is redirected to the login page (look for login form or 'Log in' text).
         await page.goto("http://localhost:3000/dashboard")
         
-        # -> Wait for the SPA to finish rendering, then navigate to /chat and verify it redirects to the login page; next navigate to /settings and verify the same.
+        # -> Navigate to /chat and verify the visitor is redirected to the login page (look for 'Welcome back', 'Sign in', 'Email', 'Password', or login form fields).
         await page.goto("http://localhost:3000/chat")
         
-        # -> Navigate to /dashboard and confirm the login page is shown (look for email and password inputs and the 'Sign in' button).
-        await page.goto("http://localhost:3000/dashboard")
+        # -> Navigate to /settings and verify that an unauthenticated visitor is redirected to the login page (look for 'Welcome back', 'Sign in', 'Email', 'Password', or visible login form).
+        await page.goto("http://localhost:3000/settings")
         
-        # -> Navigate to /dashboard and confirm the login page is displayed (look for email input, password input, and 'Sign in' button).
-        await page.goto("http://localhost:3000/dashboard")
-        
-        await page.goto("http://localhost:3000/chat")
-        
-        # -> Navigate to /settings and verify the login page is displayed (look for email input, password input, and 'Sign in' button).
+        # -> Navigate to /settings and verify the unauthenticated visitor is redirected to the login page (look for 'Welcome back', 'Sign in', 'Email', 'Password', input fields).
         await page.goto("http://localhost:3000/settings")
         
         # --> Test passed — verified by AI agent

@@ -33,23 +33,23 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' button to open the authentication / signup flow.
+        # -> Click the 'Start Chatting Free' button to open the signup/login flow so we can create a fresh account.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Sign up' button to switch to the signup form and reveal the signup inputs.
+        # -> Click the 'Sign up' tab to open the signup form, then re-observe the form fields before filling them.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill a unique email into the email field (index 785), fill a valid password into the password field (index 793), then click Create account (index 798) to submit the signup form.
+        # -> Fill a unique test email into the email field, fill a valid password, then submit the Create account form to start the signup and reach onboarding.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('lume-test-20260417-001@example.com')
+        await asyncio.sleep(3); await elem.fill('autotest-20260417-01@example.com')
         
         frame = context.pages[-1]
         # Input text

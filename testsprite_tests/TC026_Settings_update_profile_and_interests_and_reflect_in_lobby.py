@@ -33,13 +33,13 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Open the sign-in flow (navigate to the login page) by clicking the 'Start Chatting Free' button.
+        # -> Open the login/signup flow by clicking the 'Start Chatting Free' button so I can sign in as user-a@example.com.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email and password fields with user-a@example.com / password123 and submit the sign-in form.
+        # -> Fill the email and password fields with user-a@example.com / password123 and submit the Sign in form.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
@@ -55,32 +55,27 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Open the profile settings page by clicking 'Edit your profile' on the dashboard so I can observe the profile form fields.
+        # -> Click the 'Sign in' button to submit credentials and wait for the app to navigate to the dashboard.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Open Settings by clicking 'Edit your profile' so we can update the display name and interests.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/section[4]/div/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Update the display name to 'Test Display Name', save the profile form, add three interests (Music, Reading, Technology), save preferences, then return to the dashboard to verify the updated preferences.
+        # -> Update the display name to 'Test Display Name Updated', modify interests to include Movies, Travel, Reading, and Science while keeping Gaming and Music, save profile and preferences, navigate back to the dashboard, and extract visible dashboard text to verify the new display name and updated interests are reflected.
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('Test Display Name')
+        await asyncio.sleep(3); await elem.fill('Test Display Name Updated')
         
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div/form/div[4]/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[2]').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Select 'Reading' and 'Technology' interests, save preferences, navigate to the dashboard, and verify the dashboard shows Music, Reading, and Technology as selected interests.
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[6]').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[9]').nth(0)
         await asyncio.sleep(3); await elem.click()
         
         frame = context.pages[-1]
@@ -88,12 +83,34 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[11]').nth(0)
         await asyncio.sleep(3); await elem.click()
         
+        # -> Select Movies, Travel, Reading, and Science; click 'Save preferences'; navigate back to the dashboard; extract visible dashboard text to verify the display name and interests are reflected.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[3]').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[5]').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[6]').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Select Science, click 'Save preferences', navigate back to the dashboard, and extract visible dashboard text to verify the updated display name and full set of interests are reflected.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/fieldset/div/button[14]').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/main/div/div[2]/div[2]/form/div/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Wait for the save to complete, then navigate back to the dashboard so the updated preferences can be verified.
+        # -> Navigate back to the dashboard (click the Lume logo) and extract the visible dashboard text so we can verify the updated display name and interests are reflected there.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/header/a').nth(0)
@@ -101,7 +118,7 @@ async def run_test():
         
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        assert await frame.locator("xpath=//*[contains(., 'Music')]").nth(0).is_visible(), "The dashboard should show Music as a selected interest after saving preferences"
+        assert await frame.locator("xpath=//*[contains(., 'Test Display Name Updated')]").nth(0).is_visible(), "The dashboard should show the updated display name 'Test Display Name Updated' after saving settings"
         await asyncio.sleep(5)
 
     finally:

@@ -33,54 +33,38 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Sign In' button to open the login page so we can switch to the Sign up tab.
+        # -> Open the Sign In / authentication page so we can switch to the Sign up flow.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/header/nav/div[2]/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Sign up' button to switch to the sign up tab and reveal the sign-up form.
+        # -> Click the 'Sign up' button to open the sign up form so the signup fields can be filled.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/div/p/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Fill the email field with a new unique email address.
+        # -> Fill the 'Display name' field then open the Date of birth picker by clicking 'Pick a date' (index 891).
         frame = context.pages[-1]
         # Input text
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('test-3732-20260417@example.com')
-        
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('password123')
-        
-        frame = context.pages[-1]
-        # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
-        await asyncio.sleep(3); await elem.click()
-        
-        # -> Fill the Display name field, then open the Date of birth picker so the DOB can be set (stop after opening the date picker to wait for the date UI).
-        frame = context.pages[-1]
-        # Input text
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
-        await asyncio.sleep(3); await elem.fill('TestUser3732')
+        await asyncio.sleep(3); await elem.fill('Signup Tester')
         
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Select a DOB that makes the user 18+ (choose April 16, 2008), pick one interest, enable the consent checkbox, and submit the onboarding form.
+        # -> Select a valid 18+ DOB (April 17, 2008), choose at least one interest, check the 'I'm 18 or older' consent checkbox, then submit the onboarding form and verify the user lands on the dashboard.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div[2]/div/div/div/div/table/tbody/tr[3]/td[4]/button').nth(0)
+        elem = frame.locator('xpath=/html/body/div[2]/div/div/div/div/table/tbody/tr[3]/td[5]/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[4]/div/button[5]').nth(0)
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[4]/div/button[4]').nth(0)
         await asyncio.sleep(3); await elem.click()
         
         frame = context.pages[-1]
@@ -88,19 +72,25 @@ async def run_test():
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[5]/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Click the 'Start exploring Lume' button to submit onboarding and wait for the dashboard lobby to load.
+        # -> Click the 'Start exploring Lume' (submit onboarding) button and then verify the app navigates to the dashboard/lobby.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Open the Gender combobox so a gender option can be selected (then submit onboarding).
+        # -> Click the onboarding submit button ('Start exploring Lume') and wait for the app to navigate to the dashboard; if validation prevents submission, report the validation error.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Open the Gender combobox so the gender options are revealed (click the gender combobox control).
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div[2]/button').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Select a gender option (any) and submit the onboarding form, then wait for the dashboard lobby to load.
+        # -> Select a gender option (Male) from the open listbox, submit the onboarding form by clicking 'Start exploring Lume', then wait for the app to navigate to the dashboard and verify the result.
         frame = context.pages[-1]
         # Click element
         elem = frame.locator('xpath=/html/body/div[2]/div/div/div[2]').nth(0)
