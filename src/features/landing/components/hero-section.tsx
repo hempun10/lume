@@ -10,6 +10,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrowserMockup } from "./browser-mockup";
 import { ThemedImage } from "./themed-image";
 
 /**
@@ -118,14 +119,17 @@ export function HeroSection() {
 				</span>
 			</div>
 
-			<div className="mt-16 md:mt-20">
-				<ThemedImage
-					alt="Lume dashboard preview"
-					aspect="aspect-[16/10]"
-					placeholderLabel="hero dashboard"
-					lightSrc="/landing/dashboard-light.png"
-					darkSrc="/landing/dashboard-dark.png"
-				/>
+			<div className="mt-16 pb-20 md:mt-20 md:pb-24">
+				<BrowserMockup>
+					<ThemedImage
+						alt="Lume dashboard preview"
+						aspect="aspect-[16/10]"
+						placeholderLabel="hero dashboard"
+						lightSrc="/landing/dashboard-light.png"
+						darkSrc="/landing/dashboard-dark.png"
+						bare
+					/>
+				</BrowserMockup>
 			</div>
 		</section>
 	);

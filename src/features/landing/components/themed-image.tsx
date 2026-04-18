@@ -6,6 +6,10 @@ import { cn } from "@/lib/utils";
  * based on the current theme. While real assets are being produced the
  * component falls back to a labeled placeholder that respects the container
  * aspect ratio so the layout stays stable.
+ *
+ * Designed to sit inside `<BrowserMockup>`, so the image uses `rounded-lg`
+ * + a soft hairline ring that matches the chrome's inner edge. Pass
+ * `bare` to skip the ring/rounding when rendering outside a mockup.
  */
 export function ThemedImage({
 	lightSrc,
@@ -14,6 +18,7 @@ export function ThemedImage({
 	className,
 	aspect = "aspect-[16/10]",
 	placeholderLabel,
+	bare = false,
 }: {
 	lightSrc?: string;
 	darkSrc?: string;
@@ -23,6 +28,8 @@ export function ThemedImage({
 	aspect?: string;
 	/** Optional label shown inside the placeholder. */
 	placeholderLabel?: string;
+	/** When true, skip the default border/ring so the parent frame handles it. */
+	bare?: boolean;
 }) {
 	const { theme } = useTheme();
 	const src = theme === "dark" ? darkSrc : lightSrc;
@@ -31,7 +38,8 @@ export function ThemedImage({
 		return (
 			<div
 				className={cn(
-					"relative w-full overflow-hidden rounded-2xl border border-border bg-muted/40",
+					"relative w-full overflow-hidden rounded-lg",
+					!bare && "border border-border bg-muted/40",
 					aspect,
 					className,
 				)}
@@ -59,7 +67,10 @@ export function ThemedImage({
 			src={src}
 			alt={alt}
 			className={cn(
-				"w-full rounded-2xl border border-border object-cover",
+				"h-auto w-full max-w-full object-cover",
+				bare
+					? "rounded-lg ring-1 ring-gray-500/10 shadow-xs"
+					: "rounded-2xl border border-border",
 				aspect,
 				className,
 			)}

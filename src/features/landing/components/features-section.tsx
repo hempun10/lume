@@ -13,6 +13,7 @@ import {
 	UserCheck,
 	Users,
 } from "lucide-react";
+import { BrowserMockup } from "./browser-mockup";
 import { SectionBadge } from "./section-badge";
 import { ThemedImage } from "./themed-image";
 
@@ -182,14 +183,19 @@ function FeatureBlock({
 			<FeatureIconGrid features={features} />
 
 			{withPreview && (
-				<div className="mt-12">
-					<ThemedImage
-						alt={`${label} dashboard preview`}
-						aspect="aspect-[16/9]"
-						placeholderLabel={previewLabel ?? `${label.toLowerCase()} preview`}
-						lightSrc={previewLightSrc}
-						darkSrc={previewDarkSrc}
-					/>
+				<div className="mt-12 pb-20 md:pb-24">
+					<BrowserMockup>
+						<ThemedImage
+							alt={`${label} dashboard preview`}
+							aspect="aspect-[16/9]"
+							placeholderLabel={
+								previewLabel ?? `${label.toLowerCase()} preview`
+							}
+							lightSrc={previewLightSrc}
+							darkSrc={previewDarkSrc}
+							bare
+						/>
+					</BrowserMockup>
 				</div>
 			)}
 
