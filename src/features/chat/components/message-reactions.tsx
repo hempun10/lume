@@ -40,10 +40,10 @@ export function MessageReactions({
 						type="button"
 						onClick={() => onToggle(emoji)}
 						className={cn(
-							"flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs leading-none transition-colors",
+							"flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs leading-none transition-all duration-150 active:scale-95",
 							isMine
-								? "border-primary/40 bg-primary/15 text-primary"
-								: "border-border/60 bg-muted/70 text-muted-foreground hover:bg-muted",
+								? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20"
+								: "border-border/60 bg-muted/70 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground",
 						)}
 						aria-label={`${emoji} reaction (${users.length}). ${
 							isMine ? "Click to remove your reaction." : "Click to react."
