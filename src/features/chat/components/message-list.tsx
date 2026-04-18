@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "../types";
+import { MessageActions } from "./message-actions";
+import { MessageReactions } from "./message-reactions";
 import { PromptCards } from "./prompt-cards";
 
 interface MessageListProps {
@@ -9,6 +11,7 @@ interface MessageListProps {
 	userId: string;
 	strangerInterests?: string[];
 	onPromptSelect?: (text: string) => void;
+	onReact?: (messageId: string, emoji: string) => void;
 }
 
 export function MessageList({
@@ -17,6 +20,7 @@ export function MessageList({
 	userId,
 	strangerInterests = [],
 	onPromptSelect,
+	onReact,
 }: MessageListProps) {
 	const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -40,26 +44,51 @@ export function MessageList({
 
 	return (
 		<div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
-			{messages.map((msg) => (
-				<div
-					key={msg.id}
-					className={cn(
-						"flex",
-						msg.senderId === userId ? "justify-end" : "justify-start",
-					)}
-				>
+			{messages.map((msg) => {
+				const isOwn = msg.senderId === userId;
+				return (
 					<div
+						key={msg.id}
 						className={cn(
-							"max-w-[75%] break-words rounded-2xl px-4 py-2 text-sm",
-							msg.senderId === userId
-								? "rounded-br-md bg-primary text-primary-foreground"
-								: "rounded-bl-md bg-muted text-foreground",
+							"group flex flex-col",
+							isOwn ? "items-end" : "items-start",
 						)}
 					>
-						{msg.text}
+						<div
+							className={cn(
+								"flex max-w-[85%] items-center gap-1",
+								isOwn ? "flex-row-reverse" : "flex-row",
+							)}
+						>
+							<div
+								className={cn(
+									"max-w-full break-words rounded-2xl px-4 py-2 text-sm",
+									isOwn
+										? "rounded-br-md bg-primary text-primary-foreground"
+										: "rounded-bl-md bg-muted text-foreground",
+								)}
+							>
+								{msg.text}
+							</div>
+							{onReact ? (
+								<MessageActions
+									messageId={msg.id}
+									alignRight={isOwn}
+									onReact={onReact}
+								/>
+							) : null}
+						</div>
+						{msg.reactions && onReact ? (
+							<MessageReactions
+								reactions={msg.reactions}
+								userId={userId}
+								alignRight={isOwn}
+								onToggle={(emoji) => onReact(msg.id, emoji)}
+							/>
+						) : null}
 					</div>
-				</div>
-			))}
+				);
+			})}
 
 			{isStrangerTyping && (
 				<div className="flex justify-start">

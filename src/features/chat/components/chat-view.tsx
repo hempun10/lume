@@ -31,6 +31,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 		sendMessage,
 		endChat,
 		broadcastTyping,
+		toggleReaction,
 		isStrangerTyping,
 		isStrangerConnected,
 		channelRef,
@@ -154,6 +155,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 					userId={userId}
 					strangerInterests={strangerProfile?.interests}
 					onPromptSelect={sendMessage}
+					onReact={toggleReaction}
 				/>
 				{session.messages.length > 0 &&
 					strangerProfile?.interests &&

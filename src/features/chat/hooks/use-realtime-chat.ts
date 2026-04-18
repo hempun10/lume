@@ -8,6 +8,7 @@ interface UseRealtimeChatReturn {
 	sendMessage: (text: string) => void;
 	endChat: () => void;
 	broadcastTyping: () => void;
+	toggleReaction: (messageId: string, emoji: string) => void;
 	isStrangerTyping: boolean;
 	isStrangerConnected: boolean;
 	channelRef: React.RefObject<ReturnType<typeof supabase.channel> | null>;
@@ -27,6 +28,13 @@ interface BroadcastTypingPayload {
 
 interface BroadcastEndPayload {
 	sender_id: string;
+}
+
+interface BroadcastReactionPayload {
+	sender_id: string;
+	message_id: string;
+	emoji: string;
+	action: "add" | "remove";
 }
 
 type SessionUpdater = React.Dispatch<React.SetStateAction<ChatSession>>;
@@ -93,6 +101,67 @@ function handleIncomingEnd(
 		...prev,
 		status: "ended",
 		endedAt: new Date(),
+	}));
+}
+
+/**
+ * Pure reducer that toggles a reaction on a specific message within the
+ * message list. Always returns a fresh messages array (and fresh reaction
+ * map for the touched message) so React sees the update.
+ */
+function applyReactionUpdate(
+	messages: ChatMessage[],
+	messageId: string,
+	emoji: string,
+	userId: string,
+	action: "add" | "remove",
+): ChatMessage[] {
+	let changed = false;
+	const next = messages.map((msg) => {
+		if (msg.id !== messageId) return msg;
+
+		const current = msg.reactions ?? {};
+		const currentUsers = current[emoji] ?? [];
+
+		if (action === "add") {
+			if (currentUsers.includes(userId)) return msg;
+			changed = true;
+			return {
+				...msg,
+				reactions: { ...current, [emoji]: [...currentUsers, userId] },
+			};
+		}
+
+		// remove
+		if (!currentUsers.includes(userId)) return msg;
+		changed = true;
+		const nextUsers = currentUsers.filter((id) => id !== userId);
+		const { [emoji]: _removed, ...rest } = current;
+		return {
+			...msg,
+			reactions: nextUsers.length > 0 ? { ...rest, [emoji]: nextUsers } : rest,
+		};
+	});
+	return changed ? next : messages;
+}
+
+function handleIncomingReaction(
+	payload: { payload: unknown },
+	userId: string,
+	setSession: SessionUpdater,
+) {
+	const data = payload.payload as BroadcastReactionPayload;
+	if (data.sender_id === userId) return;
+
+	setSession((prev) => ({
+		...prev,
+		messages: applyReactionUpdate(
+			prev.messages,
+			data.message_id,
+			data.emoji,
+			data.sender_id,
+			data.action,
+		),
 	}));
 }
 
@@ -197,6 +266,9 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 		channel.on("broadcast", { event: "end_chat" }, (p: { payload: unknown }) =>
 			handleIncomingEnd(p, userId, setSession, setIsStrangerTyping),
 		);
+		channel.on("broadcast", { event: "reaction" }, (p: { payload: unknown }) =>
+			handleIncomingReaction(p, userId, setSession),
+		);
 		channel.on("presence", { event: "sync" }, () =>
 			handlePresenceSync(channel, userId, setIsStrangerConnected),
 		);
@@ -284,11 +356,52 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 		});
 	}, [userId, session.status]);
 
+	/**
+	 * Toggles the current user's reaction for a given message. If the user
+	 * already reacted with this emoji we remove it; otherwise we add it.
+	 * Optimistically updates local state and fans out over Broadcast.
+	 */
+	const toggleReaction = useCallback(
+		(messageId: string, emoji: string) => {
+			if (session.status !== "active" || !channelRef.current) return;
+
+			let action: "add" | "remove" = "add";
+			setSession((prev) => {
+				const target = prev.messages.find((m) => m.id === messageId);
+				const alreadyReacted = target?.reactions?.[emoji]?.includes(userId);
+				action = alreadyReacted ? "remove" : "add";
+				return {
+					...prev,
+					messages: applyReactionUpdate(
+						prev.messages,
+						messageId,
+						emoji,
+						userId,
+						action,
+					),
+				};
+			});
+
+			channelRef.current.send({
+				type: "broadcast",
+				event: "reaction",
+				payload: {
+					sender_id: userId,
+					message_id: messageId,
+					emoji,
+					action,
+				} satisfies BroadcastReactionPayload,
+			});
+		},
+		[userId, session.status],
+	);
+
 	return {
 		session,
 		sendMessage,
 		endChat,
 		broadcastTyping,
+		toggleReaction,
 		isStrangerTyping,
 		isStrangerConnected,
 		channelRef,
