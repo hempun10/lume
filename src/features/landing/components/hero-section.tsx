@@ -123,6 +123,8 @@ export function HeroSection() {
 					alt="Lume dashboard preview"
 					aspect="aspect-[16/10]"
 					placeholderLabel="hero dashboard"
+					lightSrc="/landing/dashboard-light.png"
+					darkSrc="/landing/dashboard-dark.png"
 				/>
 			</div>
 		</section>
