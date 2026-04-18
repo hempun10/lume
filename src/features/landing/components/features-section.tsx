@@ -148,6 +148,8 @@ interface FeatureBlockProps {
 	/** When true, renders the big dashboard image below the icon grid. */
 	withPreview?: boolean;
 	previewLabel?: string;
+	previewLightSrc?: string;
+	previewDarkSrc?: string;
 }
 
 function FeatureBlock({
@@ -159,6 +161,8 @@ function FeatureBlock({
 	callout,
 	withPreview = false,
 	previewLabel,
+	previewLightSrc,
+	previewDarkSrc,
 }: FeatureBlockProps) {
 	return (
 		<section>
@@ -183,6 +187,8 @@ function FeatureBlock({
 						alt={`${label} dashboard preview`}
 						aspect="aspect-[16/9]"
 						placeholderLabel={previewLabel ?? `${label.toLowerCase()} preview`}
+						lightSrc={previewLightSrc}
+						darkSrc={previewDarkSrc}
 					/>
 				</div>
 			)}
@@ -211,6 +217,8 @@ export function FeaturesSection() {
 				features={chatFeatures}
 				withPreview
 				previewLabel="chat preview"
+				previewLightSrc="/landing/chat-light.png"
+				previewDarkSrc="/landing/chat-dark.png"
 				callout="No swipes. No likes. Just the oldest good idea on the internet: two strangers, a blank window, say something."
 			/>
 
@@ -224,6 +232,8 @@ export function FeaturesSection() {
 				features={gameFeatures}
 				withPreview
 				previewLabel="games preview"
+				previewLightSrc="/landing/playing-game-light.png"
+				previewDarkSrc="/landing/playing-game-dark.png"
 				callout="You'll be surprised how fast ‘good game’ turns into a real conversation."
 			/>
 
