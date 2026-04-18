@@ -294,21 +294,23 @@ export function MessageList({
 													if (msg.replyTo) scrollToMessage(msg.replyTo.id);
 												}}
 												className={cn(
-													"mb-1 flex flex-col items-start gap-0.5 rounded-md border-l-2 px-2 py-1 text-left text-xs transition-colors",
+													// Inset panel inside the bubble. No left stripe —
+													// the tint alone separates it from the bubble body.
+													"-mx-1.5 -mt-0.5 mb-1 flex flex-col items-start gap-0.5 rounded-xl px-2.5 py-1.5 text-left text-xs transition-colors",
 													isGifOnly
-														? "border-primary bg-muted/80 hover:bg-muted"
+														? "bg-muted/80 hover:bg-muted"
 														: isOwn
-															? "-mx-1 border-white/60 bg-white/15 hover:bg-white/20"
-															: "-mx-1 border-primary bg-background/60 hover:bg-background/80",
+															? "bg-white/20 hover:bg-white/25"
+															: "bg-background/70 hover:bg-background/90",
 												)}
 												aria-label="Jump to replied message"
 											>
 												<span
 													className={cn(
-														"font-medium",
+														"font-semibold",
 														isOwn && !isGifOnly
-															? "text-white/90"
-															: "text-primary",
+															? "text-white/95"
+															: "text-foreground",
 													)}
 												>
 													{msg.replyTo.senderId === userId ? "You" : "Stranger"}
