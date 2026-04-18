@@ -1972,5 +1972,303 @@
       }
     ],
     "priority": "Low"
+  },
+  {
+    "id": "TC051",
+    "title": "Chat emoji picker inserts emoji at cursor position in message input",
+    "description": "Verifies the frimousse-based emoji picker opens from the smile icon in the chat composer, allows searching, inserts the selected emoji at the textarea caret position, closes the popover, and keeps focus on the textarea so typing can continue.",
+    "category": "Chat Messaging",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as user-a@example.com with password password123"
+      },
+      {
+        "type": "action",
+        "description": "Start matchmaking from the dashboard and wait for a matched chat room"
+      },
+      {
+        "type": "action",
+        "description": "Type the text 'Hello ' into the chat message textarea without submitting"
+      },
+      {
+        "type": "action",
+        "description": "Click the smile icon button in the chat composer labelled 'Insert emoji'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the emoji picker popover is visible with a search input"
+      },
+      {
+        "type": "action",
+        "description": "Type 'smile' into the emoji picker search input"
+      },
+      {
+        "type": "action",
+        "description": "Click the first emoji result in the grid"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the emoji picker popover closes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the chat textarea value now contains 'Hello ' followed by the selected emoji"
+      },
+      {
+        "type": "action",
+        "description": "Submit the message by pressing Enter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sent message bubble in the conversation list contains both the text and the emoji"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC052",
+    "title": "Reaction toolbar toggles an emoji reaction on a chat message",
+    "description": "Verifies the hover/focus message action toolbar exposes quick reaction emojis (👍 ❤️ 😂 😮 😢 🔥) plus a 'More reactions' button, clicking one adds a reaction chip with count 1 under the message, clicking the same chip again from the same user removes the reaction, and both sides of the conversation stay in sync via Supabase Broadcast.",
+    "category": "Chat Reactions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open two browser contexts and log in as user-a@example.com and user-b@example.com with password password123"
+      },
+      {
+        "type": "action",
+        "description": "Start matchmaking on both accounts and wait until they are paired into the same chat room"
+      },
+      {
+        "type": "action",
+        "description": "As user-a, send the text message 'react to me'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user-b sees the message 'react to me' in the conversation"
+      },
+      {
+        "type": "action",
+        "description": "As user-b, hover over user-a's received message bubble to reveal the action toolbar"
+      },
+      {
+        "type": "action",
+        "description": "Click the 👍 emoji in the action toolbar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a reaction chip showing 👍 with count 1 appears under the message on user-b's screen"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the same reaction chip 👍 1 appears under the same message on user-a's screen"
+      },
+      {
+        "type": "action",
+        "description": "As user-b, click the existing 👍 reaction chip under the message"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the 👍 reaction chip is removed from the message on both user-a and user-b screens"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC053",
+    "title": "Reply to message renders quoted preview and jumps to original on click",
+    "description": "Verifies that selecting Reply from the hover toolbar opens a reply composer strip above the textarea showing 'Replying to <name>' and a quoted snippet, sending with the reply attached renders a tinted inset quote panel inside the new bubble, and clicking that quote scrolls to and briefly highlights the original message. Also verifies the X button cancels reply mode.",
+    "category": "Chat Reply",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open two browser contexts and log in as user-a@example.com and user-b@example.com with password password123"
+      },
+      {
+        "type": "action",
+        "description": "Start matchmaking on both accounts and wait until they are paired into the same chat room"
+      },
+      {
+        "type": "action",
+        "description": "As user-a, send the text message 'Pineapple on pizza — defend your stance.'"
+      },
+      {
+        "type": "action",
+        "description": "As user-b, hover over user-a's message and click the reply icon in the action toolbar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a reply composer strip appears above the textarea showing 'Replying to stranger' and the quoted text 'Pineapple on pizza — defend your stance.'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the chat textarea is focused"
+      },
+      {
+        "type": "action",
+        "description": "Click the X button on the reply composer strip"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the reply composer strip is removed"
+      },
+      {
+        "type": "action",
+        "description": "As user-b, hover over user-a's message again and click the reply icon"
+      },
+      {
+        "type": "action",
+        "description": "As user-b, type 'New' in the textarea and press Enter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user-b's new outgoing message bubble contains an inset quote panel showing 'Stranger' label and the quoted text 'Pineapple on pizza — defend your stance.' without any left-border accent stripe"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user-a also sees the reply from user-b with the same quote panel embedded in the bubble"
+      },
+      {
+        "type": "action",
+        "description": "As user-a, scroll up if needed and click the quote panel inside user-b's reply bubble"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the view scrolls to user-a's original 'Pineapple on pizza — defend your stance.' message and the bubble briefly shows a highlight ring"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC054",
+    "title": "GIF picker sends a Giphy trending GIF as its own message",
+    "description": "Verifies the GIF picker popover opens from the ImagePlay icon in the composer, loads Giphy trending results, supports search, and clicking a result sends the GIF as a standalone message (no text) that renders as an image inside a rounded bubble on both sides of the chat.",
+    "category": "Chat GIF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open two browser contexts and log in as user-a@example.com and user-b@example.com with password password123"
+      },
+      {
+        "type": "action",
+        "description": "Start matchmaking on both accounts and wait until they are paired into the same chat room"
+      },
+      {
+        "type": "action",
+        "description": "As user-a, click the ImagePlay icon button in the chat composer labelled 'Send a GIF'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the GIF picker popover is visible with a search input and a trending grid of GIF thumbnails"
+      },
+      {
+        "type": "action",
+        "description": "Type 'cat' into the GIF picker search input and wait for results to load"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the GIF grid updates to show search results for 'cat'"
+      },
+      {
+        "type": "action",
+        "description": "Click the first GIF in the results grid"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the GIF picker popover closes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a new outgoing message bubble from user-a contains a GIF image with no accompanying text"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user-b sees the same incoming GIF image inside a bubble in the conversation"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC055",
+    "title": "Consecutive messages from the same sender stack with collapsed corners and a single tail",
+    "description": "Verifies iMessage-style grouping: when the same sender posts multiple messages within 60 seconds, the bubbles stack tightly, share a single visible tail on the last bubble of the group, collapse inner corner radii to a smaller value on the sender side, and widen spacing when the sender changes.",
+    "category": "Chat UI Grouping",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open two browser contexts and log in as user-a@example.com and user-b@example.com with password password123"
+      },
+      {
+        "type": "action",
+        "description": "Start matchmaking and wait until both accounts are paired into the same chat room"
+      },
+      {
+        "type": "action",
+        "description": "As user-a, rapidly send three text messages within 10 seconds: 'one', 'two', 'three'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify only the third ('three') bubble in user-a's view renders the SVG tail element; the first two bubbles render without a tail"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the first and second bubbles have a reduced bottom-right corner radius (collapsed corner) compared to a standalone bubble"
+      },
+      {
+        "type": "action",
+        "description": "As user-b, send the message 'hi'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user-b's incoming 'hi' bubble in user-a's view renders with its own tail on the opposite side and has a larger top margin than the intra-group spacing used between user-a's three bubbles"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC056",
+    "title": "Delivered label appears only under the most recent own message",
+    "description": "Verifies a small 'Delivered' caption is rendered below the most recent own outgoing message that ends a group, and that the caption moves to the newest message when additional ones are sent, never appearing under earlier own messages or under incoming messages.",
+    "category": "Chat UI Delivered Indicator",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open two browser contexts and log in as user-a@example.com and user-b@example.com with password password123"
+      },
+      {
+        "type": "action",
+        "description": "Start matchmaking and wait until both accounts are paired into the same chat room"
+      },
+      {
+        "type": "action",
+        "description": "As user-a, send the message 'first'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the text 'Delivered' is visible below user-a's 'first' message bubble"
+      },
+      {
+        "type": "action",
+        "description": "As user-a, send a second message 'second'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the 'Delivered' label is now visible only under the 'second' bubble and no longer under 'first'"
+      },
+      {
+        "type": "action",
+        "description": "As user-b, send the reply 'got it'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user-b's incoming 'got it' bubble in user-a's view does NOT show a 'Delivered' label under it"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the 'Delivered' label remains under user-a's most recent own message ('second')"
+      }
+    ],
+    "priority": "Medium"
   }
 ]
