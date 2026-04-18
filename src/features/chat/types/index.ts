@@ -10,22 +10,30 @@ export interface ReplyTarget {
 	text: string;
 }
 
+/**
+ * A GIF payload attached to a message. We keep intrinsic dimensions so
+ * the bubble can reserve space while the image loads (avoids layout
+ * shift on slow connections).
+ */
+export interface GifAttachment {
+	url: string;
+	width: number;
+	height: number;
+	title?: string;
+}
+
 export interface ChatMessage {
 	id: string;
 	senderId: string;
 	text: string;
 	timestamp: Date;
-	/**
-	 * Session-only reactions keyed by emoji. Each entry lists the user ids
-	 * that currently hold that reaction. Mutated in-place by broadcast
-	 * events; never persisted to the database.
-	 */
 	reactions?: Record<string, string[]>;
-	/**
-	 * When present, this message is a reply and carries a snapshot of
-	 * the message being quoted.
-	 */
 	replyTo?: ReplyTarget;
+	/**
+	 * Optional GIF attachment. When present the bubble renders the image
+	 * in place of text content.
+	 */
+	gif?: GifAttachment;
 }
 
 export type ChatStatus = "connecting" | "active" | "ended" | "disconnected";

@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth";
 import { supabase } from "@/lib/supabase/client";
-import type { ChatMessage, ChatSession, ReplyTarget } from "../types";
+import type {
+	ChatMessage,
+	ChatSession,
+	GifAttachment,
+	ReplyTarget,
+} from "../types";
 
 interface UseRealtimeChatReturn {
 	session: ChatSession;
-	sendMessage: (text: string, replyTo?: ReplyTarget) => void;
+	sendMessage: (
+		text: string,
+		options?: { replyTo?: ReplyTarget; gif?: GifAttachment },
+	) => void;
 	endChat: () => void;
 	broadcastTyping: () => void;
 	toggleReaction: (messageId: string, emoji: string) => void;
@@ -20,12 +28,20 @@ interface BroadcastReplySnapshot {
 	text: string;
 }
 
+interface BroadcastGifPayload {
+	url: string;
+	width: number;
+	height: number;
+	title?: string;
+}
+
 interface BroadcastMessagePayload {
 	sender_id: string;
 	text: string;
 	timestamp: string;
 	id: string;
 	reply_to?: BroadcastReplySnapshot;
+	gif?: BroadcastGifPayload;
 }
 
 interface BroadcastTypingPayload {
@@ -69,6 +85,14 @@ function handleIncomingMessage(
 					id: data.reply_to.id,
 					senderId: data.reply_to.sender_id,
 					text: data.reply_to.text,
+				}
+			: undefined,
+		gif: data.gif
+			? {
+					url: data.gif.url,
+					width: data.gif.width,
+					height: data.gif.height,
+					title: data.gif.title,
 				}
 			: undefined,
 	};
@@ -316,21 +340,35 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 	}, [userId, roomId]);
 
 	const sendMessage = useCallback(
-		(text: string, replyTo?: ReplyTarget) => {
-			if (session.status !== "active" || !text.trim() || !channelRef.current) {
-				return;
-			}
+		(
+			text: string,
+			options?: { replyTo?: ReplyTarget; gif?: GifAttachment },
+		) => {
+			const replyTo = options?.replyTo;
+			const gif = options?.gif;
+			// A message is valid if it has text OR a GIF attachment.
+			const trimmed = text.trim();
+			if (session.status !== "active" || !channelRef.current) return;
+			if (!trimmed && !gif) return;
 
 			const msgPayload: BroadcastMessagePayload = {
 				id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
 				sender_id: userId,
-				text: text.trim(),
+				text: trimmed,
 				timestamp: new Date().toISOString(),
 				reply_to: replyTo
 					? {
 							id: replyTo.id,
 							sender_id: replyTo.senderId,
 							text: replyTo.text,
+						}
+					: undefined,
+				gif: gif
+					? {
+							url: gif.url,
+							width: gif.width,
+							height: gif.height,
+							title: gif.title,
 						}
 					: undefined,
 			};
@@ -341,6 +379,7 @@ export function useRealtimeChat(roomId: string): UseRealtimeChatReturn {
 				text: msgPayload.text,
 				timestamp: new Date(msgPayload.timestamp),
 				replyTo,
+				gif,
 			};
 			setSession((prev) => ({
 				...prev,
