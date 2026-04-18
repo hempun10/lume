@@ -1,100 +1,27 @@
-import {
-	type Dispatch,
-	type SetStateAction,
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth";
 import { supabase } from "@/lib/supabase/client";
 import type { GameEngine, GameResult, Seat } from "../engines/types";
+import { stateForRound } from "./use-game-room.helpers";
+import type {
+	BroadcastCustomEventPayload,
+	BroadcastGameStartPayload,
+	BroadcastMovePayload,
+	BroadcastRematchPayload,
+	CustomEventHandler,
+	GameRoomStatus,
+	RoomData,
+	UseGameRoomOptions,
+	UseGameRoomReturn,
+} from "./use-game-room.types";
 
-interface BroadcastMovePayload {
-	sender_id: string;
-	move: number;
-	timestamp: string;
-}
-
-interface BroadcastGameStartPayload {
-	player_a: string;
-	player_b: string;
-	game_type: string;
-}
-
-interface BroadcastRematchPayload {
-	sender_id: string;
-}
-
-type RoomData = { user_a: string; user_b: string };
-
-export type GameRoomStatus =
-	| "connecting"
-	| "waiting_for_opponent"
-	| "playing"
-	| "finished";
-
-/**
- * Listener for a game-specific side-channel event on the shared
- * `game:${roomId}` broadcast channel. Games that need to transmit
- * state that doesn't fit the generic `number` move contract (e.g.
- * drawing strokes, user-authored text, out-of-band reveals) can
- * register a map of these.
- *
- * Self-sent events are filtered out upstream — handlers only fire
- * for events from the other seat.
- */
-// biome-ignore lint/suspicious/noExplicitAny: event payloads are game-specific.
-export type CustomEventHandler = (payload: any, senderId: string) => void;
-
-export interface UseGameRoomOptions {
-	customEvents?: Record<string, CustomEventHandler>;
-}
-
-export interface UseGameRoomReturn<State> {
-	gameState: State | null;
-	roomStatus: GameRoomStatus;
-	myTurn: boolean;
-	mySeat: Seat;
-	outcome: GameResult;
-	makeMove: (move: number) => void;
-	requestRematch: () => void;
-	rematchRequested: boolean;
-	opponentWantsRematch: boolean;
-	/**
-	 * Broadcast a game-specific side-channel event to the other seat.
-	 * Use for data that doesn't fit the generic move contract. The
-	 * sender does not receive their own event (channel is configured
-	 * with `self: false`).
-	 */
-	sendCustomEvent: (event: string, payload: unknown) => void;
-	/**
-	 * Direct setter for the shared game state. Boards use this inside
-	 * custom-event handlers (registered via `options.customEvents`) to
-	 * apply transitions that don't fit the numeric move contract —
-	 * e.g. receiving user-authored statements, or a reveal event that
-	 * exposes a value the sender kept private.
-	 */
-	setGameState: Dispatch<SetStateAction<State | null>>;
-}
-
-/**
- * Derive which seat starts a given round from the immutable original
- * room. Round 0 uses the original roles (user_a starts). Each
- * subsequent round swaps starting player.
- *
- * Because both clients share the same `originalRoom` and independently
- * bump `round` in lockstep, they always agree on the assignment.
- */
-function stateForRound<State>(
-	engine: GameEngine<State>,
-	originalRoom: RoomData,
-	round: number,
-): State {
-	const first = round % 2 === 0 ? originalRoom.user_a : originalRoom.user_b;
-	const second = round % 2 === 0 ? originalRoom.user_b : originalRoom.user_a;
-	return engine.createInitialState(first, second);
-}
+// Re-export for existing consumers that imported from this module.
+export type {
+	CustomEventHandler,
+	GameRoomStatus,
+	UseGameRoomOptions,
+	UseGameRoomReturn,
+} from "./use-game-room.types";
 
 /**
  * Generic game room hook — works for any turn-based game whose engine
@@ -221,11 +148,7 @@ export function useGameRoom<State>(
 			// events by name. Game boards register handlers via
 			// `options.customEvents`; payload shape is up to each game.
 			channel.on("broadcast", { event: "custom_event" }, (payload) => {
-				const d = payload.payload as {
-					sender_id: string;
-					event: string;
-					data: unknown;
-				};
+				const d = payload.payload as BroadcastCustomEventPayload;
 				if (!d || d.sender_id === userId) return;
 				const handler = customEventsRef.current?.[d.event];
 				if (handler) handler(d.data, d.sender_id);
