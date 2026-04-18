@@ -85,10 +85,15 @@ export function MessageList({
 						>
 							<div
 								className={cn(
-									"flex max-w-full flex-col gap-1 rounded-2xl px-4 py-2 text-sm",
+									"flex max-w-full flex-col overflow-hidden rounded-2xl text-sm",
+									msg.gif && !msg.text ? "bg-transparent" : "px-4 py-2",
 									isOwn
-										? "rounded-br-md bg-primary text-primary-foreground"
-										: "rounded-bl-md bg-muted text-foreground",
+										? msg.gif && !msg.text
+											? "rounded-br-md"
+											: "rounded-br-md bg-primary text-primary-foreground"
+										: msg.gif && !msg.text
+											? "rounded-bl-md"
+											: "rounded-bl-md bg-muted text-foreground",
 								)}
 							>
 								{msg.replyTo ? (
@@ -98,17 +103,21 @@ export function MessageList({
 											if (msg.replyTo) scrollToMessage(msg.replyTo.id);
 										}}
 										className={cn(
-											"-mx-1 flex flex-col items-start gap-0.5 rounded-md border-l-2 px-2 py-1 text-left text-xs transition-colors",
-											isOwn
-												? "border-primary-foreground/60 bg-primary-foreground/10 hover:bg-primary-foreground/15"
-												: "border-primary bg-background/60 hover:bg-background/80",
+											"mb-1 flex flex-col items-start gap-0.5 rounded-md border-l-2 px-2 py-1 text-left text-xs transition-colors",
+											msg.gif && !msg.text
+												? "border-primary bg-muted/80 hover:bg-muted"
+												: isOwn
+													? "-mx-1 border-primary-foreground/60 bg-primary-foreground/10 hover:bg-primary-foreground/15"
+													: "-mx-1 border-primary bg-background/60 hover:bg-background/80",
 										)}
 										aria-label="Jump to replied message"
 									>
 										<span
 											className={cn(
 												"font-medium",
-												isOwn ? "text-primary-foreground/90" : "text-primary",
+												isOwn && !(msg.gif && !msg.text)
+													? "text-primary-foreground/90"
+													: "text-primary",
 											)}
 										>
 											{msg.replyTo.senderId === userId ? "You" : "Stranger"}
@@ -116,7 +125,7 @@ export function MessageList({
 										<span
 											className={cn(
 												"line-clamp-1 break-words",
-												isOwn
+												isOwn && !(msg.gif && !msg.text)
 													? "text-primary-foreground/80"
 													: "text-muted-foreground",
 											)}
@@ -125,7 +134,22 @@ export function MessageList({
 										</span>
 									</button>
 								) : null}
-								<span className="break-words">{msg.text}</span>
+								{msg.gif ? (
+									<img
+										src={msg.gif.url}
+										alt={msg.gif.title ?? "GIF"}
+										width={msg.gif.width}
+										height={msg.gif.height}
+										loading="lazy"
+										className={cn(
+											"block h-auto max-w-[240px] rounded-xl bg-muted",
+											msg.text ? "mb-1" : "",
+										)}
+									/>
+								) : null}
+								{msg.text ? (
+									<span className="break-words">{msg.text}</span>
+								) : null}
 							</div>
 							{onReact ? (
 								<MessageActions

@@ -1,4 +1,4 @@
-import { Send, Smile, X } from "lucide-react";
+import { ImagePlay, Send, Smile, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,10 +12,15 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import type { ReplyTarget } from "../types";
+import type { GifResult } from "../lib/giphy";
+import type { GifAttachment, ReplyTarget } from "../types";
+import { GifPicker } from "./gif-picker";
 
 interface MessageInputProps {
-	onSend: (text: string, replyTo?: ReplyTarget) => void;
+	onSend: (
+		text: string,
+		options?: { replyTo?: ReplyTarget; gif?: GifAttachment },
+	) => void;
 	onTyping?: () => void;
 	disabled?: boolean;
 	replyTo?: ReplyTarget | null;
@@ -33,6 +38,7 @@ export function MessageInput({
 }: MessageInputProps) {
 	const [value, setValue] = useState("");
 	const [emojiOpen, setEmojiOpen] = useState(false);
+	const [gifOpen, setGifOpen] = useState(false);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	// Auto-focus the textarea when entering reply mode so the user can
@@ -46,7 +52,7 @@ export function MessageInput({
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		if (!value.trim() || disabled) return;
-		onSend(value, replyTo ?? undefined);
+		onSend(value, { replyTo: replyTo ?? undefined });
 		setValue("");
 		onCancelReply?.();
 	}
@@ -88,6 +94,21 @@ export function MessageInput({
 		onTyping?.();
 	}
 
+	function handleGifSelect(gif: GifResult) {
+		setGifOpen(false);
+		// GIFs ship as their own message — no text, no draft disruption.
+		onSend("", {
+			replyTo: replyTo ?? undefined,
+			gif: {
+				url: gif.url,
+				width: gif.width,
+				height: gif.height,
+				title: gif.title,
+			},
+		});
+		onCancelReply?.();
+	}
+
 	const replyLabel =
 		replyTo && currentUserId && replyTo.senderId === currentUserId
 			? "yourself"
@@ -117,7 +138,7 @@ export function MessageInput({
 					</div>
 				</div>
 			) : null}
-			<form onSubmit={handleSubmit} className="flex items-end gap-2 p-4">
+			<form onSubmit={handleSubmit} className="flex items-end gap-1 p-4">
 				<Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
 					<PopoverTrigger asChild>
 						<Button
@@ -147,6 +168,28 @@ export function MessageInput({
 						</EmojiPicker>
 					</PopoverContent>
 				</Popover>
+				<Popover open={gifOpen} onOpenChange={setGifOpen}>
+					<PopoverTrigger asChild>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							disabled={disabled}
+							className="mr-1 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
+							aria-label="Send a GIF"
+						>
+							<ImagePlay className="h-5 w-5" />
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent
+						align="start"
+						side="top"
+						sideOffset={8}
+						className="w-fit p-0"
+					>
+						<GifPicker onSelect={handleGifSelect} />
+					</PopoverContent>
+				</Popover>
 				<textarea
 					ref={textareaRef}
 					value={value}
@@ -161,7 +204,7 @@ export function MessageInput({
 					type="submit"
 					size="icon"
 					disabled={disabled || !value.trim()}
-					className="shrink-0 rounded-xl"
+					className="ml-1 shrink-0 rounded-xl"
 				>
 					<Send className="h-4 w-4" />
 					<span className="sr-only">Send message</span>
