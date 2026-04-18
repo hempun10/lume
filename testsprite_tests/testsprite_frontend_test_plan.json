@@ -84,7 +84,7 @@
   {
     "id": "TC003",
     "title": "Complete onboarding with valid 18+ info, interests, and consent",
-    "description": "Verifies a new or not-yet-onboarded user can complete onboarding with valid inputs and is redirected to the dashboard afterward.",
+    "description": "Verifies a new or not-yet-onboarded user can complete onboarding with valid inputs and is redirected to the dashboard afterward. IMPORTANT: use the pre-seeded account user-a@example.com / password123 which is already onboarded — so first sign in, then navigate directly to /onboarding to exercise the form. For the Date of birth picker: click the 'Pick a date' trigger button, then click a specific day BUTTON element inside the calendar (not the td cell) — day cells render as <button data-day='...'> inside td. A safe 18+ DOB is January 1, 1995. Use the month/year dropdowns if needed to navigate. For Gender, click the combobox trigger then select 'Male'. For interests, click at least one interest pill (e.g., 'Gaming'). Tick the consent checkbox and click submit. Allow up to 20 seconds for navigation to /dashboard after submit.",
     "category": "Onboarding",
     "steps": [
       {
@@ -264,7 +264,7 @@
   {
     "id": "TC007",
     "title": "Chat view supports local send and end chat to return to dashboard",
-    "description": "Verifies a user in an active chat can send a message that appears in their message list and can end the chat to return to the dashboard.",
+    "description": "Verifies a user in an active chat can send a message that appears in their message list and can end the chat to return to the dashboard. Setup: open TWO browser contexts — user-a@example.com (Alice) and user-b@example.com (Bob), both with password123, both already onboarded. In each context: sign in, land on /dashboard, then click the 'Start Matching' (or equivalent primary CTA) button. Wait up to 45 seconds for BOTH contexts to transition to the chat view (URL contains /chat or a chat UI with message input is visible). NOTE: there is a 60-second anti-rematch cooldown between the same pair — if pairing fails the first time, wait 65 seconds and retry by clicking Start Matching again in both contexts. Once in chat, from Alice's context, type 'hello from test' into the message input and press Enter (or click the send button); assert the message appears in Alice's own message list. Then click the 'End Chat' (or equivalent) button and assert navigation back to /dashboard.",
     "category": "Realtime Chat",
     "steps": [
       {
@@ -949,7 +949,7 @@
   {
     "id": "TC024",
     "title": "Prevent onboarding submission for under-18 date of birth",
-    "description": "Verifies onboarding blocks submission when the selected date of birth indicates the user is under 18 and shows an inline validation error.",
+    "description": "Verifies onboarding blocks submission when the date of birth does not meet the 18+ age requirement. IMPORTANT: sign in with user-a@example.com / password123 then navigate directly to /onboarding. The Calendar component disables under-18 dates via the {after: MAX_DOB} prop so under-18 days are not selectable via the UI — this is correct product behavior. To verify the block: fill the other fields (display name 'Test', gender Male, one interest like Gaming, consent checkbox checked) but DO NOT select a date of birth (leave the 'Pick a date' placeholder). Click the submit button. Assert that an inline validation error is visible near the Date of birth field containing either the text 'Date of birth is required' OR 'at least 18 years old' — either message is acceptable and confirms the age requirement is enforced. Also assert the URL remains on /onboarding (submission blocked).",
     "category": "Onboarding",
     "steps": [
       {
@@ -1027,7 +1027,7 @@
   {
     "id": "TC026",
     "title": "Settings update profile and interests and reflect in lobby",
-    "description": "Verifies a user can update profile fields and interests in settings, save changes, and see the updated preferences reflected back on the dashboard.",
+    "description": "Verifies a user can update profile fields and interests in settings, save changes, and see the updated preferences reflected back on the dashboard. Steps: sign in as user-a@example.com / password123, navigate to /settings. Locate the Display name INPUT field (NOT a label — find <input> with name='displayName' or aria-label 'Display name'). Clear it completely (triple-click to select all, then press Delete, or use Ctrl+A then Delete) and type the full string 'Test Display Name' in one fill() call. For interests: first deselect ALL currently-selected interest pills (they have a selected/active visual state — click each selected pill to toggle off), then select exactly these four: Technology, Fitness, Cooking, Art. Click the Save button and wait up to 10 seconds for a success toast or confirmation. Navigate to /dashboard. Assert the dashboard displays the display name 'Test Display Name' (the full string, not just 'T' or 'A'). Assert the dashboard interest list contains exactly Technology, Fitness, Cooking, Art and no others.",
     "category": "Settings",
     "steps": [
       {

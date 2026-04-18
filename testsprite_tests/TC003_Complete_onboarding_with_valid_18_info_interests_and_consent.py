@@ -33,14 +33,76 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000")
         
-        # -> Click the 'Start Chatting Free' button to open the signup flow.
+        # -> Click the 'Sign In' button to open the login page.
         frame = context.pages[-1]
         # Click element
-        elem = frame.locator('xpath=/html/body/main/div/section/div/a').nth(0)
+        elem = frame.locator('xpath=/html/body/header/nav/div[2]/a').nth(0)
         await asyncio.sleep(3); await elem.click()
         
-        # -> Open the signup page to create a fresh account (navigate to /signup).
-        await page.goto("http://localhost:3000/signup")
+        # -> Fill the email field with user-a@example.com, fill the password with password123, submit the login form, then navigate to /onboarding.
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('user-a@example.com')
+        
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('password123')
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Navigate to /onboarding so the onboarding form can be filled. If navigation is blocked (requires re-login), reattempt login.
+        await page.goto("http://localhost:3000/onboarding")
+        
+        # -> Fill the Display name input, then open the date picker by clicking the 'Pick a date' button so the calendar day buttons appear.
+        frame = context.pages[-1]
+        # Input text
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div/div/input').nth(0)
+        await asyncio.sleep(3); await elem.fill('User A')
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Open the calendar's year selector by clicking the month/year header (the 'Apr'/'2008' header) so I can choose 1995.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div[2]/div/div/div/div/div/div/span/span').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Open the Gender combobox so its options are visible (this is a context-setting control; after clicking it we'll re-observe the options).
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div[2]/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Select the 'Male' gender option, pick an interest (Gaming), tick the consent checkbox, submit the onboarding form, then wait up to 10s for navigation or validation feedback.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[4]/div/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[5]/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Open the Date of Birth picker by clicking the 'Pick a date' button so the calendar day buttons appear (then re-observe before selecting the year/month/day).
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/div/div/form/div[2]/div/button').nth(0)
+        await asyncio.sleep(3); await elem.click()
+        
+        # -> Open the calendar year selector by clicking the month header element so the year/month chooser appears (click element index 2612). After the UI updates, re-observe the calendar before selecting the year.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div[2]/div/div/div/div/div/div/span/span').nth(0)
+        await asyncio.sleep(3); await elem.click()
         
         # --> Assertions to verify final state
         frame = context.pages[-1]
