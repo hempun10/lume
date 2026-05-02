@@ -43,10 +43,19 @@ interface CellProps {
 	onClick: () => void;
 }
 
-function Cell({ value, isWinCell, disabled, onClick }: CellProps) {
+function Cell({ value, position, isWinCell, disabled, onClick }: CellProps) {
+	// 1-indexed cell label so tests + screen readers can target individual
+	// cells reliably (e.g. `getByRole("button", { name: "Cell 1" })`).
+	const cellLabel = `Cell ${position + 1}`;
+	const stateSuffix = value
+		? `, ${value}`
+		: disabled
+			? ", empty, not your turn"
+			: ", empty";
 	return (
 		<button
 			type="button"
+			aria-label={`${cellLabel}${stateSuffix}`}
 			disabled={disabled}
 			onClick={onClick}
 			className={cn(
