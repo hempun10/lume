@@ -74,6 +74,9 @@ export function ChatHeader({
 							variant={isGameBanned ? "destructive" : "ghost"}
 							size="icon-sm"
 							onClick={onToggleBan}
+							aria-label={
+								isGameBanned ? "Unblock game requests" : "Block game requests"
+							}
 							className={
 								isGameBanned
 									? ""
@@ -94,6 +97,7 @@ export function ChatHeader({
 							variant={showGame ? "secondary" : "ghost"}
 							size="icon-sm"
 							onClick={onToggleGame}
+							aria-label={showGame ? "Hide game panel" : "Play a game"}
 						>
 							<Gamepad2 className="h-4 w-4" />
 						</Button>
@@ -110,6 +114,7 @@ export function ChatHeader({
 								variant="ghost"
 								size="icon-sm"
 								onClick={onReport}
+								aria-label="Report stranger"
 								className="text-muted-foreground hover:text-destructive"
 							>
 								<Flag className="h-3.5 w-3.5" />
@@ -125,6 +130,7 @@ export function ChatHeader({
 							variant="ghost"
 							size="icon-sm"
 							onClick={onEnd}
+							aria-label="End chat"
 							className="text-destructive hover:bg-destructive/10 hover:text-destructive"
 						>
 							<LogOut className="h-4 w-4" />

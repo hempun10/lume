@@ -1,4 +1,3 @@
-import { CtaSection } from "./components/cta-section";
 import { FaqSection } from "./components/faq-section";
 import { FeaturesSection } from "./components/features-section";
 import { HeroSection } from "./components/hero-section";
@@ -25,10 +24,6 @@ export function LandingPage() {
 			<hr className="my-20 border-t border-border" />
 
 			<FaqSection />
-
-			<hr className="my-20 border-t border-border" />
-
-			<CtaSection />
 		</div>
 	);
 }

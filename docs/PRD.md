@@ -1,12 +1,12 @@
 # Lume — Product Requirements Document
 
-> **Version**: 1.0.0 · **Last updated**: 2026-04-18
-> **Owner**: Lume team · **Status**: Shipped (hackathon build)
+> **Version**: 1.1.0 · **Last updated**: 2026-05-01
+> **Owner**: Lume team · **Status**: Passmark regression testing build
 >
 > This PRD is the source of truth for Lume's product scope, feature behavior,
-> user flows, and acceptance criteria. It is designed to be consumed by
-> **TestSprite** during test generation — each feature has explicit
-> validation criteria that map directly to test cases.
+> user flows, and acceptance criteria. It is designed to guide human review and
+> **Passmark** natural-language regression tests — each feature has explicit
+> validation criteria that map to user-visible assertions.
 
 ---
 
@@ -34,7 +34,7 @@ A session flows like this:
 2. **Match on shared interests** — prioritize pairs with overlapping interest tags; fall back to any-available after a short wait so no one is stuck.
 3. **Keep conversations ephemeral** — messages exist only in the Supabase Realtime broadcast; nothing is persisted to the database.
 4. **Make the first 60 seconds fun** — 9 built-in 2-player games play inline in the chat, each finishing in ~2–5 minutes.
-5. **Ship a polished product on a hackathon timeline** — responsive mobile + desktop, light/dark theme, accessible interactions, production-deployable on Vercel + Supabase.
+5. **Ship a polished product with regression confidence** — responsive mobile + desktop, light/dark theme, accessible interactions, production-deployable on Vercel + Supabase, and covered by Passmark + Playwright tests.
 
 ---
 
@@ -93,8 +93,8 @@ Server-authoritative pairing via a Supabase Edge Function:
 - Board updates sync through Supabase Broadcast on the same chat channel.
 - Every game offers **Rematch** on completion.
 
-### 3.7 Games catalogue (9 games, all shipped)
-All games are 2-player, turn/round-based, and finish in ~2–5 minutes.
+### 3.7 Games catalogue (7 available, 2 coming soon)
+Playable games are 2-player, turn/round-based, and finish in ~2–5 minutes.
 
 | Game | Duration | Core rule |
 | --- | --- | --- |
@@ -138,8 +138,8 @@ Backed by migration `20260417121137_add_safety_tables.sql`:
 - **Dashboard layout** — 48px topbar, 56px desktop sidebar (Lobby · Settings), 56px mobile bottom tab bar.
 - **Onboarding** renders **without** the dashboard shell (full-screen).
 
-### 3.11 Landing site (`/`, `/about`, `/features`, `/release-notes`, `/release-notes/*`)
-Public marketing site with Hero, Stats, Features, Comparison, How It Works, FAQ, and CTA sections. Links to release notes.
+### 3.11 Landing site (`/`)
+Public marketing site with Hero, Stats, Features, Comparison, How It Works, FAQ, and CTA sections. The landing shell also exposes trust/legal pages at `/terms`, `/privacy`, and `/community-guidelines`.
 
 ---
 
@@ -167,7 +167,7 @@ Inside chat → **Flag** → choose reason → (optional notes) → keep **Also 
 
 ## 5. Validation Criteria (feature → acceptance checks)
 
-> Each entry maps 1:1 to a TestSprite test case.
+> Each entry maps to Passmark natural-language checks where practical. Some two-user realtime checks require the optional realtime test run.
 
 ### 5.1 Authentication
 - **AUTH-01** Signup with a valid new email + password ≥ 8 chars → redirects to `/onboarding`.
@@ -254,7 +254,7 @@ Inside chat → **Flag** → choose reason → (optional notes) → keep **Also 
 ### 5.11 Landing
 - **LAND-01** `/` loads with Hero, Features, Comparison, FAQ, and CTA visible.
 - **LAND-02** Nav links scroll to in-page anchors.
-- **LAND-03** `/release-notes` lists all releases; each release link opens a detail page.
+- **LAND-03** `/terms`, `/privacy`, and `/community-guidelines` return 200 and render readable trust content.
 
 ---
 
@@ -292,6 +292,7 @@ Inside chat → **Flag** → choose reason → (optional notes) → keep **Also 
 | Styling | Tailwind CSS v4 + shadcn/ui + Radix + Lucide |
 | Forms | React Hook Form + Zod |
 | Tooling | Biome (lint/format), TypeScript strict, Husky pre-commit |
+| Testing | Passmark + Playwright via OpenRouter |
 | Deployment | Vercel (frontend) · Supabase cloud (DB + Edge Functions) |
 
 ---

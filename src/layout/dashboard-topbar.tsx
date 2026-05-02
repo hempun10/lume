@@ -50,6 +50,7 @@ export function DashboardTopbar() {
 							variant="ghost"
 							size="icon"
 							className="h-8 w-8 rounded-full"
+							aria-label="Open account menu"
 						>
 							<Avatar size="sm">
 								<AvatarFallback className="text-[10px]">
