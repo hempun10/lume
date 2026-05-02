@@ -37,6 +37,9 @@ RUN_REALTIME_PASSMARK=1 npm run test:e2e -- realtime-matchmaking.spec.ts
 | `OPENROUTER_API_KEY` | Required by Passmark when using the OpenRouter gateway. |
 | `PLAYWRIGHT_BASE_URL` | Optional target URL. Defaults to `http://127.0.0.1:3000`. |
 | `RUN_REALTIME_PASSMARK` | Enables the optional two-browser realtime matchmaking test. |
+| `MAILPIT_URL` | Optional override for the Mailpit JSON API used by the recovery test. Defaults to `http://127.0.0.1:54324` (Supabase CLI default). |
+| `AXIOM_TOKEN` + `AXIOM_DATASET` | Optional Passmark telemetry. When both are set, every AI call is exported as an OpenTelemetry span to Axiom. No-op without them. |
+| `PASSMARK_LOG_LEVEL` | Optional Passmark logger level (`debug` \| `info` \| `warn` \| `error` \| `silent`). Defaults to `info`. |
 
 Seeded accounts after `npm run db:reset`:
 
@@ -60,6 +63,7 @@ Seeded accounts after `npm run db:reset`:
 | `games-catalog.spec.ts` | Games catalogue | Available/coming-soon status becomes confusing; play action breaks | 7 available games are discoverable; Word Chain/Chess are coming soon; play routes into matching. |
 | `chat-safety.spec.ts` | Optional report/block dialog check | Users cannot report or form allows incomplete reports | Report dialog includes reason choices, notes, Also block; reason is required. Requires a real matched room, so it is enabled with realtime runs. |
 | `realtime-matchmaking.spec.ts` | Optional two-browser realtime match | Match queue, broadcast notification, or chat delivery regresses | Alice and Bob match into chat and Bob receives Alice's message. |
+| `auth-recovery.spec.ts` | Forgot-password → OTP → reset (uses Mailpit + Passmark email provider) | Recovery emails stop sending; OTP verification regresses; new password doesn't take effect; old password keeps working | After signing up via the auth REST API, the forgot-password page redirects to `/reset-password?email=...`; Passmark pulls the 6-digit code from the local Mailpit inbox via `{{email.otp:...:<recipient>}}` and submits it with a new password; signing in with the old password still lands on `/login` and the new password reaches `/dashboard` or `/onboarding`. |
 
 ## Known limitations
 
@@ -68,7 +72,7 @@ Seeded accounts after `npm run db:reset`:
 - Passmark uses AI calls, so full-suite runs consume OpenRouter credits. Use `npm run test:e2e:smoke` while iterating.
 - The optional realtime test should be run when Supabase local services, pg_cron, and Edge Function invocation are healthy. It is skipped by default to keep the regular suite deterministic.
 - Signup/onboarding tests create unique users. Reset the database between full local runs when you want a pristine state.
-- Password reset is intentionally not in the default suite because local email verification requires Mailpit interaction.
+- Password reset is now covered by `auth-recovery.spec.ts`. It uses a custom Passmark email provider (`e2e/passmark/mailpit-provider.ts`) that polls Supabase's local Mailpit (`http://127.0.0.1:54324`) and extracts the 6-digit OTP from the recovery email. To run it against a hosted Supabase, set `MAILPIT_URL` to a reachable Mailpit (or swap in `passmark/providers/emailsink` if you wire emailsink up as the project's SMTP).
 - The app intentionally does not persist chat messages, so assertions verify live UI delivery rather than database state.
 
 ## Why these tests are high value

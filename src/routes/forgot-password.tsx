@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
 	ForgotPasswordForm,
 	type ForgotPasswordFormValues,
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/forgot-password")({
 			{
 				name: "description",
 				content:
-					"Request a password reset link to regain access to your account.",
+					"Request a 6-digit verification code to reset your account password.",
 			},
 		],
 	}),
@@ -21,15 +21,21 @@ export const Route = createFileRoute("/forgot-password")({
 });
 
 function ForgotPasswordPage() {
+	const navigate = useNavigate();
 	const mutation = useMutation({
 		mutationFn: resetPasswordForEmail,
+		onSuccess: (_data, variables) => {
+			// Hand off to /reset-password with the email so the user can enter
+			// the OTP from their inbox.
+			void navigate({
+				to: "/reset-password",
+				search: { email: variables.email },
+			});
+		},
 	});
 
 	async function handleSubmit(data: ForgotPasswordFormValues) {
-		mutation.mutate({
-			email: data.email,
-			redirectTo: `${window.location.origin}/reset-password`,
-		});
+		mutation.mutate({ email: data.email });
 	}
 
 	return (

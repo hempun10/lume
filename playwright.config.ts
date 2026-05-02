@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { configure } from "passmark";
+import { mailpitProvider } from "./e2e/passmark/mailpit-provider";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.resolve(dirname, ".env");
@@ -21,6 +22,10 @@ configure({
 			utility: "google/gemini-2.5-flash",
 		},
 	},
+	// Mailpit (built into `supabase start`) catches every email Supabase Auth
+	// sends locally. Passmark uses this provider to pull the 6-digit OTP from
+	// the recovery email during the forgot-password test.
+	email: mailpitProvider(),
 });
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";

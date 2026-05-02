@@ -1,20 +1,30 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { z } from "zod";
 import {
 	ResetPasswordForm,
 	type ResetPasswordFormValues,
 } from "@/features/auth";
-import { updateUserPassword } from "@/features/auth/mutations";
-import { supabase } from "@/lib/supabase/client";
+import {
+	resetPasswordForEmail,
+	updateUserPassword,
+	verifyRecoveryOtp,
+} from "@/features/auth/mutations";
+
+const searchSchema = z.object({
+	email: z.string().email().optional(),
+});
 
 export const Route = createFileRoute("/reset-password")({
+	validateSearch: searchSchema,
 	head: () => ({
 		meta: [
 			{ title: "Reset Password | Lume" },
 			{
 				name: "description",
-				content: "Set a new password for your account.",
+				content:
+					"Enter the 6-digit code from your email and choose a new password.",
 			},
 		],
 	}),
@@ -22,37 +32,52 @@ export const Route = createFileRoute("/reset-password")({
 });
 
 function ResetPasswordPage() {
+	const { email } = Route.useSearch();
 	const navigate = useNavigate();
-	const [hasSession, setHasSession] = useState(false);
+	const [resendSuccess, setResendSuccess] = useState(false);
 
-	useEffect(() => {
-		const {
-			data: { subscription },
-		} = supabase.auth.onAuthStateChange((event) => {
-			if (event === "PASSWORD_RECOVERY") {
-				setHasSession(true);
+	const submitMutation = useMutation({
+		mutationFn: async (data: ResetPasswordFormValues) => {
+			if (!email) {
+				throw new Error(
+					"Missing email — start over from the forgot-password page.",
+				);
 			}
-		});
-		return () => subscription.unsubscribe();
-	}, []);
-
-	const mutation = useMutation({
-		mutationFn: updateUserPassword,
+			// 1. Exchange the OTP for a recovery session.
+			await verifyRecoveryOtp({ email, token: data.otp });
+			// 2. With the session in place, set the new password.
+			await updateUserPassword({ password: data.password });
+		},
 		onSuccess: () => {
-			setTimeout(() => navigate({ to: "/dashboard" }), 2000);
+			setTimeout(() => navigate({ to: "/dashboard" }), 3500);
 		},
 	});
 
+	const resendMutation = useMutation({
+		mutationFn: resetPasswordForEmail,
+		onSuccess: () => setResendSuccess(true),
+	});
+
 	async function handleSubmit(data: ResetPasswordFormValues) {
-		mutation.mutate({ password: data.password });
+		submitMutation.mutate(data);
+	}
+
+	async function handleResend() {
+		if (!email) return;
+		setResendSuccess(false);
+		resendMutation.mutate({ email });
 	}
 
 	return (
 		<ResetPasswordForm
+			email={email ?? null}
 			onSubmit={handleSubmit}
-			error={mutation.error?.message ?? null}
-			success={mutation.isSuccess}
-			hasSession={hasSession}
+			onResend={handleResend}
+			error={
+				submitMutation.error?.message ?? resendMutation.error?.message ?? null
+			}
+			success={submitMutation.isSuccess}
+			resendSuccess={resendSuccess}
 		/>
 	);
 }

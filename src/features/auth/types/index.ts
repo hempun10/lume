@@ -24,8 +24,10 @@ export interface ForgotPasswordFormProps {
 }
 
 export interface ResetPasswordFormProps {
+	email: string | null;
 	onSubmit: (data: ResetPasswordFormValues) => Promise<void>;
+	onResend: () => Promise<void>;
 	error?: string | null;
 	success?: boolean;
-	hasSession: boolean;
+	resendSuccess?: boolean;
 }
