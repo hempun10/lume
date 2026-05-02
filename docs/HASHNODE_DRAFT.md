@@ -2,6 +2,8 @@
 
 > Submission for the Bug0 **Breaking Apps Hackathon** — `#BreakingAppsHackathon` — deadline May 10, 2026 11:59 PM PT.
 
+![Lume chat with shared-interests banner and Tic Tac Toe game panel](./images/ttt-win.png)
+
 ## TL;DR
 
 I have an open-source realtime stranger-chat app called **Lume** (TanStack Start + Supabase Realtime). I replaced its previous E2E suite with a **Passmark + Playwright** regression suite that drives the app via natural-language steps backed by AI, falls back to deterministic Playwright for setup, and uses a custom email-OTP provider that reads from local Mailpit.
@@ -113,6 +115,10 @@ CREATE POLICY "Users can read room counterpart profile"
 
 Narrowly scoped: a user can read another profile *only* if they share an active row in `public.rooms`. Profiles aren't globally readable.
 
+![Shared-interests banner: "You both like Music · Cooking" with interest-themed prompts](./images/shared-interests-banner.png)
+
+The banner above plus the four interest-themed prompt cards (Concert / Food hill / First anime / Morning person) are *all* downstream of the same Supabase query. Before the migration, every chat fell back to the generic prompt set.
+
 The thing I want to highlight: **Passmark forced me to write a meaningful behavioural assertion**, and the assertion couldn't pass until the data flow was correct. A unit test on `useStrangerProfile` would have mocked Supabase and never seen this.
 
 ### Bug #2 — The magic-link recovery flow didn't actually work end-to-end
@@ -172,6 +178,9 @@ await runSteps({
 The test then verifies in plain Playwright that the **old password no longer signs in** and the **new password reaches `/dashboard` or `/onboarding`**. That last part matters: Passmark proves the UI flow worked; Playwright proves the password actually changed in the database.
 
 End-to-end: 1 passed in 44s on chromium.
+
+![Forgot-password form](./images/forgot-password.png)
+![Reset-password form with 6-digit OTP input](./images/reset-password.png)
 
 ### Bug #3 — Login form occasionally submitted as GET with credentials in the URL
 
