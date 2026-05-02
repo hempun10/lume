@@ -44,4 +44,38 @@ test.describe("Signup and onboarding", () => {
 			],
 		});
 	});
+
+	test("date-of-birth picker disables under-18 dates so the 18+ rule cannot be bypassed", async ({
+		page,
+	}) => {
+		await signUpNewUser(page);
+
+		// Open the calendar popover.
+		await page.getByRole("button", { name: /Pick a date/ }).click();
+
+		// Calendar uses captionLayout="dropdown" with endMonth=MAX_DOB (today minus
+		// 18 years). The year dropdown therefore must NOT contain the current year,
+		// and its largest option is the current-year minus 18.
+		const currentYear = new Date().getFullYear();
+		const maxAllowedYear = currentYear - 18;
+
+		const yearDropdown = page
+			.getByRole("combobox")
+			.filter({ hasText: String(maxAllowedYear) })
+			.first();
+		await expect(yearDropdown).toBeVisible({ timeout: 5_000 });
+
+		const yearOptions = await yearDropdown
+			.locator("option")
+			.evaluateAll((opts) =>
+				opts
+					.map((o) => Number((o as HTMLOptionElement).value))
+					.filter((n) => Number.isFinite(n)),
+			);
+
+		expect(yearOptions.length).toBeGreaterThan(0);
+		const maxYear = Math.max(...yearOptions);
+		expect(maxYear).toBeLessThanOrEqual(maxAllowedYear);
+		expect(yearOptions).not.toContain(currentYear);
+	});
 });
