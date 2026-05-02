@@ -62,24 +62,30 @@ export async function loginAsSeededUser({
 	page: Page;
 	user?: (typeof SEEDED_USERS)[keyof typeof SEEDED_USERS];
 }) {
-	await page.goto(`${BASE_URL}/login`);
-	await page.waitForTimeout(3000);
-	await page.getByLabel("Email").fill(user.email);
+	await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle" });
+	// Wait for the SPA-controlled inputs to mount, otherwise the browser
+	// fills the static SSR markup and the form posts as GET on submit.
+	const emailField = page.getByLabel("Email");
+	await emailField.waitFor({ state: "visible", timeout: 15_000 });
+	await page.waitForTimeout(1500);
+	await emailField.fill(user.email);
 	await page.getByLabel("Password").fill(user.password);
 	await page.getByRole("button", { name: "Sign in" }).click();
 	await playwrightExpect(
 		page.getByRole("button", { name: "Start matching" }),
-	).toBeVisible({ timeout: 20_000 });
+	).toBeVisible({ timeout: 30_000 });
 }
 
 export async function signUpNewUser(page: Page, email = uniqueEmail()) {
-	await page.goto(`${BASE_URL}/signup`);
-	await page.waitForTimeout(3000);
-	await page.getByLabel("Email").fill(email);
+	await page.goto(`${BASE_URL}/signup`, { waitUntil: "networkidle" });
+	const emailField = page.getByLabel("Email");
+	await emailField.waitFor({ state: "visible", timeout: 15_000 });
+	await page.waitForTimeout(1500);
+	await emailField.fill(email);
 	await page.getByLabel("Password").fill("password123");
 	await page.getByRole("button", { name: "Create account" }).click();
 	await playwrightExpect(
 		page.getByRole("heading", { name: "Complete your profile" }),
-	).toBeVisible({ timeout: 20_000 });
+	).toBeVisible({ timeout: 30_000 });
 	return email;
 }

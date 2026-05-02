@@ -46,7 +46,7 @@ Seeded accounts after `npm run db:reset`:
 | Persona | Email | Password | Use |
 | --- | --- | --- | --- |
 | Alice | `user-a@example.com` | `password123` | Primary authenticated regression user. |
-| Bob | `user-b@example.com` | `password123` | Second browser for optional realtime checks. |
+| Bob | `user-b@example.com` | `password123` | Second browser for the realtime test. Shares **Music** and **Cooking** with Alice (and differs on Anime/Fitness vs Travel/Photography) so the matchmaker's interest-overlap signal is actually exercised. |
 
 ## Coverage matrix
 
@@ -62,7 +62,7 @@ Seeded accounts after `npm run db:reset`:
 | `settings.spec.ts` | Profile + preferences save, persistence, 8-cap, empty-blocks-save, lobby reflection | Form saves silently fail; toasts disappear; updates don't persist; 8-cap regresses; empty-interests save lets users break their profile | Profile and preferences save with success toasts; profile values rehydrate after a hard reload; an exact set of saved interests appears as badges on the lobby Your-vibe card with the new name + region; selecting 8 interests disables the 9th chip; deselecting all interests disables Save preferences. |
 | `games-catalog.spec.ts` | Games catalogue | Available/coming-soon status becomes confusing; play action breaks | 7 available games are discoverable; Word Chain/Chess are coming soon; play routes into matching. |
 | `chat-safety.spec.ts` | Optional report/block dialog check | Users cannot report or form allows incomplete reports | Report dialog includes reason choices, notes, Also block; reason is required. Requires a real matched room, so it is enabled with realtime runs. |
-| `realtime-matchmaking.spec.ts` | Optional two-browser realtime match | Match queue, broadcast notification, or chat delivery regresses | Alice and Bob match into chat and Bob receives Alice's message. |
+| `realtime-matchmaking.spec.ts` | Two seeded users (with overlapping interests) match into the same room, see the shared-interests banner, and exchange a message | Match queue regresses; counterpart-profile RLS breaks (the bug fixed by `20260502000000_allow_reading_room_counterpart_profile.sql`); broadcast delivery regresses; the matchmaker's interest signal silently degrades to fallback pairing | Both users reach a chat room; both see a 'You both like' banner that includes 'Music' AND 'Cooking' (and excludes their non-shared tags); Alice's `hello from passmark` lands in Bob's timeline. Gated by `RUN_REALTIME_PASSMARK=1`. |
 | `auth-recovery.spec.ts` | Forgot-password → OTP → reset (uses Mailpit + Passmark email provider) | Recovery emails stop sending; OTP verification regresses; new password doesn't take effect; old password keeps working | After signing up via the auth REST API, the forgot-password page redirects to `/reset-password?email=...`; Passmark pulls the 6-digit code from the local Mailpit inbox via `{{email.otp:...:<recipient>}}` and submits it with a new password; signing in with the old password still lands on `/login` and the new password reaches `/dashboard` or `/onboarding`. |
 
 ## Known limitations

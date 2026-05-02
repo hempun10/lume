@@ -25,6 +25,6 @@ export const seedUsers: SeedUser[] = [
 		dateOfBirth: "1998-07-22",
 		gender: "male",
 		region: "London",
-		interests: ["Gaming", "Technology", "Anime", "Fitness"],
+		interests: ["Music", "Cooking", "Anime", "Fitness"],
 	},
 ];
