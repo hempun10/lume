@@ -9,6 +9,7 @@ import {
 } from "../../games/data/pending-game";
 import { useGameInvite } from "../hooks/use-game-invite";
 import { useRealtimeChat } from "../hooks/use-realtime-chat";
+import { useSharedInterests } from "../hooks/use-shared-interests";
 import { useStrangerProfile } from "../hooks/use-stranger-profile";
 import type { ReplyTarget } from "../types";
 import { ChatEndedView } from "./chat-ended-view";
@@ -19,6 +20,7 @@ import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
 import { PromptSuggestions } from "./prompt-suggestions";
 import { ReportDialog } from "./report-dialog";
+import { SharedInterestsBanner } from "./shared-interests-banner";
 
 interface ChatViewProps {
 	roomId: string;
@@ -40,6 +42,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 	const navigate = useNavigate();
 	const [showGame, setShowGame] = useState(false);
 	const { data: strangerProfile } = useStrangerProfile(roomId, userId);
+	const sharedInterests = useSharedInterests(roomId);
 
 	const gameInvite = useGameInvite(channelRef, userId);
 	const [reportOpen, setReportOpen] = useState(false);
@@ -166,6 +169,7 @@ export function ChatView({ roomId }: ChatViewProps) {
 						strangerProfile?.userId ? () => setReportOpen(true) : undefined
 					}
 				/>
+				<SharedInterestsBanner interests={sharedInterests} />
 				<MessageList
 					messages={session.messages}
 					isStrangerTyping={isStrangerTyping}

@@ -82,8 +82,11 @@ export function GameCard({ game, onPlay }: GameCardProps) {
 					disabled={!isAvailable}
 					onClick={handlePlay}
 					className="h-8 px-3 text-xs"
+					aria-label={
+						isAvailable ? `Play ${game.name}` : `${game.name} is coming soon`
+					}
 				>
-					{isAvailable ? "Play" : "Soon"}
+					{isAvailable ? `Play ${game.name}` : "Coming soon"}
 				</Button>
 			</div>
 		</Card>

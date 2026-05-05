@@ -183,17 +183,15 @@ function FeatureBlock({
 			<FeatureIconGrid features={features} />
 
 			{withPreview && (
-				<div className="mt-12 pb-20 md:pb-24">
-					<BrowserMockup>
+				<div className="mt-12">
+					<BrowserMockup url="lume.app">
 						<ThemedImage
 							alt={`${label} dashboard preview`}
-							aspect="aspect-[16/9]"
 							placeholderLabel={
 								previewLabel ?? `${label.toLowerCase()} preview`
 							}
 							lightSrc={previewLightSrc}
 							darkSrc={previewDarkSrc}
-							bare
 						/>
 					</BrowserMockup>
 				</div>

@@ -125,7 +125,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: static script to prevent theme FOUC */}
 				<script dangerouslySetInnerHTML={{ __html: themeScript }} />
 			</head>
-			<body>
+			<body className="scroll-smooth">
 				<ThemeProvider>
 					<AuthProvider>
 						<TooltipProvider>

@@ -35,18 +35,30 @@ export async function signOut() {
 	if (error) throw error;
 }
 
-/** Send a password reset email. */
-export async function resetPasswordForEmail({
+/** Send a password reset email (contains a 6-digit OTP). */
+export async function resetPasswordForEmail({ email }: { email: string }) {
+	const { error } = await supabase.auth.resetPasswordForEmail(email);
+	if (error) throw error;
+}
+
+/**
+ * Verify a recovery OTP. On success Supabase establishes a recovery session
+ * which lets us call `updateUser({ password })` to set a new password.
+ */
+export async function verifyRecoveryOtp({
 	email,
-	redirectTo,
+	token,
 }: {
 	email: string;
-	redirectTo: string;
+	token: string;
 }) {
-	const { error } = await supabase.auth.resetPasswordForEmail(email, {
-		redirectTo,
+	const { data, error } = await supabase.auth.verifyOtp({
+		email,
+		token,
+		type: "recovery",
 	});
 	if (error) throw error;
+	return data;
 }
 
 /** Update the current user's password. */

@@ -1,51 +1,52 @@
+import { useState } from "react";
 import { useTheme } from "@/features/theme";
 import { cn } from "@/lib/utils";
 
 /**
- * Renders a theme-aware image. Expects two variants (light + dark) and swaps
- * based on the current theme. While real assets are being produced the
- * component falls back to a labeled placeholder that respects the container
- * aspect ratio so the layout stays stable.
+ * Theme-aware screenshot. Swaps `lightSrc` / `darkSrc` based on theme and
+ * renders the image at its natural aspect ratio (`w-full h-auto`) so it
+ * never gets cropped or letterboxed by an outer aspect-ratio container.
  *
- * Designed to sit inside `<BrowserMockup>`, so the image uses `rounded-lg`
- * + a soft hairline ring that matches the chrome's inner edge. Pass
- * `bare` to skip the ring/rounding when rendering outside a mockup.
+ * Designed for use inside `<BrowserMockup>`: the mockup's content area is
+ * `overflow-hidden`, so any height beyond the visible viewport is clipped
+ * naturally — exactly the UserJot "screenshot peeks out the bottom" effect.
+ *
+ * If no src is provided (or the image fails to load) a labeled placeholder
+ * is shown instead so the layout never collapses.
  */
 export function ThemedImage({
 	lightSrc,
 	darkSrc,
 	alt,
 	className,
-	aspect = "aspect-[16/10]",
 	placeholderLabel,
-	bare = false,
+	placeholderAspect = "aspect-[16/10]",
 }: {
 	lightSrc?: string;
 	darkSrc?: string;
 	alt: string;
 	className?: string;
-	/** Tailwind aspect-* class controlling the placeholder / image ratio. */
-	aspect?: string;
 	/** Optional label shown inside the placeholder. */
 	placeholderLabel?: string;
-	/** When true, skip the default border/ring so the parent frame handles it. */
-	bare?: boolean;
+	/** Aspect ratio used only by the placeholder when no src is available. */
+	placeholderAspect?: string;
 }) {
 	const { theme } = useTheme();
-	const src = theme === "dark" ? darkSrc : lightSrc;
+	const [failedSrc, setFailedSrc] = useState<string | null>(null);
+	const candidate = theme === "dark" ? darkSrc : lightSrc;
+	const src = candidate && candidate !== failedSrc ? candidate : undefined;
 
 	if (!src) {
 		return (
 			<div
 				className={cn(
-					"relative w-full overflow-hidden rounded-lg",
-					!bare && "border border-border bg-muted/40",
-					aspect,
+					"relative w-full overflow-hidden bg-muted/30",
+					placeholderAspect,
 					className,
 				)}
 			>
-				{/* subtle grid so the placeholder doesn't look broken */}
 				<div
+					aria-hidden
 					className="absolute inset-0 opacity-[0.6] dark:opacity-[0.4]"
 					style={{
 						backgroundImage:
@@ -66,14 +67,10 @@ export function ThemedImage({
 		<img
 			src={src}
 			alt={alt}
-			className={cn(
-				"h-auto w-full max-w-full object-cover",
-				bare
-					? "rounded-lg ring-1 ring-gray-500/10 shadow-xs"
-					: "rounded-2xl border border-border",
-				aspect,
-				className,
-			)}
+			loading="eager"
+			decoding="async"
+			onError={() => setFailedSrc(candidate ?? null)}
+			className={cn("block h-auto w-full max-w-none", className)}
 		/>
 	);
 }

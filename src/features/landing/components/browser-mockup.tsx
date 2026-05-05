@@ -1,68 +1,80 @@
 import { cn } from "@/lib/utils";
 
 /**
- * UserJot-style product preview: a soft gradient "slab" with a blurred
- * frosted-glass overlay, an inner hairline, and a translucent Safari-like
- * window chrome floating inside — the screenshot bleeds past the bottom so
- * it peeks out of the frame.
+ * UserJot-style product preview slab.
  *
- * The outer slab aspect ratio controls the framed area; the mockup inside
- * is positioned absolutely and extends below (`-bottom-20`) to create the
- * "peeking screenshot" effect used on UserJot.com.
+ * A soft warm-gray rounded panel that clips a floating browser window. The
+ * window is intentionally wider/taller than the slab so it bleeds past the
+ * right and bottom edges — the slab's `overflow-hidden` then clips it,
+ * giving the "screenshot peeking out of the frame" effect.
+ *
+ * The screenshot inside renders at its natural aspect ratio (`w-full
+ * h-auto`); the slab's height controls how much of the screenshot is
+ * visible. No object-cover / scaling hacks.
  */
 export function BrowserMockup({
 	children,
 	className,
+	url,
 	aspect = "aspect-[5/3]",
 }: {
 	children: React.ReactNode;
 	className?: string;
-	/** Aspect ratio of the framed slab (not the screenshot itself). */
+	/** Centered pill in the chrome (e.g. "lume.app"). Optional. */
+	url?: string;
+	/** Aspect ratio of the framed slab itself. */
 	aspect?: string;
 }) {
 	return (
 		<div className={cn("relative w-full", className)}>
 			<div
 				className={cn(
-					"relative flex justify-center overflow-hidden rounded-xl shadow-xs transition-all duration-500",
+					"relative overflow-hidden rounded-2xl",
+					"bg-[#f6f5ef] dark:bg-[#1a1a1a]",
+					"ring-1 ring-black/[0.06] dark:ring-white/[0.06]",
 					aspect,
 				)}
-				style={{
-					// Layered radial + linear gradients form a soft cloudy slab.
-					// Uses neutral grays so it reads the same in light and dark mode;
-					// the frosted ring below keeps it sitting cleanly on any bg.
-					background:
-						"radial-gradient(circle at 20% 80%, rgba(115,115,115,0.3), transparent 50%), radial-gradient(circle at 80% 20%, rgba(229,229,229,0.3), transparent 50%), radial-gradient(circle at 40% 40%, rgba(163,163,163,0.2), transparent 60%), linear-gradient(135deg, #f5f5f5, #e5e5e5)",
-				}}
 			>
-				{/* Frosted-glass layer — softens the gradient behind the mockup. */}
+				{/* Soft top highlight — gives the slab a subtle "lit from above" feel. */}
 				<div
 					aria-hidden
-					className="pointer-events-none absolute inset-0 z-10 size-full rounded-xl"
-					style={{
-						backdropFilter: "blur(100px)",
-						WebkitBackdropFilter: "blur(100px)",
-					}}
+					className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/40 to-transparent dark:from-white/[0.03]"
 				/>
 
-				{/* Hairline inner ring — adds definition to the slab edge. */}
-				<div
-					aria-hidden
-					className="pointer-events-none absolute inset-0 z-30 size-full rounded-xl ring-1 ring-inset ring-black/10 dark:ring-white/10"
-				/>
-
-				{/* Browser chrome wrapper — bleeds below the slab bottom. */}
-				<div className="absolute inset-x-0 -bottom-20 top-0 z-20 flex w-full justify-center p-6 sm:p-8 md:p-10">
-					<div className="h-full w-full overflow-hidden rounded-xl bg-white/50 px-1.5 pb-1.5 shadow-xl ring-1 ring-gray-500/10 backdrop-blur-xl dark:bg-white/5 dark:ring-white/10">
-						{/* Traffic-light dots. Default gray, hint of color on hover. */}
-						<div className="flex items-center justify-between py-2">
-							<div className="flex items-center gap-1 px-1">
-								<span className="h-2 w-2 rounded-full border border-gray-950/10 bg-gray-100/30 transition-colors duration-300 hover:bg-red-500 dark:border-white/10 dark:bg-white/10" />
-								<span className="h-2 w-2 rounded-full border border-gray-950/10 bg-gray-100/30 transition-colors duration-300 hover:bg-yellow-500 dark:border-white/10 dark:bg-white/10" />
-								<span className="h-2 w-2 rounded-full border border-gray-950/10 bg-gray-100/30 transition-colors duration-300 hover:bg-green-500 dark:border-white/10 dark:bg-white/10" />
+				{/*
+				 * Browser window. Positioned to bleed past the right and bottom
+				 * edges of the slab so the slab clips it, matching the UserJot
+				 * "peeking screenshot" treatment.
+				 */}
+				<div className="absolute inset-x-[5%] top-[8%] bottom-[-8%] sm:inset-x-[6%] sm:top-[10%] sm:bottom-[-10%]">
+					<div
+						className={cn(
+							"flex h-full w-full flex-col overflow-hidden rounded-t-xl",
+							"bg-white dark:bg-neutral-900",
+							"ring-1 ring-black/[0.08] dark:ring-white/[0.08]",
+							"shadow-[0_24px_60px_-20px_rgba(15,15,15,0.18)] dark:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)]",
+						)}
+					>
+						{/* Chrome — traffic lights left, centered URL pill. */}
+						<div className="relative flex h-9 shrink-0 items-center border-b border-black/[0.06] px-3 dark:border-white/[0.06]">
+							<div className="flex items-center gap-1.5">
+								<span className="size-2.5 rounded-full bg-[#ff5f57]" />
+								<span className="size-2.5 rounded-full bg-[#febc2e]" />
+								<span className="size-2.5 rounded-full bg-[#28c840]" />
 							</div>
+							{url ? (
+								<div className="absolute left-1/2 -translate-x-1/2">
+									<span className="rounded-md bg-black/[0.04] px-3 py-0.5 font-mono text-[11px] text-muted-foreground dark:bg-white/[0.06]">
+										{url}
+									</span>
+								</div>
+							) : null}
 						</div>
-						{children}
+
+						{/* Screenshot area — image renders at natural aspect ratio. */}
+						<div className="relative flex-1 overflow-hidden bg-white dark:bg-neutral-900">
+							{children}
+						</div>
 					</div>
 				</div>
 			</div>

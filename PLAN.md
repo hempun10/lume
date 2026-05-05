@@ -1,690 +1,194 @@
-# Lume Realtime Core — Architecture Plan
+# Breaking Apps Hackathon Preparation Plan
 
 ## Summary
 
-Implement the three core realtime systems: **matchmaking**, **chat**, and **multiplayer games**. Uses Supabase Edge Functions for server-authoritative matching, Supabase Realtime Broadcast for ephemeral chat, and Broadcast + client-side logic for game sync.
-
-## Decisions
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Matching | DB queue + Edge Function | Server-authoritative, no race conditions |
-| Chat messages | Ephemeral (Broadcast only) | Omegle-like privacy, zero message storage |
-| Game state | Client-side + Broadcast | Simple for v1 turn-based games, low latency |
-| Match algorithm | Interest overlap priority | Match by shared interests, fall back to any after timeout |
-
----
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Frontend                            │
-│                                                         │
-│  useMatchmaking()     useRealtimeChat()    useGameRoom() │
-│       │                     │                   │        │
-│       ▼                     ▼                   ▼        │
-│  match_queue INSERT    channel.on()         channel.on() │
-│  + subscribe to        'broadcast'          'broadcast'  │
-│  match:{userId}        chat:{roomId}        game:{roomId}│
-└────┬───────────────────────┬───────────────────┬─────────┘
-     │                       │                   │
-     ▼                       ▼                   ▼
-┌─────────────┐     ┌──────────────┐    ┌──────────────┐
-│ Edge Fn:    │     │  Supabase    │    │  Supabase    │
-│ match-users │     │  Realtime    │    │  Realtime    │
-│             │     │  Broadcast   │    │  Broadcast   │
-│ Polls queue │     │  (ephemeral) │    │  + DB state  │
-│ Pairs users │     └──────────────┘    └──────────────┘
-│ Creates room│
-│ Notifies    │
-└─────────────┘
-```
-
----
-
-## 1. Matchmaking
-
-### Flow
-
-```
-1. User clicks "Start Matching"
-2. Frontend: INSERT into match_queue { user_id, mode, interests, status: 'waiting' }
-3. Frontend: Subscribe to Realtime channel `match:{user_id}` for match notification
-4. Edge Function (runs on cron or invoked): 
-   a. SELECT all 'waiting' rows, ordered by created_at
-   b. For each waiting user, find best match:
-      - Same mode (text/games)
-      - Score by shared interest count (most overlap first)
-      - If no interest match after 30s, match with any same-mode user
-   c. UPDATE both rows: status → 'matched', set matched_with, room_id
-   d. INSERT into rooms { user_a, user_b, type, status: 'active' }
-   e. Broadcast to both users' channels: { room_id, partner_display_name }
-5. Frontend: Receives match → navigate to /chat or /games
-```
-
-### Edge Function: `match-users`
-
-```
-supabase/functions/match-users/index.ts
-
-- Called via pg_cron every 2 seconds
-- Acquires pg_advisory_xact_lock to prevent concurrent execution
-- Reads all 'waiting' queue entries
-- Groups by mode
-- For each group, pairs users by interest overlap score
-- Falls back to FIFO after 30s wait time
-- Creates room, updates queue rows, broadcasts match
-- Retries failed broadcast notifications (notified = false)
-- Cleans up expired entries (> 2 min waiting)
-- Logs structured metrics: { queue_depth, pairs_made, expired_count, duration_ms }
-```
-
-**Why Edge Function over Postgres function?**
-- Matching logic is complex (interest scoring, timeout fallback)
-- Easier to test and iterate on TypeScript vs plpgsql
-- Can call Supabase Broadcast API directly via REST
-
-### Concurrency & Reliability
-
-**Advisory lock** — prevents overlapping cron invocations from double-matching:
-```sql
-SELECT pg_advisory_xact_lock(hashtext('match-users'));
-```
-Lock is released automatically on transaction commit/rollback.
-
-**Atomic pairing with broadcast retry** — the DB transaction (update queue + create room) is atomic. Broadcast notification is a separate step that can fail. To handle this:
-1. `match_queue` has a `notified` boolean column (default false)
-2. Transaction: update queue rows + create room (notified = false)
-3. After commit: broadcast to both users via REST
-4. If broadcast succeeds: update `notified = true`
-5. On each cron run: retry broadcast for `status = 'matched' AND notified = false AND updated_at > now() - interval '30s'`
-
-Worst case: delayed notification (next cron cycle), never a lost match.
-
-**Secrets** — Edge Functions have automatic access to `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` env vars. No Vault or manual config needed.
-
-### Observability
-
-- **Structured logging** in Edge Function: each run logs `{ queue_depth, pairs_made, expired_count, retry_count, duration_ms }`
-- **Warning threshold**: log warning if `queue_depth > 20` or any entry waiting > 60s
-- **Supabase Dashboard**: Edge Function logs visible in Logs → Edge Functions with filtering
-- **Post-v1**: admin query for queue depth and avg wait time
-
-### Database
-
-```sql
--- Match queue
-CREATE TABLE match_queue (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  mode text NOT NULL CHECK (mode IN ('text', 'games')),
-  interests text[] DEFAULT '{}',
-  status text NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting', 'matched', 'cancelled', 'expired')),
-  matched_with uuid REFERENCES auth.users(id),
-  room_id uuid,
-  notified boolean NOT NULL DEFAULT false, -- broadcast delivery tracking
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  UNIQUE(user_id, status) -- prevent duplicate waiting entries
-);
-
--- Rooms (shared by chat and games)
-CREATE TABLE rooms (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  type text NOT NULL CHECK (type IN ('chat', 'game')),
-  game_type text, -- null for chat rooms, 'tic-tac-toe' etc for games
-  user_a uuid NOT NULL REFERENCES auth.users(id),
-  user_b uuid NOT NULL REFERENCES auth.users(id),
-  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'ended')),
-  game_state jsonb, -- current game state for game rooms
-  current_turn uuid, -- whose turn it is (game rooms)
-  started_at timestamptz DEFAULT now(),
-  ended_at timestamptz
-);
-
--- RLS policies
-ALTER TABLE match_queue ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
-
--- Users can only see/manage their own queue entries
-CREATE POLICY "users_own_queue" ON match_queue
-  FOR ALL USING (auth.uid() = user_id);
-
--- Users can only see rooms they're in
-CREATE POLICY "users_own_rooms" ON rooms
-  FOR SELECT USING (auth.uid() = user_a OR auth.uid() = user_b);
-
--- Users can update rooms they're in (to end them)
-CREATE POLICY "users_update_rooms" ON rooms
-  FOR UPDATE USING (auth.uid() = user_a OR auth.uid() = user_b);
-
--- Edge Function uses service_role key, bypasses RLS
-```
-
-### Realtime Authorization
-
-```sql
--- Allow authenticated users to receive broadcasts on their match channel
-CREATE POLICY "authenticated_receive_broadcasts" ON realtime.messages
-  FOR SELECT TO authenticated USING (true);
-```
-
-### Frontend Hook: `useMatchmaking`
-
-```
-src/features/lobby/hooks/use-matchmaking.ts
-
-Replaces: use-match-state.ts
-
-State: idle → queuing → searching → matched → navigating
-  
-- startMatching(mode, interests):
-  1. INSERT into match_queue
-  2. Subscribe to channel `match:{userId}`
-  3. Listen for 'matched' broadcast event
-  4. On match: set state to matched, store room_id + partner info
-  5. Navigate to /chat?room={roomId} or /games?room={roomId}
-
-- cancelMatching():
-  1. UPDATE match_queue SET status = 'cancelled'
-  2. Unsubscribe from channel
-  3. Reset to idle
-
-- Cleanup: unsubscribe on unmount, cancel if navigating away
-```
-
----
-
-## 2. Chat (Ephemeral Broadcast)
-
-### Channel: `chat:{roomId}`
-
-All messages are Broadcast events — **no database writes for messages**.
-
-### Events
-
-| Event | Payload | Direction |
-|-------|---------|-----------|
-| `message` | `{ sender_id, text, timestamp }` | Both → Both |
-| `typing` | `{ sender_id, is_typing }` | Both → Both |
-| `end_chat` | `{ sender_id }` | One → Both |
-
-### Presence
-
-Both users track presence on the channel:
-```js
-channel.track({ user_id, joined_at })
-```
-
-Presence `leave` event = partner disconnected → show "Stranger disconnected" UI.
-
-### Frontend Hook: `useRealtimeChat`
-
-```
-src/features/chat/hooks/use-realtime-chat.ts
-
-Replaces: use-chat.ts
-
-Props: roomId, userId
-
-Returns:
-  - messages: ChatMessage[]
-  - sendMessage(text): void
-  - endChat(): void
-  - isStrangerTyping: boolean
-  - isStrangerConnected: boolean
-  - chatStatus: 'connecting' | 'active' | 'ended' | 'disconnected'
-
-Implementation:
-  1. Subscribe to channel `chat:{roomId}` with Presence
-  2. Track own presence
-  3. Listen for broadcast events (message, typing, end_chat)
-  4. Listen for presence leave (stranger disconnected)
-  5. Messages stored in local React state only (ephemeral)
-  6. Typing indicator: debounced broadcast on keystroke
-  7. Cleanup: untrack + unsubscribe on unmount or chat end
-```
-
-### Room Lifecycle
-
-```
-1. Both users navigate to /chat?room={roomId}
-2. Both subscribe to chat:{roomId} channel
-3. Both track presence
-4. Exchange messages via broadcast
-5. Either user clicks "End Chat" → broadcasts end_chat
-6. Or stranger disconnects → presence leave detected
-7. UPDATE rooms SET status = 'ended', ended_at = now()
-8. Show ChatEndedView with duration + message count
-```
-
----
-
-## 3. Games (Client-side + Broadcast)
-
-### Architecture
-
-Games run **entirely client-side**. Both clients maintain the same game state. Moves are broadcast and applied locally.
-
-For v1, only implementing: **Tic Tac Toe** (simplest proof of concept).
-
-### Channel: `game:{roomId}`
-
-### Events
-
-| Event | Payload | Direction |
-|-------|---------|-----------|
-| `move` | `{ sender_id, position, timestamp }` | One → Both |
-| `game_start` | `{ first_player_id, game_type }` | Broadcast |
-| `game_end` | `{ winner_id, reason }` | Broadcast |
-| `rematch` | `{ sender_id }` | One → Both |
-
-### Game State (rooms.game_state JSONB)
-
-```json
-// Tic Tac Toe example
-{
-  "board": [null, "X", null, "O", null, null, null, null, null],
-  "players": { "X": "user-a-id", "O": "user-b-id" },
-  "current_turn": "X",
-  "winner": null,
-  "status": "playing" // "playing" | "won" | "draw"
-}
-```
-
-### Frontend Hook: `useGameRoom`
-
-```
-src/features/games/hooks/use-game-room.ts
-
-Props: roomId, userId, gameType
-
-Returns:
-  - gameState: GameState
-  - makeMove(move): void
-  - isMyTurn: boolean
-  - winner: string | null
-  - requestRematch(): void
-
-Implementation:
-  1. Subscribe to game:{roomId} channel
-  2. Determine player assignment (user_a = X, user_b = O)
-  3. Listen for 'move' events → validate + apply to local state
-  4. On own move: validate locally, broadcast, apply
-  5. Win detection runs after each move
-  6. On game end: UPDATE rooms.game_state + rooms.status
-```
-
-### Game Engine Pattern
-
-```
-src/features/games/engines/tic-tac-toe.ts
-
-Pure functions (no React):
-  - createInitialState(playerA, playerB): GameState
-  - applyMove(state, move): GameState | Error
-  - checkWinner(state): { winner, line } | null
-  - getValidMoves(state): Position[]
-  - isMyTurn(state, userId): boolean
-
-Each game type gets its own engine file.
-Future games follow the same pattern.
-```
-
----
-
-## PR Breakdown
-
-### PR 1: `feat/realtime-schema` — Database + Edge Function
-
-- Migration: `match_queue` and `rooms` tables with RLS
-- Edge Function: `match-users` (matching logic)
-- Realtime authorization policy
-- Type regeneration
-
-### PR 2: `feat/matchmaking` — Real Matchmaking Flow
-
-- `useMatchmaking` hook replacing `useMatchState`
-- Update LobbyView + SearchingView to use real matchmaking
-- Queue entry management (insert/cancel/cleanup)
-- Match notification via Broadcast
-- Navigation to /chat on match
-
-### PR 3: `feat/realtime-chat` — Ephemeral Chat
-
-- `useRealtimeChat` hook replacing `useChat`
-- Update ChatView to accept roomId from URL params
-- Real message exchange via Broadcast
-- Typing indicator via Broadcast
-- Presence tracking (stranger connected/disconnected)
-- Room status update on chat end
-
-### PR 4: `feat/tic-tac-toe` — First Playable Game
-
-- Tic Tac Toe engine (pure functions)
-- `useGameRoom` hook
-- Game board UI component
-- Game route with room param
-- Integration with matchmaking (mode: 'games')
-
----
-
-## Verification
-
-Each PR:
-1. `npm run check` — Biome passes
-2. `npm run typecheck` — TypeScript passes
-3. `npm run build` — Builds successfully
-4. Manual test with two browser tabs logged in as different users (user-a, user-b)
-5. Match flow: User A starts matching → User B starts matching → both see match → chat opens
-6. Test against hosted Supabase project (not just local) before merging Realtime PRs
-
-## Edge Cases
-
-- User closes tab while searching → match_queue entry stays 'waiting', Edge Function expires it after 2 min
-- User closes tab during chat → Presence leave fires, partner sees "disconnected"
-- Both users end chat simultaneously → idempotent room update
-- User navigates to /chat without roomId → redirect to /dashboard
-- User navigates to /chat with invalid roomId → show error
-- Network disconnect during chat → Realtime reconnects automatically, Presence re-syncs
-- Match queue has odd number of users → one stays waiting
-- User tries to match while already in queue → unique constraint prevents duplicate
-- Concurrent cron invocations → advisory lock serializes execution
-- Broadcast fails after DB commit → notified flag enables retry on next cycle
-- Edge Function crashes mid-execution → transaction rolls back, users stay in queue
-
-## Post-v1 Considerations
-
-- **Game move validation**: Move validation is client-side only in v1. The game engine files are pure functions that can run unchanged in an Edge Function for server-side validation in v2.
-- **Alerting**: Add queue depth alerts and avg wait time monitoring when user volume warrants it.
-- **Staging environment**: Dedicated Supabase staging project (free tier) for pre-production testing.
-- **Rate limiting**: Prevent queue spam (rapid insert/cancel cycles) via RLS or Edge Function throttling.
-
----
-
-# UX Redesign Plan (PR 5: `feat/ux-redesign`)
-
-## Summary
-
-Restructure the matching/chat/game flow: remove mode-based matching, use profile-based soft-preference matching (interests, gender, age, region), integrate games as a side-by-side panel within chat, remove standalone game routes, and add conversation prompt cards.
-
-## User Decisions
-
-| Question | Answer |
-|----------|--------|
-| Interest source for matching | Both: default to profile interests, allow editing before match |
-| Game + chat layout | Side-by-side: chat left, game right (desktop); stacked on mobile |
-| Games catalog page | Remove it — game selection happens inline within chat |
-| Matching filters (gender/age/region) | Soft preferences: prefer similar, fall back to any after timeout |
-| Prompt cards | Auto-generated from stranger's interests |
+Prepare Lume for the Breaking Apps Hackathon by replacing the previous TestSprite-centered submission artifacts with a Passmark + Playwright regression suite, tightening public documentation, and adding a few high-leverage product/testability improvements that make the app easier to validate and more compelling to write about.
+
+## Context
+
+- Lume is a TanStack Start + React 19 app with Supabase Auth, Postgres/RLS, Realtime Broadcast chat, pg_cron/Edge Function matchmaking, and 7 available inline games.
+- Current public docs are still framed around TestSprite:
+  - `README.md` says “Tested end-to-end with TestSprite MCP”, includes a full “Testing with TestSprite” section, and says 30 tests exist.
+  - `docs/PRD.md` says the PRD is designed for TestSprite and has “Shipped (hackathon build)” language.
+  - `testsprite_tests/` contains the previous generated suite and JSON plans.
+  - `.gitignore` has TestSprite runtime cache rules.
+  - `CLAUDE.md` also documents TestSprite, but that is agent-facing rather than user-facing.
+- There are documentation inconsistencies worth fixing before submission:
+  - README/PRD mention Release Notes routes that do not exist in `src/routes`.
+  - PRD says “9 games, all shipped” while `src/features/games/data/games.ts` has 7 available and 2 coming soon.
+  - README key files mention `src/features/matchmaking/` and `src/features/safety/`, but the actual code lives under `src/features/lobby/*`, `src/features/chat/*`, and Supabase functions/mutations.
+- The app is a strong candidate for the hackathon because it has multiple flows that AI regression testing can validate in plain English: auth, onboarding, protected-route guards, dashboard preferences, matchmaking, realtime chat, reports/blocks, games, and responsive/public routes.
 
 ## System Impact
 
-### Source of Truth Changes
-- **Before**: `match_queue.mode` determines room type (chat vs game). Interests entered per-session.
-- **After**: No mode. All rooms start as `chat`. Interests sourced from `profiles` table (editable pre-match). Gender/DOB/region from profiles used for scoring.
-
-### State Ownership Changes
-- **Game panel toggle**: New client-side state in ChatView (`showGame: boolean`, `selectedGame: string | null`)
-- **Stranger's profile**: Chat needs to fetch partner's profile (interests, display_name) for prompt cards. Currently not fetched.
-
-### Removed Concepts
-- `MatchMode` type (`"text" | "games"`) — eliminated
-- `match_queue.mode` column — no longer used for pairing (backward-compat: keep column, stop grouping by it)
-- `/games` route and `/game` route — removed
-- Games sidebar nav item — removed
-
-### New Concepts
-- **Match scoring**: Multi-factor score (interests + gender + age proximity + region) replaces interest-only scoring
-- **Prompt cards**: Generated from stranger's interests, shown before first message
-- **Inline game picker**: Small UI within chat header/toolbar to select and start a game
+- The product source of truth stays the application and Supabase schema. We are not changing core data ownership.
+- The testing source of truth moves from generated TestSprite artifacts to a committed Passmark Playwright suite.
+- New test configuration introduces `OPENROUTER_API_KEY` for Passmark only; Supabase env vars remain unchanged.
+- Seeded test data in `supabase/seed-data.ts` remains the deterministic baseline for local regression tests.
+- For reliability, tests should prefer seeded local users for authenticated flows and only generate throwaway users when specifically testing signup/onboarding.
+- Any UI/testability changes should preserve Passmark’s no-selector philosophy: improve accessible labels, button names, visible copy, and deterministic states rather than adding brittle test IDs.
 
 ## Approach
 
-### PR Breakdown (3 sub-PRs to keep changes manageable)
+Use the current Lume app as the tested web app, not a random public app. The submission will be stronger because we can show real fixes, local reproducibility, and meaningful coverage over a complex realtime product.
 
-**PR 5a: `feat/ux-sidebar-and-matching`** — Remove mode, update sidebar, profile-based matching
-**PR 5b: `feat/ux-chat-games-integration`** — Side-by-side game panel in chat, remove /games and /game routes
-**PR 5c: `feat/ux-prompt-cards`** — Conversation starter prompt cards
+Work in four phases:
 
----
+1. **Clean previous hackathon/testing traces** — remove or reframe TestSprite-specific public artifacts, correct docs, and decide whether to delete or archive `testsprite_tests/`.
+2. **Install and configure Passmark** — add Playwright + Passmark + dotenv config, `.env.example` support for `OPENROUTER_API_KEY`, and npm scripts for local/CI runs.
+3. **Write a high-quality Passmark suite** — cover public, auth, onboarding, dashboard/settings, safety, games, and at least one two-user realtime scenario.
+4. **Polish for prize potential** — make the UI and docs easier for AI tests and humans to understand, then create the Hashnode/social submission assets.
 
-### PR 5a: Sidebar + Matching Redesign
+## Changes
 
-#### Changes
+### Documentation and cleanup
 
-- `src/layout/dashboard-shell.tsx` — Remove "Chat" and "Games" from `sidebarNav`. Keep only Lobby and Settings.
+- `README.md`
+  - Replace TestSprite positioning with Passmark/Breaking Apps positioning.
+  - Add “Testing with Passmark” setup and run instructions.
+  - Correct feature counts and key-file paths.
+  - Remove nonexistent release-notes claims unless release-note routes are actually implemented.
+- `docs/PRD.md`
+  - Reframe as product/test source of truth for Passmark instead of TestSprite.
+  - Change status from “hackathon build” to current product status.
+  - Correct games section to “7 available, 2 coming soon”.
+  - Remove or update acceptance criteria that depend on nonexistent release-note routes.
+- `.env.example`
+  - Add `OPENROUTER_API_KEY=` with a comment that it is used by Passmark tests.
+- `.gitignore`
+  - Replace TestSprite cache comments with Playwright/Passmark cache/report ignores.
+- `testsprite_tests/`
+  - Preferred: delete from the submission branch to avoid confusing judges.
+  - Alternative: move to `docs/archive/testsprite/` only if we want to tell a migration story. For a clean hackathon entry, deletion is cleaner.
+- `CLAUDE.md`
+  - Update the testing section after the public docs are finalized so future agents follow Passmark, not TestSprite.
 
-- `src/features/lobby/types/index.ts` — Remove `MatchMode` type. Export new `MatchPreferences` type:
-  ```ts
-  interface MatchPreferences {
-    interests: string[];
-    // gender/age/region pulled from profile server-side
-  }
-  ```
+### Passmark test infrastructure
 
-- `src/features/lobby/components/match-config-card.tsx` — Remove mode toggle. Show profile interests (pre-filled from profile, editable). Remove mode param from `onStartMatching`.
+- `package.json` / `package-lock.json`
+  - Add dev/test dependencies: `@playwright/test`, `passmark`, `dotenv`.
+  - Add scripts:
+    - `test:e2e`: run Passmark suite on Chromium.
+    - `test:e2e:headed`: headed debug run.
+    - `test:e2e:report`: open Playwright report.
+    - Optional `test:e2e:smoke`: small low-credit subset for quick checks.
+- `playwright.config.ts`
+  - Load `.env` with `dotenv`.
+  - Configure Passmark AI gateway as `openrouter`.
+  - Set `baseURL` to local preview/dev URL, default `http://127.0.0.1:3000`.
+  - Use Chromium first for judging reliability; optionally add mobile viewport project later.
+  - Configure trace/video/screenshots on retry/failure.
+- `e2e/passmark/helpers.ts`
+  - Shared constants for seeded credentials and base URL.
+  - Optional helper to create unique test email strings.
+  - Optional wrapper around `runSteps` with a standard timeout and metadata.
+- `e2e/passmark/*.spec.ts`
+  - Plain-English Passmark specs with strong assertions.
 
-- `src/features/lobby/hooks/use-matchmaking.ts` — Remove `mode` from state and queue insert. Always navigate to `/chat` on match. Fetch profile interests as defaults.
+### Recommended Passmark suite
 
-- `supabase/functions/match-users/index.ts` — Replace `byMode` grouping with single pool. Add multi-factor scoring:
-  ```
-  score = interestOverlap * 3 + genderMatch * 2 + regionMatch * 2 + ageProximity * 1
-  ```
-  Edge Function needs to JOIN profiles table to get gender/DOB/region for scoring.
+Prioritize a suite that demonstrates breadth, depth, and real regression value while staying credit-conscious.
 
-- `supabase/migrations/XXXXXXXX_update_match_queue_for_redesign.sql` — 
-  - Make `mode` column nullable or give default (keep for backward compat, stop using for pairing)
-  - All rooms created as type `'chat'` (games are a feature within chat, not a room type)
+1. `landing.spec.ts`
+   - Load `/`.
+   - Assert hero, value proposition, features, FAQ, CTA, sign-in navigation, theme toggle.
+   - Check legal routes render: `/terms`, `/privacy`, `/community-guidelines`.
+2. `auth-onboarding.spec.ts`
+   - Signup with a unique email.
+   - Complete onboarding with valid 18+ DOB, gender, region, interests, consent.
+   - Assert redirect to lobby/dashboard and visible personalized greeting.
+   - Negative subtest: missing consent or DOB blocks submission.
+3. `auth-guards.spec.ts`
+   - Visiting `/dashboard`, `/chat`, `/settings`, `/games` while signed out redirects to login.
+   - Invalid login shows an inline error and stays on auth page.
+4. `dashboard-settings.spec.ts`
+   - Login as seeded user.
+   - Verify lobby greeting, online counter, mode toggle, interest chips, Start matching, Cancel search.
+   - Open settings, update profile/interests, save, return to lobby, assert updated info appears.
+5. `games-catalog.spec.ts`
+   - Login as seeded user.
+   - Browse `/games`.
+   - Assert 7 available games and 2 coming soon are understandable.
+   - Click an available game and verify it starts the matchmaking/searching flow with the chosen game intent.
+6. `chat-safety.spec.ts`
+   - Use a deterministic chat route/room where possible or pair two seeded users in two browser contexts.
+   - Send a message, verify it appears, open report dialog, assert reason is required, submit with “Also block”, assert end-chat or return-to-lobby behavior.
+7. `realtime-matchmaking.spec.ts` (stretch / flagship)
+   - Two browser contexts: Alice and Bob log in, both start matching, assert both reach `/chat?roomId=...` with the same room.
+   - Exchange messages.
+   - Invite/accept a simple game like Tic Tac Toe, make a few moves, assert synced board state.
 
-#### Files Modified
-- `src/layout/dashboard-shell.tsx` — Remove Chat + Games nav items
-- `src/features/lobby/types/index.ts` — Replace MatchMode
-- `src/features/lobby/components/match-config-card.tsx` — Remove mode toggle, pre-fill interests
-- `src/features/lobby/components/lobby-view.tsx` — Remove initialMode prop
-- `src/features/lobby/hooks/use-matchmaking.ts` — Remove mode logic
-- `src/routes/_authenticated/dashboard.tsx` — Remove mode search param
-- `supabase/functions/match-users/index.ts` — Multi-factor scoring
-- New migration for schema changes
+### Product/testability polish for a stronger submission
 
----
+- Improve accessible names where Passmark may struggle:
+  - `src/features/lobby/components/lobby-hero-card.tsx` — make mode toggle/chips/Start matching labels explicit.
+  - `src/features/chat/components/chat-header.tsx` — ensure Game, End chat, Report, Ban invites have visible or aria labels.
+  - `src/features/chat/components/report-dialog.tsx` — clear labels for reasons and “Also block”.
+  - `src/features/games/components/game-card.tsx` — clear available vs coming-soon state.
+- Add deterministic copy/state for tests without brittle selectors:
+  - Ensure searching screen shows “Searching”, elapsed time, selected interests, cancel action.
+  - Ensure settings save success text is visible and specific.
+- Consider one product enhancement that is article-worthy but bounded:
+  - “Regression-friendly realtime demo”: a documented two-seeded-user local script/runbook, not a hidden test mode.
+  - Or improve chat safety UX with clearer post-report confirmation.
+  - Or add a lightweight “Test coverage map” doc that maps Passmark specs to product risks.
 
-### PR 5b: Chat + Games Integration
+### Submission assets
 
-#### Changes
-
-- `src/features/chat/components/chat-view.tsx` — Add game panel state. Side-by-side layout:
-  ```
-  Desktop: [Chat (flex-1)] [Game Panel (w-96, collapsible)]
-  Mobile: [Chat] with slide-up game sheet
-  ```
-  Add game toggle button in ChatHeader.
-
-- `src/features/chat/components/chat-header.tsx` — Add "Play a game" button/icon that opens game picker.
-
-- `src/features/chat/components/game-panel.tsx` (NEW) — Wrapper that shows game picker or active game. Contains:
-  - Game picker (list of available games from `games/data/games.ts`)
-  - Active game view (renders TicTacToeBoard etc.)
-  - Uses existing `useGameRoom` hook
-
-- `src/features/games/hooks/use-game-room.ts` — Minor: accept roomId that's already a chat room (no separate game room needed). Game state synced via `game:{roomId}` Broadcast channel (already works this way).
-
-- Remove routes:
-  - Delete `src/routes/_authenticated/game.tsx`
-  - Delete `src/routes/_authenticated/games.tsx`
-
-- `src/features/games/components/games-view.tsx` — Delete (catalog page)
-- `src/features/games/components/game-view.tsx` — Refactor into `game-panel.tsx` (reuse logic, different layout)
-
-#### Files Modified
-- `src/features/chat/components/chat-view.tsx` — Side-by-side layout with game panel
-- `src/features/chat/components/chat-header.tsx` — Add game toggle
-- `src/features/chat/components/game-panel.tsx` — NEW: inline game panel
-- `src/routes/_authenticated/game.tsx` — DELETE
-- `src/routes/_authenticated/games.tsx` — DELETE
-- `src/features/games/components/games-view.tsx` — DELETE
-- `src/features/games/components/game-view.tsx` — DELETE (logic moves to game-panel)
-- `src/features/games/index.ts` — Update barrel exports
-
----
-
-### PR 5c: Prompt Cards
-
-#### Changes
-
-- `src/features/chat/hooks/use-stranger-profile.ts` (NEW) — Fetch stranger's profile (interests, display_name) using the partnerId from the room. Cached via TanStack Query.
-
-- `src/features/chat/components/prompt-cards.tsx` (NEW) — Shows 3-4 clickable prompt cards based on stranger's interests. Examples:
-  - Interest "hiking" → "What's the best trail you've ever hiked?"
-  - Interest "anime" → "What anime are you watching right now?"
-  - No interests → generic prompts ("What's something interesting that happened today?")
-  Clicking a card populates the message input.
-
-- `src/features/chat/components/message-list.tsx` — Show prompt cards when messages array is empty and stranger is connected.
-
-- `src/features/chat/data/prompt-templates.ts` (NEW) — Map of interest keywords to prompt templates. Fallback generic prompts.
-
-#### Files Modified
-- `src/features/chat/hooks/use-stranger-profile.ts` — NEW
-- `src/features/chat/components/prompt-cards.tsx` — NEW
-- `src/features/chat/data/prompt-templates.ts` — NEW
-- `src/features/chat/components/message-list.tsx` — Integrate prompt cards
-- `src/features/chat/index.ts` — Update exports
-
----
+- `docs/PASSMARK_TEST_PLAN.md`
+  - Matrix of Passmark tests → product risk → assertions → known limitations.
+- `docs/HASHNODE_DRAFT.md`
+  - Draft article outline:
+    1. What Lume is.
+    2. Why it is hard to test: auth, realtime, matching, games, safety.
+    3. How Passmark setup works with OpenRouter.
+    4. Walkthrough of the suite.
+    5. Regressions/edge cases found and fixed.
+    6. What surprised us about plain-English AI testing.
+    7. Repo/demo links and #BreakingAppsHackathon tag.
+- `docs/SOCIAL_POSTS.md`
+  - X/LinkedIn drafts tagging Bug0 and mentioning #BreakingAppsHackathon.
 
 ## Verification
 
-1. **Matching**: Two users with overlapping interests match faster than those without. Users with no overlap still match after 30s fallback. Gender/region preferences improve match quality but don't block.
-2. **Chat**: After match, both users land in chat. Chat works as before.
-3. **Games**: Click game icon in chat header → game picker appears → select Tic Tac Toe → side-by-side panel shows board. Game plays normally alongside chat.
-4. **Prompt cards**: First message view shows interest-based prompts. Clicking populates input. Cards hide after first message sent.
-5. **Navigation**: No /games or /game routes. Sidebar only shows Lobby + Settings. Chat route still works with roomId.
-6. **Mobile**: Game panel is a bottom sheet or stacked below chat.
-7. **`npm run check`** passes (Biome + typecheck)
+### Local verification
 
----
+1. Install dependencies:
+   - `npm install`
+2. Start/reset local backend:
+   - `npm run db:start`
+   - `npm run db:reset`
+3. Run app in production-like mode:
+   - `npm run build`
+   - `npm run preview`
+4. Run checks:
+   - `npm run check`
+   - `npm run typecheck`
+5. Run Passmark suite:
+   - `OPENROUTER_API_KEY=... npm run test:e2e -- --project chromium`
+   - `npm run test:e2e:report`
 
-# Refactoring Plan
+### Edge cases to verify manually
 
-## Summary
+- New user signup/onboarding still works after docs/test changes.
+- Seeded users can still log in after `npm run db:reset`.
+- Protected route redirects do not loop during SSR hydration.
+- Two-user matchmaking does not fail because of stale queue rows; cancel works.
+- Report + block remains idempotent and does not expose the block to the blocked user.
+- Passmark tests do not rely on selectors or hidden implementation details.
+- The final repo no longer looks like a TestSprite submission.
 
-Systematic refactoring pass to enforce single responsibility, eliminate duplication, fix naming inconsistencies, and bring all files under 150 lines. No feature changes — purely structural improvements following the React Component Refactoring Skill guidelines.
+## Execution Order
 
-## Audit Findings
-
-- **7 files over 200 lines** (excluding shadcn/ui generated files)
-- **3 files with tangled logic** (business logic mixed with UI)
-- **~70 lines of duplicated code** (DOB picker, gender select across onboarding + settings)
-- **Naming/export inconsistencies** (Footer.tsx PascalCase + default export, empty barrel files)
-- **Inline schemas** in settings instead of dedicated files
-
-## Approach: 8 PRs (stacked or parallel)
-
-Each PR is independently reviewable and mergeable.
-
----
-
-### PR 1: `refactor/shared-form-components` — Extract DateOfBirthPicker + GenderSelect
-
-**Problem:** Nearly identical ~35-line DOB calendar popover and gender select blocks duplicated in `onboarding-form.tsx` and `profile-section.tsx`. `MAX_DOB` constant defined twice.
-
-**Changes:**
-- `src/components/form/date-of-birth-picker.tsx` — NEW: Extracted `<DateOfBirthPicker />` using FormInput + Popover + Calendar
-- `src/components/form/gender-select.tsx` — NEW: Extracted `<GenderSelect />` using FormInput + Select
-- `src/lib/constants.ts` — NEW: Move `MAX_DOB` here
-- `src/features/onboarding/components/onboarding-form.tsx` — Replace inline DOB/gender blocks with shared components
-- `src/features/settings/components/profile-section.tsx` — Same replacement
-- `src/components/form/index.ts` — Update barrel exports
-
----
-
-### PR 2: `refactor/use-game-room` — Break up use-game-room.ts (294 → ~150 lines)
-
-**Problem:** 150-line useEffect with inline broadcast handlers. Rematch logic duplicated between broadcast handler and `requestRematch` callback.
-
-**Changes:**
-- `src/features/games/hooks/use-game-room.ts` — Refactor:
-  - Extract `startNewGame(roomDataRef, setGameState, setRoomStatus, channel)` helper
-  - Extract broadcast event handlers into named functions: `handleGameStart`, `handleGameMove`, `handleRematchRequest`, `handleRematchAccepted`
-  - Break the monolithic useEffect into a `setupGameChannel()` async function composed of smaller pieces
-
----
-
-### PR 3: `refactor/settings-cleanup` — Extract schema + mutations hook
-
-**Problem:** Inline Zod schema in `profile-section.tsx`. Mutation definitions + success timers tangled in `settings-view.tsx`.
-
-**Changes:**
-- `src/features/settings/schema.ts` — NEW: Extract profile form schema from profile-section.tsx
-- `src/features/settings/hooks/use-settings-mutations.ts` — NEW: Extract `useSettingsMutations()` hook from settings-view.tsx (profile + preferences mutations, success state, cache invalidation)
-- `src/features/settings/components/settings-view.tsx` — Slim down to pure layout orchestration
-- `src/features/settings/components/profile-section.tsx` — Import schema from dedicated file
-- `src/features/settings/index.ts` — Update barrel exports
-
----
-
-### PR 4: `refactor/naming-consistency` — Fix naming, exports, barrel files
-
-**Problem:** `Footer.tsx` is PascalCase with default export (only file in codebase). Chat/games have empty barrel files. Inconsistent patterns.
-
-**Changes:**
-- `src/layout/Footer.tsx` → `src/layout/footer.tsx` — Rename + change to named export
-- `src/layout/dashboard-shell.tsx` — Update Footer import
-- `src/routes/_landing.tsx` — Update Footer import
-- `src/features/chat/index.ts` — Populate with proper barrel exports (ChatView, useRealtimeChat, types)
-- `src/features/games/index.ts` — Populate with proper barrel exports (TicTacToeBoard, useGameRoom, types)
-
----
-
-### PR 5: `refactor/game-panel-decomposition` — Split game-panel.tsx (271 → ~100 lines)
-
-**Problem:** 4 sub-components in one file. `ActiveGame` is ~135 lines with 6-level deep nesting.
-
-**Changes:**
-- `src/features/chat/components/active-game.tsx` — NEW: Extract ActiveGame component
-- `src/features/chat/components/game-panel.tsx` — Keep as orchestrator importing ActiveGame, GamePickerCard, GameInviteModal
-- `src/features/chat/components/game-status-bar.tsx` — NEW: Extract the game status/turn indicator (optional, if ActiveGame is still >150 lines)
-
----
-
-### PR 6: `refactor/login-extraction` — Move login logic to feature
-
-**Problem:** `login.tsx` route has mutation definitions, mode state, and SSR guards inline — inconsistent with other routes being thin shells.
-
-**Changes:**
-- `src/features/auth/components/login-view.tsx` — NEW: Extract login page component with auth mode toggle + mutations
-- `src/routes/login.tsx` — Slim to thin route shell importing LoginView
-- `src/features/auth/index.ts` — Update barrel exports
-
----
-
-### PR 7: `refactor/dashboard-shell-split` — Split dashboard-shell.tsx (179 lines, 4 components)
-
-**Problem:** DashboardTopBar, DashboardSidebar, MobileTabBar, and DashboardShell all in one file.
-
-**Changes:**
-- `src/layout/dashboard-topbar.tsx` — NEW: Extract DashboardTopBar
-- `src/layout/dashboard-sidebar.tsx` — NEW: Extract DashboardSidebar
-- `src/layout/mobile-tab-bar.tsx` — NEW: Extract MobileTabBar
-- `src/layout/dashboard-shell.tsx` — Keep as orchestrator composing the above
-
----
-
-### PR 8: `refactor/realtime-chat-cleanup` — Tidy use-realtime-chat.ts (259 lines)
-
-**Problem:** Large useEffect with 5 inline channel event handlers.
-
-**Changes:**
-- `src/features/chat/hooks/use-realtime-chat.ts` — Extract named handler functions (`handleNewMessage`, `handleTyping`, `handlePresenceSync`, `handlePresenceLeave`), compose them in a cleaner `setupChatChannel()` function
-
----
-
-## Verification
-
-For every PR:
-1. `npm run typecheck` passes
-2. `npm run check` passes (Biome lint + format)
-3. Manual test: matchmaking → chat → game invite → tic tac toe → rematch all still work
-4. No behavioral changes — purely structural
+1. Confirm scope with the user:
+   - Delete `testsprite_tests/` or archive it?
+   - Keep the current app name/branding “Lume”?
+   - Use local Supabase only, or also run tests against the deployed `https://lume.chat`?
+   - How many OpenRouter credits are available for test runs?
+2. Cleanup docs and old artifacts.
+3. Add Passmark infra and a smoke test.
+4. Add the full core suite.
+5. Run and stabilize locally.
+6. Do product/testability polish based on Passmark failures.
+7. Prepare Hashnode/social assets.
+8. Final full run, commit, push, publish article before May 10 11:59 PM PT.

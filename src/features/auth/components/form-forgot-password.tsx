@@ -27,28 +27,15 @@ export function ForgotPasswordForm({
 					Reset password
 				</h1>
 				<p className="mt-1.5 text-sm text-muted-foreground">
-					Enter your email and we'll send you a link to reset your password.
+					Enter your email and we'll send you a 6-digit code to reset your
+					password.
 				</p>
 
 				{success ? (
 					<div className="mt-6">
 						<Alert>
 							<AlertDescription>
-								Check your email for a password reset link.
-								{import.meta.env.DEV && (
-									<>
-										{" "}
-										Local dev: check Mailpit at{" "}
-										<a
-											href="http://127.0.0.1:54324"
-											target="_blank"
-											rel="noreferrer"
-											className="font-medium underline"
-										>
-											http://127.0.0.1:54324
-										</a>
-									</>
-								)}
+								Code sent. Redirecting you to enter it…
 							</AlertDescription>
 						</Alert>
 					</div>
@@ -78,7 +65,7 @@ export function ForgotPasswordForm({
 								className="w-full rounded-2xl"
 								disabled={form.formState.isSubmitting}
 							>
-								{form.formState.isSubmitting ? "Sending..." : "Send reset link"}
+								{form.formState.isSubmitting ? "Sending…" : "Send code"}
 							</Button>
 						</form>
 					</Form>

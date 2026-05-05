@@ -13,6 +13,7 @@ export {
 	signOut,
 	signUp,
 	updateUserPassword,
+	verifyRecoveryOtp,
 } from "./mutations";
 export type {
 	ForgotPasswordFormValues,

@@ -267,14 +267,24 @@ Seed data lives in `supabase/seed-data.ts` as the single source of truth. Always
 
 ## Testing
 
-There is no Vitest or Playwright suite — automated testing is driven by **TestSprite** against a production preview build (`npm run build && npm run preview`). See [`docs/TESTING.md`](docs/TESTING.md) for the test strategy, credentials, TestSprite configuration, feature→test-case matrix, and known gotchas (e.g. single-browser limitations for two-user matchmaking/chat/game flows).
+End-to-end regression testing is driven by **Passmark** + Playwright against a running local or deployed app. Passmark is configured in `playwright.config.ts` to use OpenRouter (`OPENROUTER_API_KEY`). The suite lives in `e2e/passmark/` and is documented in `docs/PASSMARK_TEST_PLAN.md`.
 
-The canonical product spec for TestSprite (and for onboarding new contributors) lives in [`docs/PRD.md`](docs/PRD.md).
+Recommended local flow:
+
+```bash
+npm run db:start
+npm run db:reset
+npm run build && npm run preview
+OPENROUTER_API_KEY=sk-or-... npm run test:e2e
+```
+
+Use `RUN_REALTIME_PASSMARK=1` only when local Supabase Realtime, pg_cron, and Edge Functions are healthy enough for the optional two-browser matchmaking test.
+
+The canonical product spec for tests and onboarding new contributors lives in [`docs/PRD.md`](docs/PRD.md).
 
 ## Updates made by Claude
 
-- Please ensure documentation found in the repo is also updated alongside changes before processing to commiting or pushing features.
-- Please ensure that release notes are created when pushing new features. They should be semantic and claude should auto detect what version to create next. New release route files should be added to `src/routes/(clean-up)/release-notes/` and their metadata added to `src/data/releases.ts`. Bump the `version` in `package.json` to match. The `release.yml` GitHub Action will auto-create a GitHub Release and git tag on merge to main.
+- Please ensure documentation found in the repo is updated alongside code changes before committing or pushing features.
 
 Allow claude to run the following commands;
 
