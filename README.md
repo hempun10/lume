@@ -11,7 +11,13 @@
 
 **[Live demo →](https://lume-roan.vercel.app)**
 
-![Lume chat with shared-interests banner and inline Tic Tac Toe](docs/images/ttt-win.png)
+![Lume landing page](./public/landing.jpg)
+
+## What is Lume?
+
+Lume pairs you with a stranger, drops you into an ephemeral chat, and lets you play a quick two-player game together — Tic Tac Toe, Trivia, Would You Rather, and a few more. No message history, no profile feeds. When the chat ends, it's gone.
+
+The goal is to make random-stranger chat feel less awkward and less unsafe than the apps it borrows from. Games give you something to do besides "hi/hru". Server-side matchmaking respects blocks and a recent-pair cooldown. Reports are one click.
 
 ## What's inside
 
@@ -23,13 +29,17 @@
 - **Theme** — Light/dark toggle with no FOUC.
 - **Tested with [Passmark](https://github.com/bug0inc/passmark)** — natural-language regression suite over Playwright.
 
-| Shared interests + Tic Tac Toe loss | Forgot password | Reset password |
-| :--: | :--: | :--: |
-| ![Tic Tac Toe loss screen](docs/images/ttt-loss.png) | ![Forgot password form](docs/images/forgot-password.png) | ![Reset password OTP form](docs/images/reset-password.png) |
-
 ## Stack
 
 TanStack Start (React 19 + Vite 7 + Nitro SSR) · Supabase (Auth, Realtime, Edge Functions, pg_cron) · Tailwind v4 · shadcn/ui · TypeScript · Biome.
+
+## Architecture at a glance
+
+- **Frontend** — TanStack Start renders the app via Nitro SSR. Routes are file-based under `src/routes/`. Feature logic lives in `src/features/{auth,lobby,chat,games,settings}/`.
+- **Auth** — Supabase Auth + email/OTP. Middleware in protected routes redirects to `/login` when signed out and to `/onboarding` when the profile is incomplete.
+- **Matchmaking** — Clients write a `match_queue` row on "Start matching". A `pg_cron` job runs the `match-users` Edge Function every 2s, which scores candidates and creates a `chat_sessions` row. Clients subscribe via Realtime and route both users to `/chat`.
+- **Chat + games** — All in-session traffic (messages, typing, game moves) is Supabase Broadcast on a per-session channel. Nothing persists. Game state is held in-memory on each client and reconciled through broadcast.
+- **Safety** — Reports write to `reports`. Silent blocks write to `blocks`. The matchmaker filters both sides before scoring.
 
 ## Run it locally
 
@@ -107,8 +117,6 @@ RUN_REALTIME_PASSMARK=1 npx playwright test e2e/passmark/realtime-matchmaking.sp
 npx playwright test e2e/passmark/auth-recovery.spec.ts
 ```
 
-See [`docs/PASSMARK_TEST_PLAN.md`](docs/PASSMARK_TEST_PLAN.md) for the coverage matrix and [`docs/HASHNODE_DRAFT.md`](docs/HASHNODE_DRAFT.md) for the story of three real bugs the suite caught.
-
 ## Scripts
 
 ```bash
@@ -155,22 +163,26 @@ Protected routes redirect to `/login` when signed out and to `/onboarding` when 
 ## Project layout
 
 ```
-e2e/passmark/                 Natural-language regression suite
-src/routes/                   File-based TanStack Router routes
-src/features/auth/            Auth + onboarding context and forms
-src/features/lobby/           Match queue and realtime subscription
-src/features/chat/            Realtime chat, safety dialog, game host
-src/features/games/           Game engines, boards, room sync
-src/features/settings/        Profile + preferences editor
-src/lib/supabase/             Supabase browser/server clients
-supabase/functions/match-users/   Server-authoritative matchmaker
-supabase/migrations/          Schema, RLS, functions, cron setup
-docs/                         PRD, test plan, hackathon writeup
+e2e/passmark/                       Natural-language regression suite
+src/routes/                         File-based TanStack Router routes
+src/features/auth/                  Auth + onboarding context and forms
+src/features/lobby/                 Match queue and realtime subscription
+src/features/chat/                  Realtime chat, safety dialog, game host
+src/features/games/                 Game engines, boards, room sync
+src/features/settings/              Profile + preferences editor
+src/features/landing/               Marketing landing page
+src/lib/supabase/                   Supabase browser/server clients
+supabase/functions/match-users/     Server-authoritative matchmaker
+supabase/migrations/                Schema, RLS, functions, cron setup
 ```
 
 ## Deployment
 
 Configured for Vercel. Set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` plus the `VITE_SUPABASE_*` and `SUPABASE_SECRET_KEY` env vars. Pushes to `main` deploy to production after CI and migration checks.
+
+## Writeup
+
+The story of three real bugs Passmark caught during the Bug0 × Hashnode Breaking Apps Hackathon: <https://hempun.hashnode.dev/how-passmark-caught-three-real-bugs-in-my-vibe-coded-realtime-chat-app>
 
 ## License
 
