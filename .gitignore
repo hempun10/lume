@@ -12,6 +12,11 @@ dist-ssr
 __unconfig*
 todos.json
 
+# Local agent / IDE config
+.agents/
+CLAUDE.md
+AGENTS.md
+
 # cleanup:e2e-start
 # Playwright
 /test-results/

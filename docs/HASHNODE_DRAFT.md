@@ -1,8 +1,8 @@
 <!--
 Hashnode submission metadata
-- Title: Breaking Lume: how Passmark caught a silent RLS bug, an OTP flow regression, and a hydration race in my realtime stranger-chat app
-- Subtitle: A Passmark + Playwright regression suite for a TanStack Start + Supabase Realtime app — with three real bugs caught.
-- Slug: breaking-lume-passmark-regression-suite
+- Title: How Passmark caught three real bugs in my vibe-coded realtime chat app
+- Subtitle: A Passmark + Playwright regression suite for a TanStack Start + Supabase Realtime app, and the bugs it surfaced.
+- Slug: passmark-caught-three-bugs-lume
 - Cover image: ./images/ttt-win.png
 - Tags: BreakingAppsHackathon, passmark, playwright, supabase, tanstack, testing, react, typescript, ai, hackathon
 - Canonical URL: https://github.com/hempun10/lume/blob/main/docs/HASHNODE_DRAFT.md
@@ -10,7 +10,7 @@ Hashnode submission metadata
 - Mentions: @bug0inc on social posts
 -->
 
-# Breaking Lume: how Passmark caught a silent RLS bug, an OTP flow regression, and a hydration race in my realtime stranger-chat app
+# How Passmark caught three real bugs in my vibe-coded realtime chat app
 
 > Submission for the Bug0 **Breaking Apps Hackathon** — `#BreakingAppsHackathon` — deadline May 10, 2026 11:59 PM PT.
 
@@ -18,40 +18,48 @@ Hashnode submission metadata
 
 ## TL;DR
 
-I have an open-source realtime stranger-chat app called **Lume** (TanStack Start + Supabase Realtime). I replaced its previous E2E suite with a **Passmark + Playwright** regression suite that drives the app via natural-language steps backed by AI, falls back to deterministic Playwright for setup, and uses a custom email-OTP provider that reads from local Mailpit.
+I built a small realtime stranger-chat app called **Lume** the way most of us build things now: with a model in the loop, shipping fast, skipping the boring tests. Then I pointed **Passmark** at it.
 
-In the process Passmark caught **three real bugs** that had been hiding in plain sight:
+Passmark drives the app with natural-language steps and judges the result with screenshots and prose. I wrote a custom email provider so it could read OTP codes from local Mailpit, and I pinned everything to `google/gemini-2.5-flash` so my OpenRouter bill stayed predictable.
 
-1. A silent RLS policy gap that made every chat's *PromptSuggestions* and *PromptCards* fall back to generic prompts.
-2. A magic-link recovery flow that didn't actually work end-to-end against Supabase's local stack.
-3. A hydration race that made login and signup forms intermittently submit as a GET request with credentials in the URL.
+It found three bugs I had been staring past for weeks:
 
-Repo: https://github.com/hempun10/lume — branch `main`. Live demo: https://lume-roan.vercel.app.
+1. A Supabase RLS policy that silently broke chat prompts for every match.
+2. A password-recovery flow that only worked when I tested it by hand.
+3. A hydration race that sometimes posted login credentials into the URL.
+
+Repo: https://github.com/hempun10/lume. Live demo: https://lume-roan.vercel.app.
 
 ---
 
-## 1. What is Lume?
+## 1. What is Lume, and why I needed help testing it
 
-Lume is a safer, game-forward alternative to Omegle-style random chat. The product surface is much wider than a typical hackathon submission:
+Lume is a safer, game-forward take on Omegle-style random chat. The pieces:
 
-- Email/password auth + 18+ consent + DOB validation
+- Email/password auth, 18+ consent, DOB validation
 - Onboarding (display name, gender, region, 1–8 interests)
 - Protected dashboard with TanStack Router route guards
-- Matchmaking via Supabase Realtime + a Postgres `match_queue` + a `pg_cron`-driven Edge Function that scores candidates by interest overlap, region, and age proximity
-- Ephemeral 1:1 chat (messages intentionally not persisted)
-- Inline multiplayer games over Broadcast, with Tic Tac Toe as the realtime sync canary and Word Chain / Chess gated as "coming soon"
-- Report + block flows that exclude pairs from future matching
+- Matchmaking via Supabase Realtime, a Postgres `match_queue`, and a `pg_cron` Edge Function that scores candidates by interest overlap, region, and age
+- Ephemeral 1:1 chat (no persistence)
+- Inline games over Supabase Broadcast, with Tic Tac Toe as the canary
+- Report and block flows that exclude pairs from future matches
 - Forgot-password via 6-digit email OTP
 
-That's a lot of moving parts, which is exactly the kind of thing where AI-driven regression testing is more valuable than a wall of brittle selectors.
+That is a lot of state. A lot of it is invisible at rest. Most of the bugs I cared about lived between two browsers, two Supabase channels, and a redirect.
 
-## 2. Why Passmark was a good fit for this app
+Selector-based E2E tests do not love that shape. I wanted something that could read the page like a person and tell me whether the *behaviour* was right.
 
-Three properties of Lume make it a poor fit for traditional E2E test frameworks and a great fit for Passmark:
+## 2. The vibe-coded era needs different tests
 
-- **Lifecycle transitions matter more than DOM details.** "Lobby → searching → cancel → idle", "signup → onboarding → dashboard", "chat → game invite → game panel" are the flows where regressions actually hurt. Selectors describe markup; Passmark steps describe intent.
-- **Realtime + ephemeral state is hard to assert deterministically.** Messages aren't persisted. The matchmaker is non-deterministic when there are >2 users in the queue. A snapshot-based AI assertion handles "Bob's chat timeline contains the incoming message 'hello from passmark' from the stranger" much more gracefully than fishing for a `[data-message-id]` selector.
-- **Accessibility is a side effect.** Telling Passmark to "click 'Start matching'" forced me to make sure that label was actually present and unambiguous — which is also exactly what a screen reader user needs.
+Most of Lume came together during long sessions of "ask a model, paste, run, swear, ask again." That style ships a working surface fast, but the surface and the data flow lie to each other constantly. The login button works. The chat opens. The cards render. None of that proves the right rows came back from Postgres.
+
+Three Passmark properties matched that risk:
+
+- **Steps describe intent, not markup.** "Click 'Start matching'" is a contract with the user. `[data-testid="lobby-cta"]` is a contract with my last refactor.
+- **Snapshot judging tolerates non-determinism.** Lume's matchmaker is non-deterministic when more than two people are in the queue. Asking the AI to confirm "Bob's timeline contains a message from the stranger that says 'hello from passmark'" is much kinder than chasing a `[data-message-id]`.
+- **Accessibility falls out for free.** If Passmark cannot find the button by its label, neither can a screen reader. Every test I wrote made the app slightly more readable.
+
+In short: when the code is half mine and half the model's, I want a checker that judges the experience, not the DOM I no longer fully remember.
 
 ## 3. The suite at a glance
 
@@ -70,33 +78,76 @@ Three properties of Lume make it a poor fit for traditional E2E test frameworks 
 | `chat-safety.spec.ts` *(opt-in)* | Report dialog reason validation, Also block | Safety |
 | **`realtime-matchmaking.spec.ts`** *(opt-in)* | **Two browsers match into the same room AND see a "You both like Music · Cooking" banner** | **Realtime** |
 
-The two opt-in specs are gated behind `RUN_REALTIME_PASSMARK=1` because they need the local Supabase stack (realtime + pg_cron + Edge Functions) to be healthy.
+The two opt-in specs sit behind `RUN_REALTIME_PASSMARK=1` because they need the local Supabase stack (realtime, pg_cron, Edge Functions) to be healthy.
 
-## 4. Setup that mattered
+## 4. How I actually use Passmark
 
-A few choices that paid off:
+The whole driver lives in `playwright.config.ts`. One `configure` call, one custom email provider:
 
-- **Pinned the model.** I locked Passmark to `google/gemini-2.5-flash` via `playwright.config.ts`. Without pinning I hit OpenRouter 400s on flow-routed model selection.
-- **Deterministic auth, AI for behavior.** Logging in is not the test target in 95% of specs, so `loginAsSeededUser` uses plain Playwright. Passmark only kicks in for the actual flow under test. This saves credits and removes flake.
-- **One concern per Passmark test.** Snapshot-based AI judging works much better with focused assertions than with kitchen-sink scenarios. I split the original `dashboard-settings.spec.ts` into three files (`dashboard-lobby`, `dashboard-prompts`, `settings`).
-- **Mobile-specific gating via `testInfo.skip`.** A few tests don't apply on the mobile project; a single line keeps them out of the matrix.
-- **Bumped Supabase's local sign-in/up rate limit in committed config.** Default is 30 / 5 min; the suite legitimately exceeds that with parallel runs. Bumped to 300 in `supabase/config.toml`.
+```ts
+// playwright.config.ts
+import { configure } from "passmark";
+import { mailpitProvider } from "./e2e/passmark/mailpit-provider";
 
-## 5. Three bugs Passmark caught (the actual story of this hackathon)
+configure({
+  ai: {
+    gateway: "openrouter",
+    models: {
+      stepExecution: "google/gemini-2.5-flash",
+      assertionPrimary: "google/gemini-2.5-flash",
+      assertionArbiter: "google/gemini-2.5-flash",
+      // ...all roles pinned to the same model
+    },
+  },
+  email: mailpitProvider(),
+});
+```
+
+Inside a spec, I write tests in two layers. Boring setup is plain Playwright. The flow under test is Passmark steps:
+
+```ts
+// e2e/passmark/dashboard-lobby.spec.ts
+import { test, expect } from "@playwright/test";
+import { runLumeSteps, loginAsSeededUser } from "./helpers";
+
+test("a user can start and cancel a match", async ({ page }) => {
+  await loginAsSeededUser(page, "alice"); // plain Playwright
+
+  await runLumeSteps({
+    page, test, expect,
+    userFlow: "Start matching, then cancel before pairing",
+    steps: [
+      { description: "Click the 'Start matching' button on the dashboard" },
+      { description: "Wait until the lobby shows a 'Searching for someone…' state" },
+      { description: "Click the 'Cancel' button" },
+      { description: "Confirm the lobby is back to the idle state" },
+    ],
+  });
+});
+```
+
+Four design choices made the suite worth keeping:
+
+- **Pin the model.** Without `google/gemini-2.5-flash` locked across every Passmark role, OpenRouter occasionally routed to a model that returned 400s on tool calls. Pinning made every run reproducible.
+- **Deterministic auth, AI behaviour.** Logging in is not the test target in 95% of specs. `loginAsSeededUser` uses Playwright. Passmark only kicks in for the actual flow under test. Saves credits, removes flake.
+- **One concern per Passmark test.** Snapshot AI judging works much better with focused assertions. I split the original `dashboard-settings.spec.ts` into three smaller files.
+- **Bumped Supabase's local sign-in/up rate limit.** Default is 30 / 5 min. Parallel runs eat through that. Bumped to 300 in `supabase/config.toml`, committed.
+
+## 5. Three bugs Passmark caught
 
 ### Bug #1 — A silent RLS policy gap broke chat prompts for everyone
 
-This one is my favourite, because the app *looked* fine.
+This is my favourite, because the app *looked* fine.
 
-When two users matched, the chat opened with a "Break the ice!" panel showing prompt cards. I'd written `<PromptSuggestions />` to take `strangerProfile.interests` and generate interest-keyed conversation starters ("favourite album you'd recommend", etc.). The intent was: a stranger with `Music` in their interests should see music-themed prompts.
+When two users matched, the chat opened with a "Break the ice!" panel showing prompt cards. I had wired `<PromptSuggestions />` to take `strangerProfile.interests` and generate themed conversation starters. A stranger with `Music` in their interests was supposed to see music prompts.
 
-In practice every chat fell back to the generic prompt set ("Pineapple on pizza — defend your stance"). I had never noticed because:
+Every chat fell back to the generic prompt set ("Pineapple on pizza — defend your stance"). I never noticed because:
 
 - The fallback prompts are reasonable.
 - I tested locally as a single user.
 - No selector test ever asserted the *content* of the cards.
 
-When I added a `<SharedInterestsBanner />` component for the new realtime test ("You both like Music · Cooking"), the banner refused to render. Same root cause.
+When I added a `<SharedInterestsBanner />` for the realtime test ("You both like Music · Cooking"), the banner refused to render. Same root cause.
 
 The bug:
 
@@ -107,9 +158,9 @@ CREATE POLICY "Users can read own profile"
   USING (auth.uid() = id);
 ```
 
-That was the **only** SELECT policy on `profiles`. So `useStrangerProfile`'s `select("display_name, interests").eq("id", strangerId)` returned an empty payload for every other user — silently. No error, just "no rows".
+That was the **only** SELECT policy on `profiles`. So `useStrangerProfile`'s `select("display_name, interests").eq("id", strangerId)` returned an empty payload for every other user. No error, no exception, just zero rows.
 
-The fix:
+The fix is a narrow second policy:
 
 ```sql
 -- supabase/migrations/20260502000000_allow_reading_room_counterpart_profile.sql
@@ -125,26 +176,26 @@ CREATE POLICY "Users can read room counterpart profile"
   );
 ```
 
-Narrowly scoped: a user can read another profile *only* if they share an active row in `public.rooms`. Profiles aren't globally readable.
+A user can read another profile only if they share an active row in `public.rooms`. Profiles stay locked otherwise.
 
 ![Lume chat: prompt cards with 'You both like Music · Cooking' shared-interests banner above interest-themed conversation starters](./images/shared-interests-banner.png)
 
-The banner above plus the four interest-themed prompt cards (Concert / Food hill / First anime / Morning person) are *all* downstream of the same Supabase query. Before the migration, every chat fell back to the generic prompt set.
+The banner above and the four interest-themed cards underneath all read from the same Supabase query. Before the migration, every chat fell back to generics.
 
-The thing I want to highlight: **Passmark forced me to write a meaningful behavioural assertion**, and the assertion couldn't pass until the data flow was correct. A unit test on `useStrangerProfile` would have mocked Supabase and never seen this.
+The point I want to land: Passmark made me write a *behavioural* assertion ("the banner says Music · Cooking"), and the assertion could not pass until the data flow was correct. A unit test on `useStrangerProfile` would have mocked Supabase and never seen this.
 
-### Bug #2 — The magic-link recovery flow didn't actually work end-to-end
+### Bug #2 — The magic-link recovery flow did not actually work end-to-end
 
-The original `/forgot-password` sent a magic link via `supabase.auth.resetPasswordForEmail(email, { redirectTo })`. The user clicked the link, was supposed to land on `/reset-password` with a recovery session, and could set a new password.
+The original `/forgot-password` sent a magic link via `supabase.auth.resetPasswordForEmail(email, { redirectTo })`. Click the link, land on `/reset-password` with a recovery session, set a new password, done. That was the theory.
 
-Local Supabase routes all auth emails through Mailpit, so I assumed Passmark could "click" the link the same way a user would. It can't, cleanly — the link is in an email body, in a separate tool, behind redirects.
+Local Supabase routes auth emails through Mailpit, so I assumed Passmark could "click" the link the way a user would. It cannot, cleanly. The link lives in an email body, in a separate tool, behind redirects. Every attempt to script it broke the next time the redirect chain shifted.
 
-So I rewrote the entire flow as **email OTP**:
+So I rewrote the flow as a 6-digit email OTP:
 
-- `/forgot-password` → enter email → "Send code" → redirects to `/reset-password?email=…`
-- `/reset-password` → 6-digit code + new password + confirm → `verifyOtp({ type: "recovery" })` → `updateUser({ password })` → `/dashboard`
+- `/forgot-password` → enter email → "Send code" → redirect to `/reset-password?email=…`
+- `/reset-password` → enter code + new password + confirm → `verifyOtp({ type: "recovery" })` → `updateUser({ password })` → `/dashboard`
 
-That left the question: how does Passmark actually pull the OTP out of Mailpit? Built a **custom Passmark `EmailProvider`**:
+That left the question: how does Passmark actually pull a code out of Mailpit? I built a custom `EmailProvider`:
 
 ```ts
 // e2e/passmark/mailpit-provider.ts
@@ -163,13 +214,13 @@ export function mailpitProvider(): EmailProvider {
 }
 ```
 
-Wired into Passmark in `playwright.config.ts`:
+Wired into Passmark with one line:
 
 ```ts
 configure({ email: mailpitProvider() });
 ```
 
-The test then uses the placeholder syntax:
+The test uses the placeholder syntax to inline the OTP into a step:
 
 ```ts
 await runSteps({
@@ -187,21 +238,22 @@ await runSteps({
 });
 ```
 
-The test then verifies in plain Playwright that the **old password no longer signs in** and the **new password reaches `/dashboard` or `/onboarding`**. That last part matters: Passmark proves the UI flow worked; Playwright proves the password actually changed in the database.
+After `runSteps`, plain Playwright verifies the **old password no longer signs in** and the **new password reaches `/dashboard` or `/onboarding`**. Passmark proves the UI flow worked. Playwright proves the password actually changed in the database. Each layer does the part it is good at.
 
 ![Forgot-password form: email field with 'Send code' submit](./images/forgot-password.png)
 ![Reset-password form: 6-digit OTP input with new password and confirm fields](./images/reset-password.png)
 
 ### Bug #3 — Login form occasionally submitted as GET with credentials in the URL
 
-While running the realtime test (two browser contexts in parallel), one context kept landing on `/login?email=...&password=...` instead of `/dashboard`. The form was submitting *before* React hydration replaced it with the controlled SPA version, so the browser used the default GET action.
+While running the realtime test (two browser contexts in parallel), one context kept landing on `/login?email=...&password=...` instead of `/dashboard`. The form submitted *before* React hydration replaced it with the controlled SPA version, so the browser used the default GET action.
 
 Symptom:
+
 ```
 Received string: "http://127.0.0.1:3000/login?email=...&password=new-h6fj9zie"
 ```
 
-This is the kind of bug that's invisible in single-context runs and impossible to reproduce manually. It surfaced because two contexts hammering the preview server slowed hydration past my 2000 ms blanket sleep.
+I had never seen this in single-context runs. Two contexts hammering the preview server slowed hydration past my 2000 ms blanket sleep, and the failure surfaced.
 
 Fix in `e2e/passmark/helpers.ts`:
 
@@ -213,33 +265,33 @@ await page.waitForTimeout(1500); // give the controlled inputs a beat to mount
 await emailField.fill(user.email);
 ```
 
-Lesson: blanket `waitForTimeout` is not enough for SSR'd SPA forms. Wait for the *element* state, not for the clock.
+Lesson: a blanket `waitForTimeout` is not enough for SSR'd SPA forms. Wait for the *element* state, not for the clock.
 
-## 6. Things I changed in the product because of the test suite
+## 6. Things I changed in the product because of the suite
 
-These weren't bugs per se, but Passmark exposed gaps:
+Not bugs in the strict sense. Gaps Passmark exposed while it tried to read the page like a user.
 
-- **A11y**: `<InterestTagSelector />` was missing `aria-pressed` on its chips. Only the lobby's chip selector had it. Adding it lets Passmark (and screen readers) know which chips are currently selected.
-- **A11y**: chat header, game card, and dashboard avatar all got explicit `aria-label`s after Passmark complained that "Stranger" by itself was ambiguous.
-- **Onboarding DOB picker**: I rebuilt this using shadcn's `captionLayout="dropdown"` so the year dropdown only includes years where the user would already be 18+. Previously the test could pick a current-year date and bypass the rule.
-- **Lobby reflection**: Settings → Save preferences must update the lobby's "Your vibe" card. Passmark caught two cases where a stale React Query cache made the save look successful but the card didn't update.
+- `<InterestTagSelector />` was missing `aria-pressed` on its chips. Only the lobby had it. Added it everywhere; Passmark and screen readers now agree on which chips are selected.
+- Chat header, game card, and dashboard avatar got explicit `aria-label`s after Passmark complained that "Stranger" by itself was ambiguous.
+- The onboarding DOB picker now uses shadcn's `captionLayout="dropdown"` and only offers years where the user would be 18+. Previously the test could land on a current-year date and skip the rule.
+- Settings → Save preferences must update the lobby's "Your vibe" card. Passmark caught two cases where a stale React Query cache made the save look successful but the card did not update.
 
-## 7. Surprises
+## 7. Surprises along the way
 
-- **Snapshot-based AI assertions race against fast redirects.** My OTP reset originally auto-redirected after 1500 ms; Passmark's first AI check takes ~22 s, so by the time it looked, the success alert was already gone. Two fixes: (a) bumped the redirect to 3500 ms, (b) dropped the `waitUntil` and relied on a Playwright assertion immediately after `runSteps`. The lesson: Passmark and `setTimeout` don't compose naturally — let one of them own the "wait".
-- **Two-browser tests are surprisingly easy.** `runSteps` is per-page, so two contexts = two parallel Passmark drivers via `Promise.all`. The hard part is making sure *both* browsers reach a stable state before assertions run, not the AI part.
-- **Pinning the model is non-optional.** Without `model: "google/gemini-2.5-flash"` in `configure()`, OpenRouter occasionally routed to a model that produced 400s. Pinning made the suite reproducible.
+- **Snapshot AI assertions race against fast redirects.** My OTP reset originally redirected after 1500 ms. Passmark's first AI check takes around 22 s, so the success alert was already gone by the time it looked. I bumped the redirect to 3500 ms and dropped `waitUntil` so a Playwright assertion runs immediately after `runSteps`. Either Passmark or `setTimeout` owns the wait. Not both.
+- **Two-browser tests were easier than I expected.** `runSteps` is per-page, so two contexts means two parallel Passmark drivers via `Promise.all`. The hard part is making sure both browsers reach a stable state before assertions run, not anything AI-specific.
+- **The pinned model rule again.** Without `google/gemini-2.5-flash` set across every role, one OpenRouter route would occasionally pick a model that produced 400s on the same prompt. Pinning made the suite reproducible across days, which is what you want from a regression suite.
 
 ## 8. How to run this yourself
 
-You can take Lume for a spin in three ways: a **live demo** with your own account, a **local run with two seeded users** (the fastest path), or **the full Passmark suite** to reproduce the regressions.
+You can take Lume for a spin in three ways: a **live demo**, a **local run with seeded users** (the fastest path), or **the full Passmark suite** to reproduce the regressions.
 
 ### Option A — Try the live demo (90 seconds)
 
 1. Open https://lume-roan.vercel.app in two browser windows (regular + incognito works fine).
-2. Sign up two accounts with different emails. Confirmation isn't required on the demo; you go straight into onboarding.
-3. Complete onboarding for both — pick at least one overlapping interest (e.g. both pick `Music`).
-4. Click **Start matching** in both lobbies. Within a few seconds you'll be paired into a chat.
+2. Sign up two accounts with different emails. Confirmation is off on the demo; you go straight into onboarding.
+3. Complete onboarding for both. Pick at least one overlapping interest (for example, both pick `Music`).
+4. Click **Start matching** in both lobbies. You will be paired into a chat within a few seconds.
 5. Walk through the flows: send messages, open the **Games** drawer and start Tic Tac Toe, try **Report**, try **Block**.
 
 ### Option B — Run locally with the seeded users (recommended for review)
@@ -262,25 +314,25 @@ npm run db:reset
 npm run dev
 ```
 
-The seed creates two accounts you can log in as immediately — no signup needed:
+The seed creates two accounts you can log in as immediately, no signup needed:
 
 | Display name | Email | Password | Interests |
 |---|---|---|---|
 | **Alice** | `user-a@example.com` | `password123` | Music, Travel, Photography, Cooking |
 | **Bob** | `user-b@example.com` | `password123` | Music, Cooking, Anime, Fitness |
 
-Note the two overlapping interests (`Music`, `Cooking`) — that's what the shared-interests banner from Bug #1 picks up.
+The two overlapping interests (`Music`, `Cooking`) are what the shared-interests banner from Bug #1 picks up.
 
 **Manual flow to exercise everything:**
 
 1. Open `http://localhost:3000` in two browsers (Chrome regular + Chrome incognito, or Chrome + Firefox).
 2. Log in as **Alice** in window 1 and **Bob** in window 2 via `/login`.
-3. In both windows click **Start matching** on the dashboard. They should match within a few seconds.
-4. In Alice's chat, confirm the **"You both like Music · Cooking"** banner is rendered (this is the Bug #1 regression check).
+3. In both windows, click **Start matching**. They should match within a few seconds.
+4. In Alice's chat, confirm the **"You both like Music · Cooking"** banner is rendered. This is the Bug #1 regression check.
 5. Send a few messages back and forth.
-6. Open the **Games** drawer in either window → pick **Tic Tac Toe** → play a round; both windows should sync moves over Supabase Broadcast.
-7. From either side, hit **Report** → choose a reason → tick **Also block** → confirm. The pair is now excluded from future matching.
-8. Sign out Alice, click **Forgot password** on `/login`, send the OTP, then open Mailpit at `http://127.0.0.1:54324` and copy the 6-digit code. Reset her password and log in with the new one (this is the Bug #2 regression check).
+6. Open the **Games** drawer in either window, pick **Tic Tac Toe**, play a round. Both windows should sync moves over Supabase Broadcast.
+7. From either side, hit **Report**, choose a reason, tick **Also block**, confirm. The pair is now excluded from future matching.
+8. Sign out Alice, click **Forgot password** on `/login`, send the OTP, then open Mailpit at `http://127.0.0.1:54324` and copy the 6-digit code. Reset her password and log in with the new one. This is the Bug #2 regression check.
 
 ### Option C — Run the Passmark regression suite
 
@@ -321,18 +373,21 @@ npx playwright test e2e/passmark/auth-recovery.spec.ts
 → 1 passed (44 s)
 ```
 
-Three real bugs caught and fixed in the hackathon suite:
+Three real bugs caught and fixed during the hackathon:
+
 - A missing RLS policy that silently degraded every chat's prompt cards (Bug #1).
-- A magic-link recovery flow that only worked in the manual-testing happy path (Bug #2).
+- A magic-link recovery flow that only worked on the manual happy path (Bug #2).
 - A hydration race that occasionally leaked credentials into the URL (Bug #3).
 
-Plus a handful of accessibility and state-sync gaps Passmark uncovered along the way (section 6).
+Plus a handful of accessibility and state-sync gaps the suite picked up along the way (section 6).
 
 ## 10. Closing thought
 
-Selectors describe HTML. Passmark steps describe what the user is *trying to do*. For a realtime social app where the surface area is mostly state machines and ephemeral data, the second framing maps onto the actual product risk. The bugs I found weren't "this button is missing" — they were "this feature looks fine but is silently degraded", and that's exactly the class of bug that a screenshot-and-prose AI judge is shaped to find.
+Selectors describe HTML. Passmark steps describe what the user is *trying to do*. For a vibe-coded realtime app where most of the surface area is state machines and ephemeral data, the second framing maps onto the actual product risk.
 
-If you're building anything with auth + realtime + ephemeral state, give Passmark a shot. The investment is one weekend; the catch rate is real.
+The bugs I found were not "this button is missing." They were "this feature looks fine but is silently degraded." That is the class of bug a screenshot-and-prose AI judge is shaped to find, and it is also the class of bug you ship the most of when you let a model write half the code with you.
+
+If you are building anything with auth, realtime, and ephemeral state, give Passmark a weekend. The catch rate is real.
 
 ---
 
@@ -348,7 +403,7 @@ If you're building anything with auth + realtime + ephemeral state, give Passmar
 
 - [x] Default suite + realtime + recovery all green locally
 - [ ] Playwright report screenshots captured (`npm run test:e2e:report`)
-- [ ] Repo made public or judge-accessible
+- [x] Repo made public or judge-accessible
 - [x] Article includes `#BreakingAppsHackathon`
 - [ ] X / LinkedIn post drafted (see `docs/SOCIAL_POSTS.md`) and tagged `@bug0inc`
 - [ ] Submitted before May 10, 2026 11:59 PM PT
