@@ -1,3 +1,15 @@
+<!--
+Hashnode submission metadata
+- Title: Breaking Lume: how Passmark caught a silent RLS bug, an OTP flow regression, and a hydration race in my realtime stranger-chat app
+- Subtitle: A Passmark + Playwright regression suite for a TanStack Start + Supabase Realtime app — with three real bugs caught.
+- Slug: breaking-lume-passmark-regression-suite
+- Cover image: ./images/ttt-win.png
+- Tags: BreakingAppsHackathon, passmark, playwright, supabase, tanstack, testing, react, typescript, ai, hackathon
+- Canonical URL: https://github.com/hempun10/lume/blob/main/docs/HASHNODE_DRAFT.md
+- Hashtag: #BreakingAppsHackathon (must appear in body)
+- Mentions: @bug0inc on social posts
+-->
+
 # Breaking Lume: how Passmark caught a silent RLS bug, an OTP flow regression, and a hydration race in my realtime stranger-chat app
 
 > Submission for the Bug0 **Breaking Apps Hackathon** — `#BreakingAppsHackathon` — deadline May 10, 2026 11:59 PM PT.
@@ -218,7 +230,82 @@ These weren't bugs per se, but Passmark exposed gaps:
 - **Two-browser tests are surprisingly easy.** `runSteps` is per-page, so two contexts = two parallel Passmark drivers via `Promise.all`. The hard part is making sure *both* browsers reach a stable state before assertions run, not the AI part.
 - **Pinning the model is non-optional.** Without `model: "google/gemini-2.5-flash"` in `configure()`, OpenRouter occasionally routed to a model that produced 400s. Pinning made the suite reproducible.
 
-## 8. Final results
+## 8. How to run this yourself
+
+You can take Lume for a spin in three ways: a **live demo** with your own account, a **local run with two seeded users** (the fastest path), or **the full Passmark suite** to reproduce the regressions.
+
+### Option A — Try the live demo (90 seconds)
+
+1. Open https://lume-roan.vercel.app in two browser windows (regular + incognito works fine).
+2. Sign up two accounts with different emails. Confirmation isn't required on the demo; you go straight into onboarding.
+3. Complete onboarding for both — pick at least one overlapping interest (e.g. both pick `Music`).
+4. Click **Start matching** in both lobbies. Within a few seconds you'll be paired into a chat.
+5. Walk through the flows: send messages, open the **Games** drawer and start Tic Tac Toe, try **Report**, try **Block**.
+
+### Option B — Run locally with the seeded users (recommended for review)
+
+Prereqs: Node 20+, [Supabase CLI](https://supabase.com/docs/guides/cli), Docker (for the local Supabase stack).
+
+```bash
+# Clone and install
+git clone https://github.com/hempun10/lume.git
+cd lume
+npm install
+
+# Start the local Supabase stack (Postgres + Auth + Realtime + Mailpit at :54324)
+npm run db:start
+
+# Reset the schema, regenerate types, and seed Alice + Bob
+npm run db:reset
+
+# Start the dev server on http://localhost:3000
+npm run dev
+```
+
+The seed creates two accounts you can log in as immediately — no signup needed:
+
+| Display name | Email | Password | Interests |
+|---|---|---|---|
+| **Alice** | `user-a@example.com` | `password123` | Music, Travel, Photography, Cooking |
+| **Bob** | `user-b@example.com` | `password123` | Music, Cooking, Anime, Fitness |
+
+Note the two overlapping interests (`Music`, `Cooking`) — that's what the shared-interests banner from Bug #1 picks up.
+
+**Manual flow to exercise everything:**
+
+1. Open `http://localhost:3000` in two browsers (Chrome regular + Chrome incognito, or Chrome + Firefox).
+2. Log in as **Alice** in window 1 and **Bob** in window 2 via `/login`.
+3. In both windows click **Start matching** on the dashboard. They should match within a few seconds.
+4. In Alice's chat, confirm the **"You both like Music · Cooking"** banner is rendered (this is the Bug #1 regression check).
+5. Send a few messages back and forth.
+6. Open the **Games** drawer in either window → pick **Tic Tac Toe** → play a round; both windows should sync moves over Supabase Broadcast.
+7. From either side, hit **Report** → choose a reason → tick **Also block** → confirm. The pair is now excluded from future matching.
+8. Sign out Alice, click **Forgot password** on `/login`, send the OTP, then open Mailpit at `http://127.0.0.1:54324` and copy the 6-digit code. Reset her password and log in with the new one (this is the Bug #2 regression check).
+
+### Option C — Run the Passmark regression suite
+
+Set `OPENROUTER_API_KEY` in `.env.local` (see `.env.example`), then use the package.json scripts:
+
+```bash
+# Smoke test (landing only — fastest sanity check on the AI driver)
+npm run test:e2e:smoke
+
+# Full chromium suite (~31 tests, ~6–7 min after a fresh db:reset)
+npm run test:e2e
+
+# Same suite, headed (watch the AI clicks happen)
+npm run test:e2e:headed
+
+# Show the last HTML report
+npm run test:e2e:report
+
+# Realtime two-browser test (opt-in)
+RUN_REALTIME_PASSMARK=1 npx playwright test e2e/passmark/realtime-matchmaking.spec.ts
+```
+
+The recovery and matchmaking specs need the local Supabase stack running (`npm run db:start`). Everything else can target the Vercel demo with `PLAYWRIGHT_BASE_URL=https://lume-roan.vercel.app npm run test:e2e`.
+
+## 9. Final results
 
 ```txt
 # Default chromium suite (no realtime gating)
@@ -241,7 +328,7 @@ Three real bugs caught and fixed in the hackathon suite:
 
 Plus a handful of accessibility and state-sync gaps Passmark uncovered along the way (section 6).
 
-## 9. Closing thought
+## 10. Closing thought
 
 Selectors describe HTML. Passmark steps describe what the user is *trying to do*. For a realtime social app where the surface area is mostly state machines and ephemeral data, the second framing maps onto the actual product risk. The bugs I found weren't "this button is missing" — they were "this feature looks fine but is silently degraded", and that's exactly the class of bug that a screenshot-and-prose AI judge is shaped to find.
 
