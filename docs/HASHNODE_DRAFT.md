@@ -14,7 +14,7 @@ In the process Passmark caught **three real bugs** that had been hiding in plain
 2. A magic-link recovery flow that didn't actually work end-to-end against Supabase's local stack.
 3. A hydration race that made login and signup forms intermittently submit as a GET request with credentials in the URL.
 
-Repo: https://github.com/hempun10/lume — branch `main`.
+Repo: https://github.com/hempun10/lume — branch `main`. Live demo: https://lume-roan.vercel.app.
 
 ---
 
@@ -251,6 +251,7 @@ If you're building anything with auth + realtime + ephemeral state, give Passmar
 
 ## Links
 
+- Live demo: https://lume-roan.vercel.app
 - Repo: https://github.com/hempun10/lume
 - Branch: `main`
 - Test plan: [`docs/PASSMARK_TEST_PLAN.md`](https://github.com/hempun10/lume/blob/main/docs/PASSMARK_TEST_PLAN.md)

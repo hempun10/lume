@@ -11,7 +11,7 @@ A social platform for meeting strangers through ephemeral text chat and lightwei
 
 Built with **TanStack Start** (React 19 + Vite 7 + Nitro SSR), **Supabase** (Auth, Realtime, Edge Functions, pg_cron), **Tailwind v4**, and **shadcn/ui**. Regression-tested with **[Passmark](https://github.com/bug0inc/passmark)** and Playwright for the Breaking Apps Hackathon.
 
-**[Live Demo](https://lume.chat)** · **[PRD](docs/PRD.md)** · **[Passmark Test Plan](docs/PASSMARK_TEST_PLAN.md)**
+**[Live Demo](https://lume-roan.vercel.app)** · **[PRD](docs/PRD.md)** · **[Passmark Test Plan](docs/PASSMARK_TEST_PLAN.md)**
 
 ## What's Included
 
@@ -187,7 +187,7 @@ Useful variants:
 ```bash
 npm run test:e2e:smoke      # landing/trust smoke test
 npm run test:e2e:headed     # debug in a visible browser
-PLAYWRIGHT_BASE_URL=https://lume.chat npm run test:e2e
+PLAYWRIGHT_BASE_URL=https://lume-roan.vercel.app npm run test:e2e
 RUN_REALTIME_PASSMARK=1 npm run test:e2e -- realtime-matchmaking.spec.ts
 ```
 

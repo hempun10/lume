@@ -20,7 +20,7 @@ export function BrowserMockup({
 }: {
 	children: React.ReactNode;
 	className?: string;
-	/** Centered pill in the chrome (e.g. "lume.app"). Optional. */
+	/** Centered pill in the chrome (e.g. "lume-roan.vercel.app"). Optional. */
 	url?: string;
 	/** Aspect ratio of the framed slab itself. */
 	aspect?: string;

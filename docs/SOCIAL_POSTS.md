@@ -8,7 +8,7 @@ The suite covers auth, onboarding, protected routes, matchmaking, settings, game
 
 Article: <HASHNODE_URL>
 Repo: https://github.com/hempun10/lume
-Demo: https://lume.chat
+Demo: https://lume-roan.vercel.app
 
 ## LinkedIn
 
@@ -28,7 +28,7 @@ I used Passmark to describe these flows in plain English and run them through Pl
 
 Hashnode article: <HASHNODE_URL>
 GitHub repo: https://github.com/hempun10/lume
-Live demo: https://lume.chat
+Live demo: https://lume-roan.vercel.app
 
 #BreakingAppsHackathon
 

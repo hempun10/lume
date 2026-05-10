@@ -24,7 +24,7 @@ interface RouterContext {
  */
 const themeScript = `(function(){try{if(localStorage.getItem("lume-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
 
-const SITE_URL = "https://lume.chat";
+const SITE_URL = "https://lume-roan.vercel.app";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
 	head: () => ({

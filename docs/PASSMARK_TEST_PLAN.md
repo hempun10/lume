@@ -25,7 +25,7 @@ Optional variants:
 ```bash
 npm run test:e2e:smoke
 npm run test:e2e:headed
-PLAYWRIGHT_BASE_URL=https://lume.chat npm run test:e2e
+PLAYWRIGHT_BASE_URL=https://lume-roan.vercel.app npm run test:e2e
 PLAYWRIGHT_HEADLESS=0 npm run test:e2e:smoke
 RUN_REALTIME_PASSMARK=1 npm run test:e2e -- realtime-matchmaking.spec.ts
 ```

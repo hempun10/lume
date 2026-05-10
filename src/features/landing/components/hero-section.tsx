@@ -120,7 +120,7 @@ export function HeroSection() {
 			</div>
 
 			<div className="mt-16 md:mt-20">
-				<BrowserMockup url="lume.app">
+				<BrowserMockup url="lume-roan.vercel.app">
 					<ThemedImage
 						alt="Lume dashboard preview"
 						placeholderLabel="hero dashboard"

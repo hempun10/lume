@@ -184,7 +184,7 @@ function FeatureBlock({
 
 			{withPreview && (
 				<div className="mt-12">
-					<BrowserMockup url="lume.app">
+					<BrowserMockup url="lume-roan.vercel.app">
 						<ThemedImage
 							alt={`${label} dashboard preview`}
 							placeholderLabel={

@@ -183,7 +183,7 @@ Prioritize a suite that demonstrates breadth, depth, and real regression value w
 1. Confirm scope with the user:
    - Delete `testsprite_tests/` or archive it?
    - Keep the current app name/branding “Lume”?
-   - Use local Supabase only, or also run tests against the deployed `https://lume.chat`?
+   - Use local Supabase only, or also run tests against the deployed `https://lume-roan.vercel.app`?
    - How many OpenRouter credits are available for test runs?
 2. Cleanup docs and old artifacts.
 3. Add Passmark infra and a smoke test.
