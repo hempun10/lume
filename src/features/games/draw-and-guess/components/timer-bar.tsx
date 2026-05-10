@@ -17,7 +17,7 @@ export function TimerBar({
 				<div
 					className={cn(
 						"h-full rounded-full transition-[width] duration-200 ease-linear",
-						danger ? "bg-destructive" : "bg-brand-500",
+						danger ? "bg-destructive" : "bg-primary",
 					)}
 					style={{ width: `${pct * 100}%` }}
 				/>

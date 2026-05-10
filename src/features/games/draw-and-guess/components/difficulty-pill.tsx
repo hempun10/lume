@@ -7,7 +7,7 @@ export function DifficultyPill({ tier }: { tier: DrawAndGuessDifficulty }) {
 		<output
 			className={cn(
 				"shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-				tier === "easy" && "border-brand-500/40 bg-brand-500/5 text-brand-500",
+				tier === "easy" && "border-primary/40 bg-primary/5 text-primary",
 				tier === "medium" &&
 					"border-amber-500/40 bg-amber-500/5 text-amber-500",
 				tier === "hard" &&

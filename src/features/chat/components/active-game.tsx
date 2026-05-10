@@ -177,7 +177,7 @@ function GameRoom({
 						className={
 							isFinished
 								? outcome === "won"
-									? "text-sm font-semibold text-brand-500"
+									? "text-sm font-semibold text-primary"
 									: outcome === "lost"
 										? "text-sm font-semibold text-destructive"
 										: "text-sm font-semibold text-muted-foreground"

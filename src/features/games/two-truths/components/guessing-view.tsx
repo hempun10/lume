@@ -43,7 +43,7 @@ export function GuessingView({
 									"flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors motion-safe:duration-150 ease-out",
 									"disabled:cursor-not-allowed",
 									isMyGuess
-										? "border-brand-500 bg-brand-500/10"
+										? "border-primary bg-primary/10"
 										: "border-border bg-card",
 									!disabled && "hover:border-border/80 active:scale-[0.99]",
 								)}

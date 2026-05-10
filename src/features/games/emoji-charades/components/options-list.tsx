@@ -35,8 +35,8 @@ export function OptionsList({
 				let tone = "text-foreground";
 				if (revealed) {
 					if (isCorrect) {
-						border = "border-brand-500";
-						bg = "bg-brand-500/10";
+						border = "border-primary";
+						bg = "bg-primary/10";
 					} else if (isMyGuess) {
 						border = "border-destructive";
 						bg = "bg-destructive/10";
@@ -45,8 +45,8 @@ export function OptionsList({
 						tone = "text-muted-foreground";
 					}
 				} else if (isMyGuess) {
-					border = "border-brand-500";
-					bg = "bg-brand-500/10";
+					border = "border-primary";
+					bg = "bg-primary/10";
 				}
 
 				const disabled = iAmRevealer || revealed || locked || !myTurn;
@@ -71,7 +71,7 @@ export function OptionsList({
 								className={cn(
 									"flex size-6 shrink-0 items-center justify-center rounded-md border text-xs font-semibold tabular-nums",
 									revealed && isCorrect
-										? "border-brand-500 bg-brand-500/20 text-brand-500"
+										? "border-primary bg-primary/20 text-primary"
 										: "border-border/60 text-muted-foreground",
 								)}
 							>
@@ -81,7 +81,7 @@ export function OptionsList({
 								{text}
 							</span>
 							{revealed && isCorrect && (
-								<span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-brand-500">
+								<span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
 									<Check className="size-3" aria-hidden />
 									Answer
 								</span>

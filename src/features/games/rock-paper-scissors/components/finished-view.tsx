@@ -47,7 +47,7 @@ export function FinishedView({
 							key={`${i}-${h.aPick}-${h.bPick}`}
 							className={cn(
 								"flex items-center justify-between rounded-lg border px-3 py-2 text-xs",
-								outcome === "win" && "border-brand-500/40 bg-brand-500/5",
+								outcome === "win" && "border-primary/40 bg-primary/5",
 								outcome === "lose" && "border-destructive/30 bg-destructive/5",
 								outcome === "tie" && "border-border bg-card",
 							)}
@@ -67,7 +67,7 @@ export function FinishedView({
 							<span
 								className={cn(
 									"text-xs font-medium",
-									outcome === "win" && "text-brand-500",
+									outcome === "win" && "text-primary",
 									outcome === "lose" && "text-destructive",
 									outcome === "tie" && "text-muted-foreground",
 								)}

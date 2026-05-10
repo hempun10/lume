@@ -39,7 +39,7 @@ export function RoundResult({
 			<p
 				className={cn(
 					"text-sm font-semibold",
-					tone === "win" && "text-brand-500",
+					tone === "win" && "text-primary",
 					tone === "lose" && "text-destructive",
 					tone === "tie" && "text-muted-foreground",
 				)}

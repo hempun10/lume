@@ -29,12 +29,11 @@ export function GuessPanel({
 				const disabled = iAmDrawer || revealed || guess !== null || !myTurn;
 
 				let tone = "border-border bg-card text-foreground";
-				if (isCorrect)
-					tone = "border-brand-500 bg-brand-500/10 text-foreground";
+				if (isCorrect) tone = "border-primary bg-primary/10 text-foreground";
 				else if (isWrongGuess)
 					tone = "border-destructive bg-destructive/10 text-destructive";
 				else if (!revealed && isGuess)
-					tone = "border-brand-500 bg-brand-500/10 text-foreground";
+					tone = "border-primary bg-primary/10 text-foreground";
 
 				return (
 					<li
@@ -55,7 +54,7 @@ export function GuessPanel({
 						>
 							<span className="truncate">{text}</span>
 							{isCorrect && (
-								<Check className="size-4 shrink-0 text-brand-500" aria-hidden />
+								<Check className="size-4 shrink-0 text-primary" aria-hidden />
 							)}
 							{isWrongGuess && (
 								<X className="size-4 shrink-0 text-destructive" aria-hidden />

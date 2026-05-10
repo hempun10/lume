@@ -145,7 +145,7 @@ export function MockChatPreview() {
 		<MockFrame label="lume / chat" className="w-full">
 			<div className="flex items-center justify-between border-b border-border bg-background px-4 py-2.5">
 				<div className="flex items-center gap-2.5">
-					<div className="flex size-7 items-center justify-center rounded-full bg-brand-500/15 text-[11px] font-semibold text-brand-600">
+					<div className="flex size-7 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">
 						S
 					</div>
 					<div className="space-y-0.5">
@@ -283,9 +283,9 @@ export function MockMatchFoundPreview() {
 		<MockFrame label="matching" className="w-full">
 			<div className="flex flex-col items-center gap-4 bg-background px-6 py-7 text-center">
 				<div className="relative">
-					<div className="absolute inset-0 animate-ping rounded-full bg-brand-500/20" />
-					<div className="relative flex size-14 items-center justify-center rounded-full border border-brand-400/40 bg-brand-500/10">
-						<Sparkles className="size-6 text-brand-600" />
+					<div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+					<div className="relative flex size-14 items-center justify-center rounded-full border border-primary/40 bg-primary/10">
+						<Sparkles className="size-6 text-primary" />
 					</div>
 				</div>
 				<div className="space-y-1">

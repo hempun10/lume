@@ -75,8 +75,8 @@ export function TriviaBoard({ state, mySeat, myTurn, onMove }: Props) {
 					let tone = "text-foreground";
 					if (revealed) {
 						if (isCorrect) {
-							border = "border-brand-500";
-							bg = "bg-brand-500/10";
+							border = "border-primary";
+							bg = "bg-primary/10";
 							tone = "text-foreground";
 						} else if (isMine || isTheirs) {
 							border = "border-destructive/60";
@@ -86,8 +86,8 @@ export function TriviaBoard({ state, mySeat, myTurn, onMove }: Props) {
 							tone = "text-muted-foreground";
 						}
 					} else if (isMine) {
-						border = "border-brand-500";
-						bg = "bg-brand-500/10";
+						border = "border-primary";
+						bg = "bg-primary/10";
 					}
 
 					return (
@@ -113,7 +113,7 @@ export function TriviaBoard({ state, mySeat, myTurn, onMove }: Props) {
 							<span className="flex-1 text-pretty text-sm">{label}</span>
 							{revealed && isCorrect && (
 								<Check
-									className="size-4 shrink-0 text-brand-500"
+									className="size-4 shrink-0 text-primary"
 									aria-label="Correct answer"
 								/>
 							)}
@@ -211,7 +211,7 @@ function FinishedView({
 				<p
 					className={cn(
 						"text-xs uppercase tracking-wide",
-						tone === "win" && "text-brand-500",
+						tone === "win" && "text-primary",
 						tone === "lose" && "text-destructive",
 						tone === "tie" && "text-muted-foreground",
 					)}
@@ -235,9 +235,9 @@ function FinishedView({
 							key={`${i}-${h.questionIdx}`}
 							className={cn(
 								"flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs",
-								iGot && !theyGot && "border-brand-500/40 bg-brand-500/5",
+								iGot && !theyGot && "border-primary/40 bg-primary/5",
 								!iGot && theyGot && "border-destructive/30 bg-destructive/5",
-								iGot && theyGot && "border-brand-500/20 bg-brand-500/5",
+								iGot && theyGot && "border-primary/20 bg-primary/5",
 								!iGot && !theyGot && "border-border bg-card",
 							)}
 						>
@@ -263,7 +263,7 @@ function ResultPip({ correct, label }: { correct: boolean; label: string }) {
 				className={cn(
 					"flex size-4 items-center justify-center rounded-full",
 					correct
-						? "bg-brand-500/20 text-brand-500"
+						? "bg-primary/20 text-primary"
 						: "bg-destructive/15 text-destructive",
 				)}
 			>

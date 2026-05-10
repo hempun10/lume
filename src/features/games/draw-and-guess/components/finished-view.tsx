@@ -33,7 +33,7 @@ export function FinishedView({
 				<p
 					className={cn(
 						"text-xs uppercase tracking-wide",
-						tone === "win" && "text-brand-500",
+						tone === "win" && "text-primary",
 						tone === "lose" && "text-destructive",
 						tone === "tie" && "text-muted-foreground",
 					)}
@@ -57,7 +57,7 @@ export function FinishedView({
 							key={i}
 							className={cn(
 								"flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs",
-								scored && "border-brand-500/40 bg-brand-500/5",
+								scored && "border-primary/40 bg-primary/5",
 								!scored && "border-destructive/30 bg-destructive/5",
 							)}
 						>
@@ -72,7 +72,7 @@ export function FinishedView({
 							</span>
 							<span className="flex shrink-0 items-center gap-1 text-[10px] font-semibold uppercase tracking-wide">
 								{scored ? (
-									<span className="flex items-center gap-1 text-brand-500">
+									<span className="flex items-center gap-1 text-primary">
 										<Check className="size-3" aria-hidden />
 										+1 each
 									</span>

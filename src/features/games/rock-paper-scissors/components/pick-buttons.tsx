@@ -36,7 +36,7 @@ export function PickButtons({
 							"flex flex-col items-center gap-1 rounded-xl border px-2 py-3 transition-colors motion-safe:duration-150 ease-out",
 							"disabled:cursor-not-allowed disabled:opacity-50",
 							selected
-								? "border-brand-500 bg-brand-500/10"
+								? "border-primary bg-primary/10"
 								: "border-border bg-card hover:border-border/80",
 							!disabled && "active:scale-[0.97]",
 						)}

@@ -199,7 +199,7 @@ function FeatureBlock({
 
 			{callout && (
 				<div className="mt-8 flex max-w-2xl gap-4">
-					<div className="w-1 shrink-0 rounded-full bg-brand-500" />
+					<div className="w-1 shrink-0 rounded-full bg-primary" />
 					<p className="text-pretty text-sm font-medium text-muted-foreground">
 						{callout}
 					</p>
@@ -215,7 +215,7 @@ export function FeaturesSection() {
 		<div id="features">
 			<FeatureBlock
 				label="Text Chat"
-				chipClass="bg-brand-500"
+				chipClass="bg-primary"
 				heading="Real conversations, with a stranger, right now"
 				description="You hit match, we pair you with a real person who's also looking to talk. Interests show up when they help, and skipping to the next match is always one tap away."
 				features={chatFeatures}

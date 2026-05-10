@@ -124,7 +124,7 @@ function OptionCard({
 				"group relative rounded-xl border p-4 text-left transition-colors motion-safe:duration-150 ease-out",
 				"disabled:cursor-not-allowed",
 				highlighted
-					? "border-brand-500 bg-brand-500/5"
+					? "border-primary bg-primary/5"
 					: "border-border bg-card hover:border-border/80",
 				!disabled && "active:scale-[0.98]",
 			)}
@@ -143,7 +143,7 @@ function OptionCard({
 
 function PickBadge({ who }: { who: "You" | "Stranger" }) {
 	return (
-		<span className="inline-flex items-center gap-1 rounded-full bg-brand-500/10 px-2 py-0.5 text-[10px] font-medium text-brand-500">
+		<span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
 			<Check className="size-3" />
 			{who}
 		</span>
@@ -184,7 +184,7 @@ function FinishedView({ state }: { state: WouldYouRatherState }) {
 							className={cn(
 								"flex items-center justify-between rounded-lg border px-3 py-2 text-xs",
 								match
-									? "border-brand-500/40 bg-brand-500/5 text-foreground"
+									? "border-primary/40 bg-primary/5 text-foreground"
 									: "border-border bg-card text-muted-foreground",
 							)}
 						>

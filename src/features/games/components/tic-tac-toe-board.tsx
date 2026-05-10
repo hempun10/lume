@@ -72,7 +72,7 @@ function Cell({ value, position, isWinCell, disabled, onClick }: CellProps) {
 				<span
 					className={cn(
 						"animate-in zoom-in-50 duration-150",
-						value === "X" ? "text-brand-500" : "text-destructive",
+						value === "X" ? "text-primary" : "text-destructive",
 						isWinCell && "scale-110",
 					)}
 				>

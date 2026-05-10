@@ -65,7 +65,7 @@ export function SetupCoordinator({
 						className={cn(
 							"flex flex-col items-center gap-0.5 rounded-lg border border-border bg-background px-2 py-2.5",
 							"text-xs font-semibold text-foreground transition-colors motion-safe:duration-150 ease-out",
-							"hover:border-brand-500/50 hover:bg-brand-500/5 active:scale-[0.98]",
+							"hover:border-primary/50 hover:bg-primary/5 active:scale-[0.98]",
 						)}
 					>
 						<span>{t.label}</span>

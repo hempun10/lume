@@ -119,7 +119,7 @@ const ticTacToeAdapter: GameAdapter<TicTacToeState> = {
 		return (
 			<span className="text-xs text-muted-foreground">
 				You:{" "}
-				<span className={seat === "A" ? "text-brand-500" : "text-destructive"}>
+				<span className={seat === "A" ? "text-primary" : "text-destructive"}>
 					{mark}
 				</span>
 			</span>

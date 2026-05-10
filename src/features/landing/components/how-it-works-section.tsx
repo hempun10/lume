@@ -60,7 +60,7 @@ export function HowItWorksSection() {
 			</div>
 
 			<div className="mt-14 flex max-w-2xl gap-4">
-				<div className="w-1 shrink-0 rounded-full bg-brand-500" />
+				<div className="w-1 shrink-0 rounded-full bg-primary" />
 				<p className="text-pretty text-sm font-medium text-muted-foreground">
 					Seriously, it's that simple. Most users are in a conversation before
 					the tab beside this one finishes loading.

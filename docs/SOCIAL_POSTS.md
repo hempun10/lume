@@ -7,7 +7,7 @@ I joined the #BreakingAppsHackathon by @bug0inc and used Passmark to regression-
 The suite covers auth, onboarding, protected routes, matchmaking, settings, games, and safety/report flows — all described in plain English and executed through Playwright.
 
 Article: <HASHNODE_URL>
-Repo: <GITHUB_URL>
+Repo: https://github.com/hempun10/lume
 Demo: https://lume.chat
 
 ## LinkedIn
@@ -27,7 +27,7 @@ Lume is a fun testing target because it is not just static UI. The app includes:
 I used Passmark to describe these flows in plain English and run them through Playwright with OpenRouter. The best part was that the tests read like product behavior, not selector maintenance.
 
 Hashnode article: <HASHNODE_URL>
-GitHub repo: <GITHUB_URL>
+GitHub repo: https://github.com/hempun10/lume
 Live demo: https://lume.chat
 
 #BreakingAppsHackathon

@@ -14,7 +14,7 @@ In the process Passmark caught **three real bugs** that had been hiding in plain
 2. A magic-link recovery flow that didn't actually work end-to-end against Supabase's local stack.
 3. A hydration race that made login and signup forms intermittently submit as a GET request with credentials in the URL.
 
-Repo: https://github.com/hempun10/lume — branch `hackathon/passmark-suite`.
+Repo: https://github.com/hempun10/lume — branch `main`.
 
 ---
 
@@ -27,7 +27,7 @@ Lume is a safer, game-forward alternative to Omegle-style random chat. The produ
 - Protected dashboard with TanStack Router route guards
 - Matchmaking via Supabase Realtime + a Postgres `match_queue` + a `pg_cron`-driven Edge Function that scores candidates by interest overlap, region, and age proximity
 - Ephemeral 1:1 chat (messages intentionally not persisted)
-- Inline multiplayer games over Broadcast (Tic Tac Toe today; Word Chain / Chess gated as "coming soon")
+- Inline multiplayer games over Broadcast, with Tic Tac Toe as the realtime sync canary and Word Chain / Chess gated as "coming soon"
 - Report + block flows that exclude pairs from future matching
 - Forgot-password via 6-digit email OTP
 
@@ -235,10 +235,10 @@ npx playwright test e2e/passmark/auth-recovery.spec.ts
 → 1 passed (44 s)
 ```
 
-Three real bugs caught and fixed in `hackathon/passmark-suite`:
-- `b9000c1` — counterpart-profile RLS + shared-interests banner
-- `50ad6d7` — OTP-based forgot-password + Passmark Mailpit email provider
-- `8fb2220` — onboarding/settings/lobby polish + a11y `aria-pressed`
+Three real bugs caught and fixed in the hackathon suite:
+- Counterpart-profile RLS + shared-interests banner
+- OTP-based forgot-password + Passmark Mailpit email provider
+- Onboarding/settings/lobby polish + a11y `aria-pressed`
 
 ## 9. Closing thought
 
@@ -251,15 +251,15 @@ If you're building anything with auth + realtime + ephemeral state, give Passmar
 ## Links
 
 - Repo: https://github.com/hempun10/lume
-- Branch: `hackathon/passmark-suite`
-- Test plan: [`docs/PASSMARK_TEST_PLAN.md`](https://github.com/hempun10/lume/blob/hackathon/passmark-suite/docs/PASSMARK_TEST_PLAN.md)
+- Branch: `main`
+- Test plan: [`docs/PASSMARK_TEST_PLAN.md`](https://github.com/hempun10/lume/blob/main/docs/PASSMARK_TEST_PLAN.md)
 - Bug0 hackathon: https://passmark.bug0.com
 
 ## Checklist before publishing
 
 - [x] Default suite + realtime + recovery all green locally
 - [ ] Playwright report screenshots captured (`npm run test:e2e:report`)
-- [x] Repo pushed publicly (`hackathon/passmark-suite`)
+- [ ] Repo made public or judge-accessible
 - [x] Article includes `#BreakingAppsHackathon`
-- [ ] X / LinkedIn post drafted (see `docs/SOCIAL_POSTS.md`) and tagged `@bug0_inc`
+- [ ] X / LinkedIn post drafted (see `docs/SOCIAL_POSTS.md`) and tagged `@bug0inc`
 - [ ] Submitted before May 10, 2026 11:59 PM PT

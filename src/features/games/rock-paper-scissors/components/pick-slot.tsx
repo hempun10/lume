@@ -23,7 +23,7 @@ export function PickSlot({
 			className={cn(
 				"flex flex-col items-center gap-2 rounded-xl border p-4",
 				accent === "you"
-					? "border-brand-500/30 bg-brand-500/5"
+					? "border-primary/30 bg-primary/5"
 					: "border-border bg-card",
 			)}
 		>
