@@ -2,7 +2,7 @@
 
 > Submission for the Bug0 **Breaking Apps Hackathon** — `#BreakingAppsHackathon` — deadline May 10, 2026 11:59 PM PT.
 
-![Lume chat with shared-interests banner and Tic Tac Toe game panel](./images/ttt-win.png)
+![Lume chat: stranger profile with shared-interests banner above an inline Tic Tac Toe board showing a winning line](./images/ttt-win.png)
 
 ## TL;DR
 
@@ -115,7 +115,7 @@ CREATE POLICY "Users can read room counterpart profile"
 
 Narrowly scoped: a user can read another profile *only* if they share an active row in `public.rooms`. Profiles aren't globally readable.
 
-![Shared-interests banner: "You both like Music · Cooking" with interest-themed prompts](./images/shared-interests-banner.png)
+![Lume chat: prompt cards with 'You both like Music · Cooking' shared-interests banner above interest-themed conversation starters](./images/shared-interests-banner.png)
 
 The banner above plus the four interest-themed prompt cards (Concert / Food hill / First anime / Morning person) are *all* downstream of the same Supabase query. Before the migration, every chat fell back to the generic prompt set.
 
@@ -177,10 +177,8 @@ await runSteps({
 
 The test then verifies in plain Playwright that the **old password no longer signs in** and the **new password reaches `/dashboard` or `/onboarding`**. That last part matters: Passmark proves the UI flow worked; Playwright proves the password actually changed in the database.
 
-End-to-end: 1 passed in 44s on chromium.
-
-![Forgot-password form](./images/forgot-password.png)
-![Reset-password form with 6-digit OTP input](./images/reset-password.png)
+![Forgot-password form: email field with 'Send code' submit](./images/forgot-password.png)
+![Reset-password form: 6-digit OTP input with new password and confirm fields](./images/reset-password.png)
 
 ### Bug #3 — Login form occasionally submitted as GET with credentials in the URL
 
@@ -224,7 +222,8 @@ These weren't bugs per se, but Passmark exposed gaps:
 
 ```txt
 # Default chromium suite (no realtime gating)
-~31 tests, ~6–7 minutes after `npm run db:reset`
+npm run test:e2e
+→ ~31 tests, ~6–7 minutes after `npm run db:reset`
 
 # Realtime opt-in
 RUN_REALTIME_PASSMARK=1 npx playwright test e2e/passmark/realtime-matchmaking.spec.ts
@@ -236,9 +235,11 @@ npx playwright test e2e/passmark/auth-recovery.spec.ts
 ```
 
 Three real bugs caught and fixed in the hackathon suite:
-- Counterpart-profile RLS + shared-interests banner
-- OTP-based forgot-password + Passmark Mailpit email provider
-- Onboarding/settings/lobby polish + a11y `aria-pressed`
+- A missing RLS policy that silently degraded every chat's prompt cards (Bug #1).
+- A magic-link recovery flow that only worked in the manual-testing happy path (Bug #2).
+- A hydration race that occasionally leaked credentials into the URL (Bug #3).
+
+Plus a handful of accessibility and state-sync gaps Passmark uncovered along the way (section 6).
 
 ## 9. Closing thought
 
